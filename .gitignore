@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Node (за бъдещия client)
+node_modules/
+build/
+
+# Python (за AI service)
+venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

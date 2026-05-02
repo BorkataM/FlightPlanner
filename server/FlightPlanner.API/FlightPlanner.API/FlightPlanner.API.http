@@ -1,0 +1,6 @@
+@FlightPlanner.API_HostAddress = http://localhost:5049
+
+GET {{FlightPlanner.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
