@@ -1,4 +1,6 @@
-﻿using FlightPlanner.Infrastructure.Persistence;
+﻿using FlightPlanner.Core.Interfaces;
+using FlightPlanner.Infrastructure.Persistence;
+using FlightPlanner.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,8 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
 
             services.AddDbContext<FlightPlannerDbContext>(options =>
                 options.UseNpgsql(connectionString));
+
+            services.AddScoped<IAirportRepository, AirportRepository>();
 
             return services;
         }
