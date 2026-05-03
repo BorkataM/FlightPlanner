@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="../FlightPlanner.Core/FlightPlanner.Core.csproj" />
+  <Project Path="../FlightPlanner.Infrastructure/FlightPlanner.Infrastructure.csproj" />
   <Project Path="FlightPlanner.API/FlightPlanner.API.csproj" />
 </Solution>
