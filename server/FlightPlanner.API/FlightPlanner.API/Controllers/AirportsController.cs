@@ -1,4 +1,5 @@
 ﻿using FlightPlanner.Core.Interfaces;
+using FlightPlanner.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlightPlanner.API.Controllers
@@ -7,11 +8,11 @@ namespace FlightPlanner.API.Controllers
     [Route("api/[controller]")]
     public class AirportsController : ControllerBase
     {
-        private readonly IAirportRepository _airportRepository;
+        private readonly IAirportService _airportService;
 
-        public AirportsController(IAirportRepository airportRepository)
+        public AirportsController(IAirportService airportService)
         {
-            _airportRepository = airportRepository;
+            _airportService = airportService;
         }
 
         [HttpGet("search")]
@@ -20,7 +21,7 @@ namespace FlightPlanner.API.Controllers
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Query cannot be empty");
 
-            var results = await _airportRepository.SearchAirportsAsync(query);
+            var results = await _airportService.SearchAirportsAsync(query);
 
             return Ok(results);
         }
