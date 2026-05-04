@@ -16,15 +16,15 @@ namespace FlightPlanner.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Flight>()
-                .HasOne(f => f.Origin)
+                .HasOne(f => f.DepartureAirport)
                 .WithMany(a => a.DepartingFlights)
-                .HasForeignKey(f => f.OriginAirportId)
+                .HasForeignKey(f => f.DepartureAirportId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Flight>()
-                .HasOne(f => f.Destination)
+                .HasOne(f => f.ArrivalAirport)
                 .WithMany(a => a.ArrivingFlights)
-                .HasForeignKey(f => f.DestinationAirportId)
+                .HasForeignKey(f => f.ArrivalAirportId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
