@@ -25,7 +25,8 @@ namespace FlightPlanner.Infrastructure.Repositories
                 .Take(10)
                 .Select(a => new AirportDto
                 {
-                    IataCode = a.IataCode,
+                    IcaoCode = a.IcaoCode,
+                    IataCode = a.IataCode ?? string.Empty,
                     Name = a.Name,
                     City = a.City,
                     Country = a.Country
@@ -39,7 +40,8 @@ namespace FlightPlanner.Infrastructure.Repositories
                 .Where(a => a.IataCode == iataCode.ToUpper())
                 .Select(a => new AirportDto
                 {
-                    IataCode = a.IataCode,
+                    IcaoCode = a.IcaoCode,
+                    IataCode = a.IataCode ?? string.Empty,
                     Name = a.Name,
                     City = a.City,
                     Country = a.Country

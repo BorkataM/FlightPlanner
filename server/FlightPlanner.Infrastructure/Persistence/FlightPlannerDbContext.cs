@@ -32,7 +32,7 @@ namespace FlightPlanner.Infrastructure.Persistence
 
         public static async Task SeedAirportsAsync(FlightPlannerDbContext context)
         {
-            if (context.Airports.Any()) return;
+            if (await context.Airports.AnyAsync()) return;
 
             var path = Path.Combine(AppContext.BaseDirectory, "Resources", "airports.csv");
 
@@ -51,14 +51,15 @@ namespace FlightPlanner.Infrastructure.Persistence
             {
                 var dict = (IDictionary<string, object>)record;
 
-                string iata = dict["iata_code"]?.ToString() ?? "";
+                string icao = dict["ident"]?.ToString() ?? "";
                 string type = dict["type"]?.ToString() ?? "";
 
-                if (!string.IsNullOrEmpty(iata) && (type == "large_airport" || type == "medium_airport"))
+                if (!string.IsNullOrEmpty(icao) && (type == "large_airport" || type == "medium_airport"))
                 {
                     airportsToSave.Add(new Airport
                     {
-                        IataCode = iata,
+                        IcaoCode = icao.ToUpper(),
+                        IataCode = dict["iata_code"]?.ToString()?.ToUpper(),
                         Name = dict["name"]?.ToString() ?? "Unknown",
                         City = dict["municipality"]?.ToString() ?? "Unknown",
                         Country = dict["iso_country"]?.ToString() ?? "Unknown",
