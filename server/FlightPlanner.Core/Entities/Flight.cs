@@ -13,18 +13,17 @@ namespace FlightPlanner.Core.Entities
         public string FlightNumber { get; set; } = string.Empty;
 
         public string? Airline { get; set; }
+        public int? AirlineId { get; set; }
+        public Airline? AirlineEntity { get; set; }
 
         public int DepartureAirportId { get; set; }
         public Airport DepartureAirport { get; set; } = null!;
-
         public int ArrivalAirportId { get; set; }
         public Airport ArrivalAirport { get; set; } = null!;
-
         public DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
-
         public decimal Price { get; set; }
-
         public DateTime LastUpdated { get; set; }
+        public FlightAnalytics? Analytics { get; set; }
     }
 }

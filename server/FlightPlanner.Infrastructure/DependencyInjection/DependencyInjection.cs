@@ -1,5 +1,7 @@
 ﻿using FlightPlanner.Core.Interfaces;
 using FlightPlanner.Core.Services;
+using FlightPlanner.Infrastructure.BackgroundServices;
+using FlightPlanner.Infrastructure.ExternalClients;
 using FlightPlanner.Infrastructure.Persistence;
 using FlightPlanner.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,9 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
 
             services.AddScoped<IAirportService, AirportService>();
             services.AddScoped<IAirportRepository, AirportRepository>();
+
+            services.AddHttpClient<OpenSkyClient>();
+            services.AddHostedService<FlightSyncWorker>();
 
             return services;
         }

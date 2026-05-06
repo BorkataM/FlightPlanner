@@ -72,5 +72,34 @@ namespace FlightPlanner.Infrastructure.Persistence
             await context.Airports.AddRangeAsync(airportsToSave);
             await context.SaveChangesAsync();
         }
+
+        public static async Task SeedAirlinesAsync(FlightPlannerDbContext context)
+        {
+            if (await context.Airlines.AnyAsync()) return;
+
+            var airlines = new List<Airline>
+    {
+        new Airline { IcaoCode = "LZB", Name = "Bulgaria Air", EcoRating = 3.5 },
+        new Airline { IcaoCode = "BGH", Name = "BH Air", EcoRating = 3.2 },
+        new Airline { IcaoCode = "THY", Name = "Turkish Airlines", EcoRating = 4.1 },
+        new Airline { IcaoCode = "DLH", Name = "Lufthansa", EcoRating = 4.5 },
+        new Airline { IcaoCode = "BAW", Name = "British Airways", EcoRating = 4.3 },
+        new Airline { IcaoCode = "EZY", Name = "EasyJet", EcoRating = 3.8 },
+        new Airline { IcaoCode = "EJU", Name = "EasyJet Europe", EcoRating = 3.8 },
+        new Airline { IcaoCode = "RYR", Name = "Ryanair", EcoRating = 3.0 },
+        new Airline { IcaoCode = "WZZ", Name = "Wizz Air", EcoRating = 3.1 },
+        new Airline { IcaoCode = "AFR", Name = "Air France", EcoRating = 4.4 },
+        new Airline { IcaoCode = "KLM", Name = "KLM Royal Dutch Airlines", EcoRating = 4.6 },
+        new Airline { IcaoCode = "TVF", Name = "Transavia France", EcoRating = 3.7 },
+        new Airline { IcaoCode = "PGT", Name = "Pegasus Airlines", EcoRating = 3.4 },
+        new Airline { IcaoCode = "SAS", Name = "Scandinavian Airlines", EcoRating = 4.2 },
+        new Airline { IcaoCode = "LOT", Name = "LOT Polish Airlines", EcoRating = 3.9 },
+        new Airline { IcaoCode = "AUA", Name = "Austrian Airlines", EcoRating = 4.1 },
+        new Airline { IcaoCode = "SWR", Name = "Swiss International Air Lines", EcoRating = 4.3 }
+    };
+
+            await context.Airlines.AddRangeAsync(airlines);
+            await context.SaveChangesAsync();
+        }
     }
 }

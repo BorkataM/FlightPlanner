@@ -21,6 +21,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<FlightPlannerDbContext>();
 
         await FlightPlannerDbContext.SeedAirportsAsync(context);
+        await FlightPlannerDbContext.SeedAirlinesAsync(context);
         Console.WriteLine("Seed process completed successfully.");
     }
     catch (Exception ex)
