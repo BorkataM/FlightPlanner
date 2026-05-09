@@ -12,6 +12,8 @@ namespace FlightPlanner.Infrastructure.Persistence
         public DbSet<Airport> Airports { get; set; }
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<FlightAnalytics> FlightAnalytics { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +28,22 @@ namespace FlightPlanner.Infrastructure.Persistence
                 .WithMany(a => a.ArrivingFlights)
                 .HasForeignKey(f => f.ArrivalAirportId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.User)
+                .WithMany(u => u.Bookings)
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Flight)
+                .WithMany(f => f.Bookings)
+                .HasForeignKey(b => b.FlightId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }

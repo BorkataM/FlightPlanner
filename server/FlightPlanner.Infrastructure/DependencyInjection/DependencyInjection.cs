@@ -4,6 +4,7 @@ using FlightPlanner.Infrastructure.BackgroundServices;
 using FlightPlanner.Infrastructure.ExternalClients;
 using FlightPlanner.Infrastructure.Persistence;
 using FlightPlanner.Infrastructure.Repositories;
+using FlightPlanner.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,13 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
 
             services.AddScoped<IAirportService, AirportService>();
             services.AddScoped<IAirportRepository, AirportRepository>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IBookingRepository, BookingRepository>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IBookingService, BookingService>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 
             services.AddHttpClient<OpenSkyClient>();
             services.AddHostedService<FlightSyncWorker>();

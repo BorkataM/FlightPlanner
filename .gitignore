@@ -4,6 +4,9 @@
 *.certificate
 *.key
 
+# --- Claude / AI Assistants ---
+.claude/
+
 # --- .NET Core / Visual Studio ---
 bin/
 obj/
