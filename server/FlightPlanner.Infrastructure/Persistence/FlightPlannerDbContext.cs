@@ -14,6 +14,7 @@ namespace FlightPlanner.Infrastructure.Persistence
         public DbSet<FlightAnalytics> FlightAnalytics { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<UserFollow> UserFollows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -44,6 +45,21 @@ namespace FlightPlanner.Infrastructure.Persistence
                 .WithMany(f => f.Bookings)
                 .HasForeignKey(b => b.FlightId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserFollow>()
+                .HasKey(uf => new { uf.FollowerId, uf.FolloweeId });
+
+            modelBuilder.Entity<UserFollow>()
+                .HasOne(uf => uf.Follower)
+                .WithMany(u => u.Following)
+                .HasForeignKey(uf => uf.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserFollow>()
+                .HasOne(uf => uf.Followee)
+                .WithMany(u => u.Followers)
+                .HasForeignKey(uf => uf.FolloweeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
         }

@@ -35,6 +35,8 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
             services.AddScoped<IBookingService, BookingService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+            services.AddScoped<ISocialRepository, SocialRepository>();
+            services.AddScoped<ISocialService, SocialService>();
 
             services.AddHttpClient<OpenSkyClient>();
             services.AddHostedService<FlightSyncWorker>();
