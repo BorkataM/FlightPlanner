@@ -27,6 +27,13 @@ namespace FlightPlanner.Infrastructure.Repositories
             return user;
         }
 
+        public async Task<User> UpdateAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
         public async Task<bool> ExistsAsync(string email) =>
             await _context.Users.AnyAsync(u => u.Email == email);
     }

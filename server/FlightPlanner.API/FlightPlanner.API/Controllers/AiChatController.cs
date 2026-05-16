@@ -34,9 +34,16 @@ namespace FlightPlanner.API.Controllers
                 var result = await _aiChatService.ChatAsync(userId, email, firstName, lastName, request, ct);
                 return Ok(result);
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
-                return StatusCode(502, new { message = "AI service unavailable.", detail = ex.Message });
+                return StatusCode(503, new
+                {
+                    message = "The AI assistant is temporarily unavailable. Please try again in a moment."
+                });
+            }
+            catch (TaskCanceledException)
+            {
+                return StatusCode(504, new { message = "The AI assistant took too long to respond. Please try again." });
             }
         }
 

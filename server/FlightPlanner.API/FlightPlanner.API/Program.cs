@@ -1,3 +1,4 @@
+using FlightPlanner.API.Middleware;
 using FlightPlanner.Infrastructure.DependencyInjection;
 using FlightPlanner.Infrastructure.Persistence;
 using DotNetEnv;
@@ -9,10 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 DotNetEnv.Env.Load();
 
-// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 
 var rawJwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtKey = rawJwtKey.Replace("${JWT_KEY}", Environment.GetEnvironmentVariable("JWT_KEY") ?? rawJwtKey);
@@ -41,7 +49,6 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<FlightPlannerDbContext>();
-
         await FlightPlannerDbContext.SeedAirportsAsync(context);
         await FlightPlannerDbContext.SeedAirlinesAsync(context);
         Console.WriteLine("Seed process completed successfully.");
@@ -52,13 +59,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
-}
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

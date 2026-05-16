@@ -5,6 +5,7 @@ using FlightPlanner.Infrastructure.ExternalClients;
 using FlightPlanner.Infrastructure.Persistence;
 using FlightPlanner.Infrastructure.Repositories;
 using FlightPlanner.Infrastructure.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,11 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
             services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
             services.AddScoped<ISocialRepository, SocialRepository>();
             services.AddScoped<ISocialService, SocialService>();
+
+            services.AddScoped<IFlightRepository, FlightRepository>();
+            services.AddScoped<IFlightService, FlightService>();
+
+            services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
 
             services.AddHttpClient<OpenSkyClient>();
             services.AddHostedService<FlightSyncWorker>();
