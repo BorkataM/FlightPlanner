@@ -41,6 +41,14 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
             services.AddHttpClient<OpenSkyClient>();
             services.AddHostedService<FlightSyncWorker>();
 
+            var rawAiUrl = configuration["AiService:BaseUrl"] ?? "http://localhost:8000";
+            var aiServiceUrl = rawAiUrl.Replace("${AI_SERVICE_URL}", Environment.GetEnvironmentVariable("AI_SERVICE_URL") ?? rawAiUrl);
+            services.AddHttpClient<IAiChatService, AiChatClient>(client =>
+            {
+                client.BaseAddress = new Uri(aiServiceUrl);
+                client.Timeout = TimeSpan.FromSeconds(60);
+            });
+
             return services;
         }
     }

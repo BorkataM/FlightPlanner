@@ -85,10 +85,17 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class UserContext(BaseModel):
+    user_id: int
+    email: str
+    first_name: str
+    last_name: str
+
+
 class ChatRequest(BaseModel):
     message: str
     conversation_history: list[ChatMessage] = []
-    user_id: int | None = None
+    user_context: UserContext | None = None
 
 
 class ChatResponse(BaseModel):

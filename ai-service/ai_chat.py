@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import services
 from database import settings
-from schemas import ChatRequest, ChatResponse
+from schemas import ChatRequest, ChatResponse, UserContext
 
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -79,6 +79,14 @@ TOOLS: list[dict] = [
     {
         "type": "function",
         "function": {
+            "name": "get_my_bookings",
+            "description": "Get the current user's flight booking history for personalised recommendations.",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_flight_analytics",
             "description": "Get detailed analytics (CO₂, delay probability, SmartScore …) for a specific flight.",
             "parameters": {
@@ -95,7 +103,7 @@ TOOLS: list[dict] = [
     },
 ]
 
-SYSTEM_PROMPT = """You are FlightAI, an intelligent flight assistant for the FlightPlanner platform.
+_SYSTEM_PROMPT_BASE = """You are FlightAI, an intelligent flight assistant for the FlightPlanner platform.
 
 Your job is to help users find the smartest flights — balancing price, environmental impact,
 and punctuality. You have access to live flight data through the tools provided.
@@ -107,6 +115,17 @@ Guidelines:
 - Be concise and friendly.
 - If the user mentions a city name but not a code, do your best to infer the IATA code.
 """
+
+
+def _build_system_prompt(user_context: UserContext | None) -> str:
+    if user_context is None:
+        return _SYSTEM_PROMPT_BASE
+    return (
+        _SYSTEM_PROMPT_BASE
+        + f"\nYou are talking to {user_context.first_name} {user_context.last_name} "
+        f"({user_context.email}). You can use get_my_bookings to see their booking history "
+        f"and provide personalised recommendations."
+    )
 
 # ---------------------------------------------------------------------------
 # Tool executor
@@ -133,7 +152,31 @@ def _flight_to_dict(flight) -> dict:
     }
 
 
-async def _execute_tool(name: str, args: dict, db: AsyncSession) -> str:
+def _booking_to_dict(booking) -> dict:
+    flight = booking.Flight
+    return {
+        "booking_id": booking.Id,
+        "confirmation_code": booking.ConfirmationCode,
+        "seat_number": booking.SeatNumber,
+        "booking_date": str(booking.BookingDate) if booking.BookingDate else None,
+        "flight_number": getattr(flight, "FlightNumber", None),
+        "departure": getattr(getattr(flight, "DepartureAirport", None), "IataCode", None)
+            or getattr(getattr(flight, "DepartureAirport", None), "IcaoCode", None),
+        "arrival": getattr(getattr(flight, "ArrivalAirport", None), "IataCode", None)
+            or getattr(getattr(flight, "ArrivalAirport", None), "IcaoCode", None),
+        "departure_time": str(flight.DepartureTime) if flight and flight.DepartureTime else None,
+        "price_usd": float(flight.Price) if flight and flight.Price else None,
+        "smart_score": getattr(getattr(flight, "Analytics", None), "SmartScore", None),
+    }
+
+
+async def _execute_tool(name: str, args: dict, db: AsyncSession, user_context: UserContext | None = None) -> str:
+    if name == "get_my_bookings":
+        if user_context is None:
+            return json.dumps({"error": "No authenticated user context available."})
+        bookings = await services.get_user_bookings(db, user_context.user_id)
+        return json.dumps([_booking_to_dict(b) for b in bookings])
+
     if name == "search_flights":
         flights = await services.search_flights(
             db,
@@ -161,7 +204,8 @@ async def _execute_tool(name: str, args: dict, db: AsyncSession) -> str:
 # ---------------------------------------------------------------------------
 
 async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
-    messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    user_context = request.user_context
+    messages: list[dict] = [{"role": "system", "content": _build_system_prompt(user_context)}]
 
     for msg in request.conversation_history:
         messages.append({"role": msg.role, "content": msg.content})
@@ -195,7 +239,7 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
             if "flight_id" in tool_args:
                 flight_ids.append(tool_args["flight_id"])
 
-            tool_result = await _execute_tool(tool_name, tool_args, db)
+            tool_result = await _execute_tool(tool_name, tool_args, db, user_context)
 
             messages.append(
                 {

@@ -68,43 +68,49 @@ def calculate_predicted_delay_minutes(delay_probability: float) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Component scores  (all on a 1–10 scale, clamped)
+# ---------------------------------------------------------------------------
+
+def _clamp(value: float) -> float:
+    return round(max(1.0, min(10.0, value)), 4)
+
+
+def calculate_price_score(price: Decimal | float) -> float:
+    """$50 → 10, $2 000+ → 1.  Linear, clamped."""
+    score = 10.0 - ((float(price) - 50.0) / (2_000.0 - 50.0)) * 9.0
+    return _clamp(score)
+
+
+def calculate_eco_score(co2_emissions: float, eco_rating: float) -> float:
+    """
+    Blends CO₂ (70 %) and airline EcoRating (30 %).
+    CO₂ 0 kg → 10, 5 000 kg+ → 1.  EcoRating already 0–10.
+    """
+    co2_component = 10.0 - (co2_emissions / 5_000.0) * 9.0
+    blended = co2_component * 0.70 + eco_rating * 0.30
+    return _clamp(blended)
+
+
+def calculate_delay_score(delay_probability: float) -> float:
+    """0 % delay → 10, 100 % delay → 1.  Linear, clamped."""
+    return _clamp(10.0 - delay_probability * 9.0)
+
+
+# ---------------------------------------------------------------------------
 # SmartScore
 # ---------------------------------------------------------------------------
 
 def calculate_smart_score(
-    price: Decimal | float,
-    co2_emissions: float,
-    fuel_efficiency: float,
-    delay_probability: float,
-    eco_rating: float,
+    price_score: float,
+    eco_score: float,
+    delay_score: float,
 ) -> float:
     """
-    Composite 0–100 score.  Higher = smarter choice.
-
-    Weights:
-      30 % price        (cheaper → higher score)
-      25 % CO₂          (lower emissions → higher score)
-      25 % reliability  (lower delay prob → higher score)
-      10 % fuel         (lower L/100km → higher score)
-      10 % eco rating   (higher airline rating → higher score)
+    SmartScore = (PriceScore × 0.4) + (EcoScore × 0.4) + (DelayScore × 0.2)
+    Result clamped to [1.0, 10.0].
     """
-    price_f = float(price)
-
-    # Normalise each dimension to [0, 100]
-    price_score = max(0.0, 100.0 - (price_f / 2_000.0) * 100.0)
-    co2_score = max(0.0, 100.0 - (co2_emissions / 5_000.0) * 100.0)
-    delay_score = (1.0 - delay_probability) * 100.0
-    fuel_score = max(0.0, 100.0 - (fuel_efficiency / 10.0) * 100.0)
-    eco_score = (eco_rating / 10.0) * 100.0
-
-    smart_score = (
-        price_score * 0.30
-        + co2_score * 0.25
-        + delay_score * 0.25
-        + fuel_score * 0.10
-        + eco_score * 0.10
-    )
-    return round(smart_score, 2)
+    raw = price_score * 0.4 + eco_score * 0.4 + delay_score * 0.2
+    return round(max(1.0, min(10.0, raw)), 2)
 
 
 # ---------------------------------------------------------------------------
@@ -125,15 +131,8 @@ async def _load_flight(db: AsyncSession, flight_id: int) -> Flight | None:
     return result.scalar_one_or_none()
 
 
-async def process_flight_analytics(db: AsyncSession, flight_id: int) -> FlightAnalytics | None:
-    """
-    Calculate and persist analytics for a single flight.
-    Returns None if the flight cannot be found or lacks required data.
-    """
-    flight = await _load_flight(db, flight_id)
-    if flight is None:
-        return None
-
+def _compute_analytics(flight: Flight) -> FlightAnalytics | None:
+    """Pure calculation — no DB I/O.  Returns a populated (unsaved) FlightAnalytics."""
     dep = flight.DepartureAirport
     arr = flight.ArrivalAirport
     if dep is None or arr is None:
@@ -141,55 +140,81 @@ async def process_flight_analytics(db: AsyncSession, flight_id: int) -> FlightAn
 
     distance_km = haversine_distance(dep.Latitude, dep.Longitude, arr.Latitude, arr.Longitude)
     eco_rating = flight.AirlineEntity.EcoRating if flight.AirlineEntity else 5.0
-
     price = flight.Price or Decimal("500")
+    dep_time = flight.DepartureTime or datetime.utcnow()
+
     co2 = calculate_co2_emissions(distance_km, eco_rating)
     fuel = calculate_fuel_efficiency(distance_km, eco_rating)
-    dep_time = flight.DepartureTime or datetime.utcnow()
     delay_prob = calculate_delay_probability(dep_time, distance_km)
     delay_mins = calculate_predicted_delay_minutes(delay_prob)
-    smart = calculate_smart_score(price, co2, fuel, delay_prob, eco_rating)
 
-    analytics = flight.Analytics
-    if analytics is None:
-        analytics = FlightAnalytics(FlightId=flight_id)
-        db.add(analytics)
+    price_score = calculate_price_score(price)
+    eco_score = calculate_eco_score(co2, eco_rating)
+    delay_score = calculate_delay_score(delay_prob)
+    smart = calculate_smart_score(price_score, eco_score, delay_score)
 
-    analytics.BasePrice = price
-    analytics.Co2Emissions = co2
-    analytics.FuelEfficiency = fuel
-    analytics.DelayProbability = delay_prob
-    analytics.PredictedDelayMinutes = delay_mins
-    analytics.SmartScore = smart
-    analytics.IsEcoFriendly = co2 < 500.0
-    analytics.IsBestValue = smart >= 70.0
+    row = flight.Analytics or FlightAnalytics(FlightId=flight.Id)
+    row.BasePrice = price
+    row.Co2Emissions = co2
+    row.FuelEfficiency = fuel
+    row.DelayProbability = delay_prob
+    row.PredictedDelayMinutes = delay_mins
+    row.SmartScore = smart
+    row.IsEcoFriendly = eco_score > 8.0
+    row.IsBestValue = smart > 8.5
+    return row
 
+
+async def process_flight_analytics(db: AsyncSession, flight_id: int) -> FlightAnalytics | None:
+    """Calculate and persist analytics for a single flight."""
+    flight = await _load_flight(db, flight_id)
+    if flight is None:
+        return None
+
+    row = _compute_analytics(flight)
+    if row is None:
+        return None
+
+    db.add(row)
     await db.commit()
-    await db.refresh(analytics)
-    return analytics
+    await db.refresh(row)
+    return row
 
 
 async def process_all_unprocessed(db: AsyncSession) -> dict:
-    """Process every flight whose SmartScore is NULL or 0."""
+    """
+    Load every flight with SmartScore == 0 or NULL, compute analytics for all,
+    then commit in a single bulk operation.
+    """
     result = await db.execute(
-        select(Flight.Id)
+        select(Flight)
         .join(FlightAnalytics, Flight.Id == FlightAnalytics.FlightId, isouter=True)
         .where(
             (FlightAnalytics.SmartScore == None) | (FlightAnalytics.SmartScore == 0)
         )
+        .options(
+            selectinload(Flight.DepartureAirport),
+            selectinload(Flight.ArrivalAirport),
+            selectinload(Flight.AirlineEntity),
+            selectinload(Flight.Analytics),
+        )
     )
-    ids = [row[0] for row in result.all()]
+    flights = list(result.scalars().all())
 
     processed = skipped = errors = 0
-    for fid in ids:
+    for flight in flights:
         try:
-            result = await process_flight_analytics(db, fid)
-            if result:
-                processed += 1
-            else:
+            row = _compute_analytics(flight)
+            if row is None:
                 skipped += 1
+                continue
+            db.add(row)
+            processed += 1
         except Exception:
             errors += 1
+
+    if processed:
+        await db.commit()
 
     return {"processed": processed, "skipped": skipped, "errors": errors}
 
