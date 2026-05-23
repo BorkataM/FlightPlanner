@@ -26,5 +26,10 @@ namespace FlightPlanner.Core.Services
         {
             return await _airportRepository.GetByIataCodeAsync(iataCode);
         }
+
+        public async Task<IEnumerable<AirportDto>> GetAllAirportsAsync()
+        {
+            return await _airportRepository.GetAllAirportsAsync();
+        }
     }
 }

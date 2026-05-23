@@ -6,5 +6,6 @@ namespace FlightPlanner.Core.Interfaces
     {
         Task<IEnumerable<AirportDto>> SearchAirportsAsync(string query);
         Task<AirportDto?> GetAirportByIataAsync(string iataCode);
+        Task<IEnumerable<AirportDto>> GetAllAirportsAsync();
     }
 }

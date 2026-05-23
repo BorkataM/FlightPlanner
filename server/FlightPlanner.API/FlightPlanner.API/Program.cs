@@ -63,8 +63,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
-app.UseHttpsRedirection();
 app.UseCors();
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -15,6 +15,13 @@ namespace FlightPlanner.API.Controllers
             _airportService = airportService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var results = await _airportService.GetAllAirportsAsync();
+            return Ok(results);
+        }
+
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] string query)
         {

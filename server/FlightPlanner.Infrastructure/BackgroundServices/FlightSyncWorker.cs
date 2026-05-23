@@ -41,13 +41,15 @@ namespace FlightPlanner.Infrastructure.BackgroundServices
 
                     var availableAirports = await context.Airports
                         .Where(a => a.IataCode != null && a.IataCode != "")
+                        .OrderBy(a => a.Id)
                         .Take(200).ToListAsync(stoppingToken);
 
                     var airlinesDict = await context.Airlines
                         .ToDictionaryAsync(a => a.IcaoCode, a => a, stoppingToken);
 
-                    var existingFlights = await context.Flights
-                        .ToDictionaryAsync(f => f.FlightNumber, f => f, stoppingToken);
+                    var existingFlights = (await context.Flights.ToListAsync(stoppingToken))
+                        .GroupBy(f => f.FlightNumber)
+                        .ToDictionary(g => g.Key, g => g.OrderByDescending(f => f.LastUpdated).First());
 
                     var random = new Random();
                     int updatedCount = 0;

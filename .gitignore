@@ -1,5 +1,7 @@
 # --- Security & Credentials ---
 .env
+.env.local
+.env.*.local
 *.pfx
 *.certificate
 *.key
