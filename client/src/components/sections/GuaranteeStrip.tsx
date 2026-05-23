@@ -10,14 +10,14 @@ const ICONS = [
 
 export default function GuaranteeStrip() {
   return (
-    <div className="border-b border-white/[0.10]" style={{ background: 'rgba(13,28,54,0.98)' }}>
-      <div className="max-w-[1280px] mx-auto px-8 py-6 flex items-center justify-between divide-x divide-white/[0.12]">
+    <div className="border-b border-slate-100" style={{ background: '#F8FAFC' }}>
+      <div className="max-w-[1280px] mx-auto px-8 py-6 flex items-center justify-between divide-x divide-slate-100">
         {en.guarantees.map((item, i) => (
           <div key={item.title} className="flex items-center gap-3 px-8 first:pl-0 last:pr-0">
-            <span className="text-gray-400">{ICONS[i]}</span>
+            <span className="text-violet-500">{ICONS[i]}</span>
             <div>
-              <div className="text-white text-sm font-semibold">{item.title}</div>
-              <div className="text-gray-500 text-xs">{item.sub}</div>
+              <div className="text-slate-800 text-sm font-semibold">{item.title}</div>
+              <div className="text-slate-400 text-xs">{item.sub}</div>
             </div>
           </div>
         ))}

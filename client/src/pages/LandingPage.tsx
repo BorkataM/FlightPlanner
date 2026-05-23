@@ -6,7 +6,7 @@ import PopularDestinations from '../features/destinations/PopularDestinations'
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ background: '#0D1E35' }}>
+    <div className="min-h-screen" style={{ background: '#F0F4F8' }}>
       <Navbar />
       <HeroSection />
       <StatsStrip />

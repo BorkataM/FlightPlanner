@@ -96,39 +96,39 @@ export default function AirportSelect({ label, icon, placeholder, value, onChang
 
   return (
     <div ref={containerRef} className="relative flex items-center gap-3 px-5 py-4 cursor-pointer" onClick={!open ? handleOpen : undefined}>
-      <span className="text-gray-500 shrink-0">{icon}</span>
+      <span className="text-slate-400 shrink-0">{icon}</span>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">{label}</div>
+        <div className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">{label}</div>
         {open
           ? <input ref={inputRef} value={query} onChange={handleInput} placeholder={placeholder}
-              className="bg-transparent text-white text-base font-semibold outline-none w-full placeholder-gray-600 mt-0.5" />
+              className="bg-transparent text-slate-900 text-base font-semibold outline-none w-full placeholder-slate-400 mt-0.5" />
           : <div className="text-base font-semibold mt-0.5 truncate">
-              {value ? <span className="text-white">{value.city}</span> : <span className="text-gray-500">{placeholder}</span>}
+              {value ? <span className="text-slate-900">{value.city}</span> : <span className="text-slate-400">{placeholder}</span>}
             </div>
         }
-        {value && !open && <div className="text-gray-500 text-xs">{code}</div>}
+        {value && !open && <div className="text-slate-400 text-xs">{code}</div>}
       </div>
 
       {open && (query.length >= 2 || !!fromAirport) && (
         <div className="absolute top-[calc(100%+4px)] left-0 w-72 z-50 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto"
-          style={{ background: 'rgba(10,22,46,0.98)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(24px)' }}>
+          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
           {loading && (
-            <div className="flex items-center gap-2 px-4 py-3 text-gray-500 text-sm">
+            <div className="flex items-center gap-2 px-4 py-3 text-slate-400 text-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching…
             </div>
           )}
           {!loading && results.length === 0 && (
-            <div className="px-4 py-3 text-gray-500 text-sm">
+            <div className="px-4 py-3 text-slate-400 text-sm">
               {fromAirport ? 'No available routes found' : 'No airports found'}
             </div>
           )}
           {results.map(airport => (
             <button key={airport.icaoCode} onClick={() => handleSelect(airport)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-t border-white/[0.04] first:border-0">
-              <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left border-t border-slate-100 first:border-0">
+              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
               <div className="min-w-0">
-                <div className="text-white text-sm font-semibold">{airport.city}</div>
-                <div className="text-gray-400 text-xs truncate">{airport.name} · {airport.iataCode ?? airport.icaoCode}</div>
+                <div className="text-slate-900 text-sm font-semibold">{airport.city}</div>
+                <div className="text-slate-400 text-xs truncate">{airport.name} · {airport.iataCode ?? airport.icaoCode}</div>
               </div>
             </button>
           ))}
