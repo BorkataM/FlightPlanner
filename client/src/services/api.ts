@@ -15,6 +15,10 @@ async function post<T>(url: string, body: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
   })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { message?: string }).message ?? res.statusText)
+  }
   return res.json() as Promise<T>
 }
 
@@ -24,12 +28,40 @@ export interface FlightSearchParams {
   limit?: number
 }
 
+export interface RegisterData {
+  email:     string
+  password:  string
+  firstName: string
+  lastName:  string
+  age:       number
+}
+
+export interface LoginData {
+  email:    string
+  password: string
+}
+
+export interface AuthResponse {
+  token:        string
+  refreshToken: string
+  userId:       number
+  email:        string
+  firstName:    string
+  lastName:     string
+}
+
 function buildFlightSearchUrl({ from, to, limit }: FlightSearchParams): string {
   const params = new URLSearchParams()
   if (from)  params.set('from',  from)
   if (to)    params.set('to',    to)
   if (limit) params.set('limit', String(limit))
   return `${BASE_URL}/api/flights/search?${params}`
+}
+
+export const authApi = {
+  login:    (data: LoginData)    => post<AuthResponse>(`${BASE_URL}/api/auth/login`,    data),
+  register: (data: RegisterData) => post<AuthResponse>(`${BASE_URL}/api/auth/register`, data),
+  refresh:  (refreshToken: string) => post<AuthResponse>(`${BASE_URL}/api/auth/refresh`, { refreshToken }),
 }
 
 export const airportsApi = {

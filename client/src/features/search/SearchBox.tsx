@@ -4,9 +4,7 @@ import DateField from './DateField'
 import FlexDatesGrid from './FlexDatesGrid'
 import AirportBrowser from './AirportBrowser'
 import { useSearchBox } from './useSearchBox'
-import { en } from '../../localization/en'
-
-const t = en.search
+import { useLocale } from '../../context/LocaleContext'
 
 const ROUND_TRIP_GRID = 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]'
 const ONE_WAY_GRID    = 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,1fr)]'
@@ -28,6 +26,8 @@ const FilterChip = ({ label }: { label: string }) => (
 )
 
 export default function SearchBox() {
+  const { t: locale } = useLocale()
+  const t             = locale.search
   const sb            = useSearchBox()
   const minReturnDate = calcMinReturnDate(sb.departure)
 

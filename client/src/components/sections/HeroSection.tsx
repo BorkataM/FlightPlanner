@@ -1,10 +1,10 @@
 import SearchBox from '../../features/search/SearchBox'
 import { IMAGES } from '../../assets/images'
-import { en } from '../../localization/en'
-
-const t = en.hero
+import { useLocale } from '../../context/LocaleContext'
 
 export default function HeroSection() {
+  const { t: locale } = useLocale()
+  const t = locale.hero
   return (
     <section
       className="relative h-full flex flex-col overflow-hidden bg-cover bg-center"
