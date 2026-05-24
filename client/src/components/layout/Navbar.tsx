@@ -100,9 +100,7 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-5">
-          <button className="flex items-center gap-1 text-slate-600 text-sm font-medium hover:text-slate-900 transition-colors">
-            {t.currency} <ChevronDown className="w-3.5 h-3.5" />
-          </button>
+          <span className="text-slate-600 text-sm font-medium">€ EUR</span>
 
           <LanguageDropdown locale={code} label={t.language} setLocale={setLocale} />
 

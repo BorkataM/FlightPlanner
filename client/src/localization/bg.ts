@@ -2,12 +2,11 @@ import type { LocaleSchema } from './en'
 
 export const bg: LocaleSchema = {
   navbar: {
-    brand: 'SkyWave',
-    links: ['Полети', 'Хотели', 'Оферти', 'Изследвай', 'Пътеводител'],
+    brand:      'SkyWave',
+    links:      ['Полети', 'Хотели', 'Оферти', 'Изследвай', 'Пътеводител'],
     activeLink: 'Полети',
-    currency: 'BGN',
-    language: 'BG',
-    signIn: 'Вход',
+    language:   'BG',
+    signIn:     'Вход',
   },
 
   hero: {

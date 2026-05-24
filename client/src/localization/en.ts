@@ -3,7 +3,6 @@ export interface LocaleSchema {
     brand:      string
     links:      readonly string[]
     activeLink: string
-    currency:   string
     language:   string
     signIn:     string
   }
@@ -66,7 +65,6 @@ export const en: LocaleSchema = {
     brand:      'SkyWave',
     links:      ['Flights', 'Hotels', 'Offers', 'Explore', 'Travel Guide'],
     activeLink: 'Flights',
-    currency:   'BGN',
     language:   'EN',
     signIn:     'Sign in',
   },
