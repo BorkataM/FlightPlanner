@@ -41,7 +41,7 @@ export default function SearchBox() {
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <button onClick={sb.handleTripTypeToggle} className="flex items-center gap-1 hover:text-slate-900 transition-colors font-medium">
-              {sb.isRoundTrip ? 'Round trip' : 'One way'} <ChevronDown className="w-3 h-3" />
+              {sb.isRoundTrip ? t.roundTrip : t.oneWay} <ChevronDown className="w-3 h-3" />
             </button>
             <button className="flex items-center gap-1.5 hover:text-slate-900 transition-colors font-medium">
               <Users className="w-3.5 h-3.5" /> {t.passengers} <ChevronDown className="w-3 h-3" />
@@ -144,12 +144,12 @@ export default function SearchBox() {
         <div className="mt-4 w-full max-w-[900px]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold text-blue-100 opacity-90">
-              Flights from {sb.fromAirport.city} — all dates
+              {t.flightsFromAllDates.replace('{city}', sb.fromAirport.city)}
             </span>
             {sb.destLoading && <Loader2 className="w-4 h-4 text-blue-200 animate-spin" />}
           </div>
           {!sb.destLoading && sb.previewDestinations.length === 0 && (
-            <p className="text-blue-200 text-sm opacity-70">No flights found from this airport.</p>
+            <p className="text-blue-200 text-sm opacity-70">{t.noFlights}</p>
           )}
           {sb.previewDestinations.length > 0 && (
             <div className="grid grid-cols-4 gap-2.5">
@@ -162,7 +162,7 @@ export default function SearchBox() {
                   >
                     <div className="text-white font-semibold text-sm truncate">{d.city}</div>
                     <div className="text-blue-200 text-xs opacity-80 mt-0.5">{d.code}</div>
-                    <div className="text-white font-bold text-base mt-1">from €{Math.round(d.minPrice)}</div>
+                    <div className="text-white font-bold text-base mt-1">{t.from} €{Math.round(d.minPrice)}</div>
                   </button>
                 )
               })}

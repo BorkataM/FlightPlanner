@@ -15,6 +15,8 @@ export interface LocaleSchema {
   search: {
     tabs:         { flights: string; hotels: string; cars: string }
     tripType:     string
+    roundTrip:    string
+    oneWay:       string
     passengers:   string
     fields: {
       from:      { label: string; value: string; sub: string }
@@ -22,8 +24,22 @@ export interface LocaleSchema {
       departure: { label: string; value: string }
       return:    { label: string; value: string }
     }
-    filters:      readonly string[]
-    flexibleDates: string
+    filters:           readonly string[]
+    flexibleDates:     string
+    from:              string
+    noFlights:         string
+    flightsFromAllDates: string
+  }
+  browse: {
+    loading:            string
+    originCountry:      string
+    destinationCountry: string
+    flightsFrom:        string
+    popular:            string
+    allCountries:       string
+    pickAirport:        string
+    selectCountry:      string
+    clear:              string
   }
   aiCopilot: {
     label:    string
@@ -64,6 +80,8 @@ export const en: LocaleSchema = {
   search: {
     tabs:       { flights: 'Flights', hotels: 'Hotels', cars: 'Cars' },
     tripType:   'One way',
+    roundTrip:  'Round trip',
+    oneWay:     'One way',
     passengers: '1 Passenger',
     fields: {
       from:      { label: 'From',      value: 'Sofia',     sub: 'SOF'        },
@@ -71,8 +89,23 @@ export const en: LocaleSchema = {
       departure: { label: 'Departure', value: '12 Jun, Thu'                  },
       return:    { label: 'Return',    value: 'Add date'                     },
     },
-    filters:      ['Price', 'Best time to fly', 'Direct flights', 'Baggage', 'Airlines'],
-    flexibleDates: 'Flexible dates',
+    filters:             ['Price', 'Best time to fly', 'Direct flights', 'Baggage', 'Airlines'],
+    flexibleDates:       'Flexible dates',
+    from:                'from',
+    noFlights:           'No flights found from this airport.',
+    flightsFromAllDates: 'Flights from {city} — all dates',
+  },
+
+  browse: {
+    loading:            'Loading airports…',
+    originCountry:      'Origin country',
+    destinationCountry: 'Destination country',
+    flightsFrom:        'Flights from {city}',
+    popular:            'Popular',
+    allCountries:       'All countries',
+    pickAirport:        'Pick an airport',
+    selectCountry:      'Select a country to see airports',
+    clear:              'Clear',
   },
 
   aiCopilot: {

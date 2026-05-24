@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toCountryName } from './searchUtils'
+import { useLocale } from '../../context/LocaleContext'
 import type { Airport } from './types'
 
 interface Props {
@@ -48,6 +49,8 @@ export default function AirportBrowser({
   popularEntries, otherEntries, airportsByCountry,
   onSelectAirport,
 }: Props) {
+  const { t: locale } = useLocale()
+  const t = locale.browse
   const isToWithFrom = browseField === 'to' && !!fromAirport
 
   const isCountryEnabled = (airports: Airport[]) => {
@@ -70,15 +73,17 @@ export default function AirportBrowser({
     >
       {(browseLoading || destLoading) ? (
         <div className="flex items-center gap-2 px-6 py-5 text-slate-400 text-sm">
-          <Loader2 className="w-4 h-4 animate-spin" /> Loading airports…
+          <Loader2 className="w-4 h-4 animate-spin" /> {t.loading}
         </div>
       ) : (
         <>
           <div className="flex-1 p-5 overflow-y-auto max-h-56 border-r border-slate-100">
             <div className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">
-              {browseField === 'from' ? 'Origin country'
-                : fromAirport ? `Flights from ${fromAirport.city}`
-                : 'Destination country'}
+              {browseField === 'from'
+                ? t.originCountry
+                : fromAirport
+                  ? t.flightsFrom.replace('{city}', fromAirport.city)
+                  : t.destinationCountry}
             </div>
 
             {isToWithFrom ? (
@@ -93,7 +98,7 @@ export default function AirportBrowser({
               </div>
             ) : (
               <>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Popular</div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.popular}</div>
                 <div className="columns-4 gap-x-4 mb-3">
                   {popularEntries.map(([country, airports]) => (
                     <CountryButton key={country} country={country}
@@ -106,7 +111,7 @@ export default function AirportBrowser({
 
                 <div className="border-t border-slate-100 mb-3" />
 
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">All countries</div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.allCountries}</div>
                 <div className="columns-4 gap-x-4">
                   {otherEntries.map(([country, airports]) => (
                     <CountryButton key={country} country={country}
@@ -122,10 +127,10 @@ export default function AirportBrowser({
 
           <div className="browse-airport-sidebar w-60 shrink-0 flex flex-col">
             <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-              <span className="text-sm font-bold text-slate-900">Pick an airport</span>
+              <span className="text-sm font-bold text-slate-900">{t.pickAirport}</span>
               {browseCountry && (
                 <button onClick={() => setBrowseCountry(null)} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium">
-                  Clear
+                  {t.clear}
                 </button>
               )}
             </div>
@@ -151,7 +156,7 @@ export default function AirportBrowser({
                     )
                   })
               ) : (
-                <p className="text-slate-400 text-sm px-2 pt-1">Select a country to see airports</p>
+                <p className="text-slate-400 text-sm px-2 pt-1">{t.selectCountry}</p>
               )}
             </div>
           </div>

@@ -92,7 +92,7 @@ export function useSearchBox(): SearchBoxState {
     hasFetched.current = true
     setBrowseLoading(true)
     airportsApi.getAll()
-      .then(setAllAirports)
+      .then(airports => setAllAirports(airports.filter(a => a.city?.trim())))
       .catch(() => setAllAirports([]))
       .finally(() => setBrowseLoading(false))
   }, [browseField])

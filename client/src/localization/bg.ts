@@ -17,17 +17,34 @@ export const bg: LocaleSchema = {
   },
 
   search: {
-    tabs: { flights: 'Полети', hotels: 'Хотели', cars: 'Коли' },
-    tripType: 'В една посока',
+    tabs:       { flights: 'Полети', hotels: 'Хотели', cars: 'Коли' },
+    tripType:   'В една посока',
+    roundTrip:  'Отиване и връщане',
+    oneWay:     'В една посока',
     passengers: '1 Пътник',
     fields: {
-      from: { label: 'От', value: 'София', sub: 'SOF' },
-      to: { label: 'До', value: 'Навсякъде', sub: 'Навсякъде' },
-      departure: { label: 'Заминаване', value: '12 Юни, Чет' },
-      return: { label: 'Връщане', value: 'Добави дата' },
+      from:      { label: 'От',         value: 'София',       sub: 'SOF'       },
+      to:        { label: 'До',         value: 'Навсякъде',   sub: 'Навсякъде' },
+      departure: { label: 'Заминаване', value: '12 Юни, Чет'                   },
+      return:    { label: 'Връщане',    value: 'Добави дата'                   },
     },
-    filters: ['Цена', 'Най-добро време', 'Директни полети', 'Багаж', 'Авиолинии'],
-    flexibleDates: 'Гъвкави дати',
+    filters:             ['Цена', 'Най-добро време', 'Директни полети', 'Багаж', 'Авиолинии'],
+    flexibleDates:       'Гъвкави дати',
+    from:                'от',
+    noFlights:           'Няма намерени полети от това летище.',
+    flightsFromAllDates: 'Полети от {city} — всички дати',
+  },
+
+  browse: {
+    loading:            'Зареждане на летища…',
+    originCountry:      'Страна на заминаване',
+    destinationCountry: 'Страна на пристигане',
+    flightsFrom:        'Полети от {city}',
+    popular:            'Популярни',
+    allCountries:       'Всички страни',
+    pickAirport:        'Изберете летище',
+    selectCountry:      'Изберете страна, за да видите летища',
+    clear:              'Изчисти',
   },
 
   aiCopilot: {
