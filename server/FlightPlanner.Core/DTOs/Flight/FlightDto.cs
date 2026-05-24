@@ -15,6 +15,7 @@ namespace FlightPlanner.Core.DTOs.Flight
         public DateTime? DepartureTime { get; set; }
         public DateTime? ArrivalTime { get; set; }
         public decimal Price { get; set; }
+        public int Stops { get; set; }
         public FlightAnalyticsDto? Analytics { get; set; }
     }
 }

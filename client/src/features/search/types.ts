@@ -27,5 +27,6 @@ export interface FlightDto {
   departureTime: string | null
   arrivalTime: string | null
   price: number
+  stops: number
   analytics: FlightAnalytics | null
 }

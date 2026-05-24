@@ -23,6 +23,7 @@ namespace FlightPlanner.Core.Entities
         public DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
         public decimal Price { get; set; }
+        public int Stops { get; set; } = 0;
         public DateTime LastUpdated { get; set; }
         public FlightAnalytics? Analytics { get; set; }
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();

@@ -32,9 +32,9 @@ namespace FlightPlanner.Core.Services
         }
 
         public async Task<IEnumerable<FlightDto>> SearchAsync(
-            string? departureCode, string? arrivalCode, int limit)
+            string? departureCode, string? arrivalCode, DateOnly? date, int limit)
         {
-            var flights = await _flightRepository.SearchAsync(departureCode, arrivalCode, limit);
+            var flights = await _flightRepository.SearchAsync(departureCode, arrivalCode, date, limit);
             return flights.Select(Map);
         }
 
@@ -53,6 +53,7 @@ namespace FlightPlanner.Core.Services
             DepartureTime = f.DepartureTime,
             ArrivalTime = f.ArrivalTime,
             Price = f.Price,
+            Stops = f.Stops,
             Analytics = f.Analytics is null ? null : new FlightAnalyticsDto
             {
                 SmartScore = f.Analytics.SmartScore,

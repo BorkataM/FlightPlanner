@@ -44,7 +44,7 @@ namespace FlightPlanner.Infrastructure.Repositories
                 .ToListAsync();
 
         public async Task<IEnumerable<Flight>> SearchAsync(
-            string? departureCode, string? arrivalCode, int limit)
+            string? departureCode, string? arrivalCode, DateOnly? date, int limit)
         {
             var query = WithIncludes().AsQueryable();
 
@@ -64,7 +64,17 @@ namespace FlightPlanner.Infrastructure.Repositories
                     f.ArrivalAirport.IataCode == code);
             }
 
-            return await query.Take(limit).ToListAsync();
+            if (date.HasValue)
+            {
+                var start = date.Value.ToDateTime(TimeOnly.MinValue);
+                var end   = date.Value.ToDateTime(TimeOnly.MaxValue);
+                query = query.Where(f => f.DepartureTime >= start && f.DepartureTime <= end);
+            }
+
+            return await query
+                .OrderBy(f => f.DepartureTime)
+                .Take(limit)
+                .ToListAsync();
         }
     }
 }

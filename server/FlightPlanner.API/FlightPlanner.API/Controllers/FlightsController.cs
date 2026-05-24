@@ -57,10 +57,11 @@ namespace FlightPlanner.API.Controllers
         public async Task<ActionResult<IEnumerable<FlightDto>>> Search(
             [FromQuery] string? from,
             [FromQuery] string? to,
+            [FromQuery] DateOnly? date,
             [FromQuery] int limit = 20)
         {
             if (limit < 1 || limit > 1000) limit = 100;
-            var flights = await _flightService.SearchAsync(from, to, limit);
+            var flights = await _flightService.SearchAsync(from, to, date, limit);
             return Ok(flights);
         }
     }

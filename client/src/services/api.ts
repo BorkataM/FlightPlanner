@@ -25,6 +25,7 @@ async function post<T>(url: string, body: unknown): Promise<T> {
 export interface FlightSearchParams {
   from?:  string
   to?:    string
+  date?:  string
   limit?: number
 }
 
@@ -50,10 +51,11 @@ export interface AuthResponse {
   lastName:     string
 }
 
-function buildFlightSearchUrl({ from, to, limit }: FlightSearchParams): string {
+function buildFlightSearchUrl({ from, to, date, limit }: FlightSearchParams): string {
   const params = new URLSearchParams()
   if (from)  params.set('from',  from)
   if (to)    params.set('to',    to)
+  if (date)  params.set('date',  date)
   if (limit) params.set('limit', String(limit))
   return `${BASE_URL}/api/flights/search?${params}`
 }
