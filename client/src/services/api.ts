@@ -3,29 +3,46 @@ import type { Airport, FlightDto } from '../features/search/types'
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 const AI_URL   = import.meta.env.VITE_AI_URL  ?? 'http://localhost:8000'
 
-const get = <T>(url: string): Promise<T> =>
-  fetch(url).then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
+async function get<T>(url: string): Promise<T> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(res.statusText)
+  return res.json() as Promise<T>
+}
 
-const post = <T>(url: string, body: unknown): Promise<T> =>
-  fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json())
+async function post<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(body),
+  })
+  return res.json() as Promise<T>
+}
+
+export interface FlightSearchParams {
+  from?:  string
+  to?:    string
+  limit?: number
+}
+
+function buildFlightSearchUrl({ from, to, limit }: FlightSearchParams): string {
+  const params = new URLSearchParams()
+  if (from)  params.set('from',  from)
+  if (to)    params.set('to',    to)
+  if (limit) params.set('limit', String(limit))
+  return `${BASE_URL}/api/flights/search?${params}`
+}
 
 export const airportsApi = {
-  search: (query: string): Promise<Airport[]> =>
-    get(`${BASE_URL}/api/airports/search?query=${encodeURIComponent(query)}`),
-  getAll: (): Promise<Airport[]> =>
-    get(`${BASE_URL}/api/airports`),
+  search: (query: string) =>
+    get<Airport[]>(`${BASE_URL}/api/airports/search?query=${encodeURIComponent(query)}`),
+
+  getAll: () =>
+    get<Airport[]>(`${BASE_URL}/api/airports`),
 }
 
 export const flightsApi = {
-  search: (params: { from?: string; to?: string; limit?: number }): Promise<FlightDto[]> => {
-    const q = new URLSearchParams()
-    if (params.from)  q.set('from', params.from)
-    if (params.to)    q.set('to', params.to)
-    if (params.limit) q.set('limit', String(params.limit))
-    return get(`${BASE_URL}/api/flights/search?${q}`)
-  },
-  smartest: (limit = 10): Promise<FlightDto[]> =>
-    get(`${BASE_URL}/api/flights/smartest?limit=${limit}`),
+  search:   (params: FlightSearchParams) => get<FlightDto[]>(buildFlightSearchUrl(params)),
+  smartest: (limit = 10)                 => get<FlightDto[]>(`${BASE_URL}/api/flights/smartest?limit=${limit}`),
 }
 
 export const aiApi = {

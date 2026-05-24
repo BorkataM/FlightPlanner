@@ -59,7 +59,7 @@ export const en = {
     title:    'Popular destinations',
     subtitle: 'Trending places loved by travelers',
     from:     'from',
-    currency: 'BGN',
+    currency: '€',
   },
 }
 

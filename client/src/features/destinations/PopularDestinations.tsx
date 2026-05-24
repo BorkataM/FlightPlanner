@@ -16,12 +16,12 @@ export default function PopularDestinations() {
     setCards(prev => prev.map((d, i) => (i === idx ? { ...d, liked: !d.liked } : d)))
 
   return (
-    <section className="py-14 border-b border-slate-100" style={{ background: '#FFFFFF' }}>
+    <section className="py-14 border-b border-blue-100" style={{ background: '#FFFFFF' }}>
       <div className="max-w-[1280px] mx-auto px-8">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{t.title}</h2>
-            <p className="text-slate-400 text-sm mt-1">{t.subtitle}</p>
+            <div className="text-xs font-semibold tracking-widest uppercase text-indigo-500 mb-2">{t.subtitle}</div>
+            <h2 className="text-3xl font-extrabold text-slate-900">{t.title}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setOffset(Math.max(0, offset - 1))} disabled={offset === 0}

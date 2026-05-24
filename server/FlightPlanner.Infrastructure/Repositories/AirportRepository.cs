@@ -37,8 +37,8 @@ namespace FlightPlanner.Infrastructure.Repositories
         public async Task<IEnumerable<AirportDto>> GetAllAirportsAsync()
         {
             return await _context.Airports
+                .Where(a => a.IataCode != null && a.IataCode != "")
                 .OrderBy(a => a.Country).ThenBy(a => a.City)
-                .Take(300)
                 .Select(a => new AirportDto
                 {
                     IcaoCode = a.IcaoCode,

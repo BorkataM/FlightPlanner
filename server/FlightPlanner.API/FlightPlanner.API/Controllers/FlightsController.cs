@@ -59,7 +59,7 @@ namespace FlightPlanner.API.Controllers
             [FromQuery] string? to,
             [FromQuery] int limit = 20)
         {
-            if (limit < 1 || limit > 100) limit = 20;
+            if (limit < 1 || limit > 1000) limit = 100;
             var flights = await _flightService.SearchAsync(from, to, limit);
             return Ok(flights);
         }
