@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { Plane, ArrowLeftRight, Calendar, Search, ChevronDown, Users, Loader2 } from 'lucide-react'
 import AirportSelect from './AirportSelect'
 import DateField from './DateField'
@@ -5,6 +6,13 @@ import FlexDatesGrid from './FlexDatesGrid'
 import AirportBrowser from './AirportBrowser'
 import { useSearchBox } from './useSearchBox'
 import { useLocale } from '../../context/LocaleContext'
+
+function toDateStr(d: Date) {
+  const y   = d.getFullYear()
+  const m   = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 const ROUND_TRIP_GRID = 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]'
 const ONE_WAY_GRID    = 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,1fr)]'
@@ -29,7 +37,19 @@ export default function SearchBox() {
   const { t: locale } = useLocale()
   const t             = locale.search
   const sb            = useSearchBox()
+  const navigate      = useNavigate()
   const minReturnDate = calcMinReturnDate(sb.departure)
+  const canSearch     = !!sb.fromAirport && !!sb.toAirport
+
+  const handleSearch = () => {
+    if (!canSearch) return
+    const from = sb.fromAirport!.iataCode ?? sb.fromAirport!.icaoCode
+    const to   = sb.toAirport!.iataCode   ?? sb.toAirport!.icaoCode
+    const params = new URLSearchParams({ from, to, trip: sb.tripType, fromCity: sb.fromAirport!.city, toCity: sb.toAirport!.city })
+    if (sb.departure)                    params.set('departure',  toDateStr(sb.departure))
+    if (sb.returnDate && sb.isRoundTrip) params.set('returnDate', toDateStr(sb.returnDate))
+    navigate(`/search?${params}`)
+  }
 
   return (
     <>
@@ -57,6 +77,8 @@ export default function SearchBox() {
               placeholder={t.fields.from.value}
               value={sb.fromAirport}
               onChange={(a) => { sb.setFromAirport(a); sb.setToAirport(null) }}
+              validCodes={sb.departureCodes}
+              validCodesLoaded={sb.departureCodesLoaded}
               onBrowseOpen={sb.onFromBrowseOpen}
               onBrowseClose={sb.onFromBrowseClose}
               closeSignal={sb.fromCloseSignal}
@@ -73,6 +95,8 @@ export default function SearchBox() {
               value={sb.toAirport}
               onChange={sb.setToAirport}
               fromAirport={sb.fromAirport}
+              validCodes={sb.fromAirport ? sb.destCodes : sb.departureCodes}
+              validCodesLoaded={sb.fromAirport ? true : sb.departureCodesLoaded}
               onBrowseOpen={sb.onToBrowseOpen}
               onBrowseClose={sb.onToBrowseClose}
               closeSignal={sb.toCloseSignal}
@@ -102,7 +126,11 @@ export default function SearchBox() {
           </div>
 
           <div className="flex items-center px-4">
-            <button className="btn-search w-14 h-14 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
+            <button
+              onClick={handleSearch}
+              disabled={!canSearch}
+              className={`btn-search w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 ${canSearch ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}`}
+            >
               <Search className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -115,6 +143,7 @@ export default function SearchBox() {
               setBrowseCountry={sb.setBrowseCountry}
               browseLoading={sb.browseLoading}
               destLoading={sb.destLoading}
+              departureCodesLoaded={sb.departureCodesLoaded}
               allAirports={sb.allAirports}
               destCodes={sb.destCodes}
               departureCodes={sb.departureCodes}
@@ -152,8 +181,8 @@ export default function SearchBox() {
             <p className="text-blue-200 text-sm opacity-70">{t.noFlights}</p>
           )}
           {sb.previewDestinations.length > 0 && (
-            <div className="grid grid-cols-4 gap-2.5">
-              {sb.previewDestinations.slice(0, 16).map(d => {
+            <div className="dest-scroll grid grid-cols-4 gap-2.5 max-h-[280px] overflow-y-auto pr-1">
+              {sb.previewDestinations.map(d => {
                 const airport = sb.destAirports.find(a => (a.iataCode ?? a.icaoCode) === d.code)
                 return (
                   <button key={d.code}

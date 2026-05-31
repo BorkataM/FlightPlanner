@@ -1,33 +1,39 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapPin, Loader2 } from 'lucide-react'
 import { airportsApi, flightsApi } from '../../services/api'
-import { flightsToAirports } from './searchUtils'
+import { flightsToAirports, normalizeAirportQuery } from './searchUtils'
 import type { Airport } from './types'
 
 interface Props {
-  label:          string
-  icon:           React.ReactNode
-  placeholder:    string
-  value:          Airport | null
-  onChange:       (airport: Airport | null) => void
-  fromAirport?:   Airport | null
-  onBrowseOpen?:  () => void
-  onBrowseClose?: () => void
-  closeSignal?:   number
+  label:              string
+  icon:               React.ReactNode
+  placeholder:        string
+  value:              Airport | null
+  onChange:           (airport: Airport | null) => void
+  fromAirport?:       Airport | null
+  validCodes?:        Set<string>
+  validCodesLoaded?:  boolean
+  onBrowseOpen?:      () => void
+  onBrowseClose?:     () => void
+  closeSignal?:       number
 }
 
 export default function AirportSelect({
   label, icon, placeholder, value, onChange,
-  fromAirport, onBrowseOpen, onBrowseClose, closeSignal,
+  fromAirport, validCodes, validCodesLoaded, onBrowseOpen, onBrowseClose, closeSignal,
 }: Props) {
   const [query,   setQuery]   = useState('')
   const [results, setResults] = useState<Airport[]>([])
   const [open,    setOpen]    = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const inputRef     = useRef<HTMLInputElement>(null)
-  const debounce     = useRef<ReturnType<typeof setTimeout>>()
+  const containerRef        = useRef<HTMLDivElement>(null)
+  const inputRef            = useRef<HTMLInputElement>(null)
+  const debounce            = useRef<ReturnType<typeof setTimeout>>()
+  const validCodesRef       = useRef(validCodes)
+  const validCodesLoadedRef = useRef(validCodesLoaded)
+  useEffect(() => { validCodesRef.current       = validCodes       }, [validCodes])
+  useEffect(() => { validCodesLoadedRef.current = validCodesLoaded }, [validCodesLoaded])
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -56,7 +62,13 @@ export default function AirportSelect({
   const searchAirports = useCallback(async (q: string) => {
     if (q.length < 2) { setResults([]); return }
     setLoading(true)
-    try   { setResults(await airportsApi.search(q)) }
+    try {
+      const all    = await airportsApi.search(normalizeAirportQuery(q))
+      const codes  = validCodesRef.current
+      const loaded = validCodesLoadedRef.current
+      if (loaded === false) { setResults([]); return }
+      setResults(codes && codes.size > 0 ? all.filter(a => codes.has(a.iataCode ?? a.icaoCode)) : all)
+    }
     catch { setResults([]) }
     finally { setLoading(false) }
   }, [])

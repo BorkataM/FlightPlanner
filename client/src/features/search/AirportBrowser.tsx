@@ -11,6 +11,7 @@ interface Props {
   setBrowseCountry: Dispatch<SetStateAction<string | null>>
   browseLoading: boolean
   destLoading: boolean
+  departureCodesLoaded: boolean
   allAirports: Airport[]
   destCodes: Set<string>
   departureCodes: Set<string>
@@ -44,7 +45,7 @@ function CountryButton({ country, selected, enabled, onClick }: CountryButtonPro
 
 export default function AirportBrowser({
   browseField, fromAirport, browseCountry, setBrowseCountry,
-  browseLoading, destLoading, allAirports,
+  browseLoading, destLoading, departureCodesLoaded, allAirports,
   destCodes, departureCodes,
   popularEntries, otherEntries, airportsByCountry,
   onSelectAirport,
@@ -55,13 +56,15 @@ export default function AirportBrowser({
 
   const isCountryEnabled = (airports: Airport[]) => {
     if (isToWithFrom) return airports.some(a => destCodes.has(a.iataCode ?? a.icaoCode))
-    return departureCodes.size === 0 || airports.some(a => departureCodes.has(a.iataCode ?? a.icaoCode))
+    if (!departureCodesLoaded) return false
+    return airports.some(a => departureCodes.has(a.iataCode ?? a.icaoCode))
   }
 
   const isAirportEnabled = (a: Airport) => {
     const code = a.iataCode ?? a.icaoCode
     if (isToWithFrom) return destCodes.has(code)
-    return departureCodes.size === 0 || departureCodes.has(code)
+    if (!departureCodesLoaded) return false
+    return departureCodes.has(code)
   }
 
   const toggle = (country: string) => setBrowseCountry(c => c === country ? null : country)
@@ -71,7 +74,7 @@ export default function AirportBrowser({
       onMouseDown={e => e.nativeEvent.stopImmediatePropagation()}
       className="browse-panel absolute top-full left-0 right-0 z-50 rounded-b-2xl flex overflow-hidden"
     >
-      {(browseLoading || destLoading) ? (
+      {(browseLoading || destLoading || (browseField === 'from' && !departureCodesLoaded)) ? (
         <div className="flex items-center gap-2 px-6 py-5 text-slate-400 text-sm">
           <Loader2 className="w-4 h-4 animate-spin" /> {t.loading}
         </div>

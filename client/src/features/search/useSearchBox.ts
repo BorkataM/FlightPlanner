@@ -36,13 +36,14 @@ export interface SearchBoxState {
   browseLoading:    boolean
   destLoading:      boolean
 
-  allAirports:       Airport[]
-  departureCodes:    Set<string>
-  destAirports:      Airport[]
-  destCodes:         Set<string>
-  airportsByCountry: [string, Airport[]][]
-  popularEntries:    [string, Airport[]][]
-  otherEntries:      [string, Airport[]][]
+  allAirports:          Airport[]
+  departureCodes:       Set<string>
+  departureCodesLoaded: boolean
+  destAirports:         Airport[]
+  destCodes:            Set<string>
+  airportsByCountry:    [string, Airport[]][]
+  popularEntries:       [string, Airport[]][]
+  otherEntries:         [string, Airport[]][]
 
   previewDestinations: PreviewDestination[]
   flightsByDate:       Map<string, number>
@@ -73,7 +74,8 @@ export function useSearchBox(): SearchBoxState {
   const [browseLoading,   setBrowseLoading]   = useState(false)
   const [destFlights,     setDestFlights]     = useState<FlightDto[]>([])
   const [destLoading,     setDestLoading]     = useState(false)
-  const [departureCodes,  setDepartureCodes]  = useState<Set<string>>(new Set())
+  const [departureCodes,       setDepartureCodes]       = useState<Set<string>>(new Set())
+  const [departureCodesLoaded, setDepartureCodesLoaded] = useState(false)
   const [routeFlights,    setRouteFlights]    = useState<FlightDto[]>([])
   const [fromCloseSignal, setFromCloseSignal] = useState(0)
   const [toCloseSignal,   setToCloseSignal]   = useState(0)
@@ -82,9 +84,10 @@ export function useSearchBox(): SearchBoxState {
   const isRoundTrip = tripType === 'roundTrip'
 
   useEffect(() => {
-    flightsApi.search({ limit: 1000 })
+    flightsApi.search({ limit: 10000 })
       .then(flights => setDepartureCodes(new Set(flights.map(f => f.departureAirportCode))))
       .catch(() => {})
+      .finally(() => setDepartureCodesLoaded(true))
   }, [])
 
   useEffect(() => {
@@ -213,7 +216,7 @@ export function useSearchBox(): SearchBoxState {
     browseField,
     browseCountry, setBrowseCountry,
     browseLoading, destLoading,
-    allAirports,   departureCodes,
+    allAirports,   departureCodes, departureCodesLoaded,
     destAirports,  destCodes,
     previewDestinations,
     flightsByDate,

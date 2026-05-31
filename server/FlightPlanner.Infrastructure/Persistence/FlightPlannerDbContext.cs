@@ -283,5 +283,110 @@ namespace FlightPlanner.Infrastructure.Persistence
             await context.Flights.AddRangeAsync(flights);
             await context.SaveChangesAsync();
         }
+
+        public static async Task SeedSofiaExtendedFlightsAsync(FlightPlannerDbContext context)
+        {
+            var cutoff = new DateTime(2026, 6, 25, 0, 0, 0, DateTimeKind.Utc);
+
+            var existingCount = await context.Flights
+                .Include(f => f.DepartureAirport)
+                .CountAsync(f => f.DepartureAirport.IataCode == "SOF" && f.DepartureTime >= cutoff);
+            if (existingCount >= 1000) return;
+
+            var sofAirport = await context.Airports.FirstOrDefaultAsync(a => a.IataCode == "SOF");
+            if (sofAirport == null) return;
+
+            var destCodes = new[] { "LHR", "CDG", "FRA", "AMS", "IST", "VIE", "MUC", "ZRH", "WAW", "BCN", "FCO", "MAD", "ATH", "PRG", "DUB", "CPH", "BUD", "OSL", "MXP" };
+            var destAirports = await context.Airports
+                .Where(a => a.IataCode != null && destCodes.Contains(a.IataCode))
+                .ToDictionaryAsync(a => a.IataCode!, a => a);
+
+            var airlines = await context.Airlines.ToDictionaryAsync(a => a.IcaoCode, a => a);
+
+            // (destination IATA, airline ICAO, duration mins, base price EUR)
+            var routes = new (string Dest, string Al, int Dur, decimal Price)[]
+            {
+                ("LHR","LZB",175,89m),  ("LHR","WZZ",175,72m),  ("LHR","EZY",175,68m),
+                ("CDG","LZB",195,95m),  ("CDG","AFR",195,115m), ("CDG","WZZ",195,79m),
+                ("FRA","LZB",185,88m),  ("FRA","DLH",185,130m), ("FRA","WZZ",185,74m),
+                ("AMS","KLM",200,95m),  ("AMS","WZZ",200,72m),  ("AMS","LZB",200,89m),
+                ("IST","LZB",90,55m),   ("IST","THY",90,65m),   ("IST","BGH",90,49m),
+                ("VIE","AUA",100,69m),  ("VIE","WZZ",100,45m),  ("VIE","LZB",100,62m),
+                ("MUC","DLH",150,89m),  ("MUC","LZB",150,79m),  ("MUC","WZZ",150,65m),
+                ("ZRH","SWR",165,105m), ("ZRH","WZZ",165,85m),  ("ZRH","LZB",165,99m),
+                ("WAW","LOT",145,72m),  ("WAW","WZZ",145,49m),  ("WAW","LZB",145,68m),
+                ("BCN","WZZ",225,65m),  ("BCN","EZY",225,72m),  ("BCN","LZB",225,79m),
+                ("FCO","WZZ",160,59m),  ("FCO","EZY",160,65m),  ("FCO","LZB",160,74m),
+                ("MAD","WZZ",260,79m),  ("MAD","EZY",260,85m),  ("MAD","LZB",260,95m),
+                ("ATH","LZB",80,55m),   ("ATH","BGH",80,49m),   ("ATH","WZZ",80,44m),
+                ("PRG","WZZ",145,49m),  ("PRG","EZY",145,55m),  ("PRG","LZB",145,62m),
+                ("DUB","RYR",270,45m),  ("DUB","WZZ",270,55m),  ("DUB","LZB",270,79m),
+                ("CPH","SAS",195,89m),  ("CPH","WZZ",195,72m),  ("CPH","LZB",195,85m),
+                ("BUD","WZZ",100,39m),  ("BUD","BGH",100,44m),  ("BUD","LZB",100,55m),
+                ("OSL","WZZ",230,79m),  ("OSL","SAS",230,99m),  ("OSL","LZB",230,89m),
+                ("MXP","WZZ",180,59m),  ("MXP","EZY",180,65m),  ("MXP","LZB",180,74m),
+            };
+
+            var rng = new Random(1337);
+            int[] hours = { 6, 11, 16, 20 };
+            var flights = new List<Flight>();
+            var counter = 20000;
+
+            // 26 weeks (~6 months) of flights from 25.06.2026
+            for (int week = 0; week < 26; week++)
+            {
+                for (int ri = 0; ri < routes.Length; ri++)
+                {
+                    var r = routes[ri];
+                    if (!destAirports.TryGetValue(r.Dest, out var destAirport)) continue;
+                    airlines.TryGetValue(r.Al, out var airline);
+
+                    // Rotate which departure slot is skipped so not every airline flies at identical times
+                    int skipSlot = (week + ri) % 4;
+
+                    for (int si = 0; si < hours.Length; si++)
+                    {
+                        if (si == skipSlot) continue;
+                        var h = hours[si];
+
+                        var dep = cutoff
+                            .AddDays(week * 7 + rng.Next(0, 3))
+                            .AddHours(h)
+                            .AddMinutes(rng.Next(0, 55));
+                        var arr = dep.AddMinutes(r.Dur + rng.Next(-5, 25));
+                        var factor = 0.75 + rng.NextDouble() * 0.65;
+                        var price = Math.Round(Math.Max(19m, r.Price * (decimal)factor), 2);
+                        var smart = 35 + rng.NextDouble() * 60;
+
+                        flights.Add(new Flight
+                        {
+                            FlightNumber = $"{r.Al}{counter++:D5}",
+                            AirlineId = airline?.Id,
+                            DepartureAirportId = sofAirport.Id,
+                            ArrivalAirportId = destAirport.Id,
+                            DepartureTime = dep,
+                            ArrivalTime = arr,
+                            Price = price,
+                            LastUpdated = DateTime.UtcNow,
+                            Analytics = new FlightAnalytics
+                            {
+                                BasePrice = r.Price,
+                                DelayProbability = rng.NextDouble() * 0.35,
+                                PredictedDelayMinutes = rng.Next(0, 45),
+                                Co2Emissions = r.Dur * 0.14 + rng.NextDouble() * 15,
+                                FuelEfficiency = 75 + rng.NextDouble() * 25,
+                                SmartScore = smart,
+                                IsEcoFriendly = smart > 70,
+                                IsBestValue = price < r.Price * 0.95m,
+                            }
+                        });
+                    }
+                }
+            }
+
+            await context.Flights.AddRangeAsync(flights);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"[Seed] Added {flights.Count} extended SOF flights starting 25.06.2026.");
+        }
     }
 }

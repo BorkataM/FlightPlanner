@@ -60,7 +60,7 @@ namespace FlightPlanner.API.Controllers
             [FromQuery] DateOnly? date,
             [FromQuery] int limit = 20)
         {
-            if (limit < 1 || limit > 1000) limit = 100;
+            if (limit < 1 || limit > 10000) limit = 100;
             var flights = await _flightService.SearchAsync(from, to, date, limit);
             return Ok(flights);
         }
