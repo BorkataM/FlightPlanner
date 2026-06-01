@@ -159,6 +159,16 @@
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.18);
 }
+/* horizontal tab strip — results page */
+.results-tab-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203,213,225,0.8) transparent;
+}
+.results-tab-scroll::-webkit-scrollbar        { height: 3px; }
+.results-tab-scroll::-webkit-scrollbar-track  { background: transparent; }
+.results-tab-scroll::-webkit-scrollbar-thumb  { background: rgba(203,213,225,0.8); border-radius: 99px; }
+.results-tab-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.9); }
+
 .dest-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.25) transparent;

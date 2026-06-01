@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Plane, ChevronLeft, Loader2 } from 'lucide-react'
+import { Plane, ChevronLeft, ChevronRight, Loader2, Info } from 'lucide-react'
 import { flightsApi } from '../services/api'
 import type { FlightDto } from '../features/search/types'
+import { useAuth } from '../context/AuthContext'
+import AuthModal from '../components/auth/AuthModal'
 
 type Sort  = 'cheapest' | 'fastest' | 'best'
 type Badge = 'CHEAPEST' | 'FASTEST' | 'BEST' | 'ECO'
@@ -16,92 +18,144 @@ interface Combo {
   badges:        Badge[]
 }
 
-function toDateKey(s: string) { return s.slice(0, 10) }
+/* ── helpers ─────────────────────────────────────────────────── */
+const toDateKey = (s: string) => s.slice(0, 10)
 
 function durationMin(f: FlightDto) {
   if (!f.departureTime || !f.arrivalTime) return Infinity
   return (new Date(f.arrivalTime).getTime() - new Date(f.departureTime).getTime()) / 60000
 }
 
-function fmtTime(s: string | null) {
+const fmtTime = (s?: string | null) => {
   if (!s) return '—'
   const d = new Date(s)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-function fmtDur(min: number) {
-  if (!isFinite(min)) return '—'
-  return `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m`
+const fmtDur = (min: number) =>
+  isFinite(min) ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m` : '—'
+
+const fmtTabDate = (s: string) =>
+  new Date(s + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+
+const fmtLegDate = (s?: string | null) =>
+  s ? new Date(s).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
+
+/* ── badge styles ────────────────────────────────────────────── */
+const BADGE_CLASS: Record<Badge, string> = {
+  CHEAPEST: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  FASTEST:  'bg-sky-50     text-sky-700     border border-sky-200',
+  BEST:     'bg-violet-50  text-violet-700  border border-violet-200',
+  ECO:      'bg-teal-50    text-teal-700    border border-teal-200',
 }
 
-function fmtTab(s: string) {
-  const d = new Date(s + 'T00:00:00')
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-
-const BADGE_STYLE: Record<Badge, string> = {
-  CHEAPEST: 'bg-green-100  text-green-700',
-  FASTEST:  'bg-blue-100   text-blue-700',
-  BEST:     'bg-purple-100 text-purple-700',
-  ECO:      'bg-emerald-100 text-emerald-700',
-}
-
-function FlightLeg({ flight, label }: { flight: FlightDto; label?: string }) {
+/* ── FlightLeg ───────────────────────────────────────────────── */
+function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outbound' | 'Return' }) {
   const dur = durationMin(flight)
   return (
-    <div className="flex items-center gap-4">
-      {label && <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-widest w-16 shrink-0">{label}</span>}
-      <div className="text-center w-14 shrink-0">
-        <div className="text-lg font-bold text-slate-900 leading-none">{fmtTime(flight.departureTime)}</div>
-        <div className="text-xs text-slate-400 mt-0.5">{flight.departureAirportCode}</div>
+    <div className="py-4 px-6">
+      {/* date + label row */}
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="text-[12px] font-semibold text-slate-400 tracking-wide">
+          {fmtLegDate(flight.departureTime)}
+        </span>
+        {direction && (
+          <span className={`text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full border ${
+            direction === 'Outbound'
+              ? 'bg-blue-50 text-blue-500 border-blue-100'
+              : 'bg-violet-50 text-violet-500 border-violet-100'
+          }`}>
+            {direction}
+          </span>
+        )}
       </div>
-      <div className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
-        <div className="text-xs text-slate-400">{fmtDur(dur)}</div>
-        <div className="w-full flex items-center gap-1">
-          <div className="flex-1 h-px bg-slate-200" />
-          <Plane className="w-3 h-3 text-slate-400 rotate-90 shrink-0" />
-          <div className="flex-1 h-px bg-slate-200" />
+
+      {/* timeline */}
+      <div className="flex items-center gap-4">
+        {/* departure */}
+        <div className="shrink-0 w-16">
+          <div className="text-[22px] font-black text-slate-900 leading-none tabular-nums">
+            {fmtTime(flight.departureTime)}
+          </div>
+          <div className="text-[11px] font-bold text-slate-400 tracking-wider mt-1">
+            {flight.departureAirportCode}
+          </div>
         </div>
-        <div className="text-xs text-slate-400">{flight.stops === 0 ? 'Direct' : `${flight.stops} stop`}</div>
-      </div>
-      <div className="text-center w-14 shrink-0">
-        <div className="text-lg font-bold text-slate-900 leading-none">{fmtTime(flight.arrivalTime)}</div>
-        <div className="text-xs text-slate-400 mt-0.5">{flight.arrivalAirportCode}</div>
-      </div>
-      <div className="text-right shrink-0 min-w-0 hidden sm:block">
-        <div className="text-sm text-slate-500 truncate">{flight.airlineName}</div>
-        <div className="text-xs text-slate-400">{flight.flightNumber}</div>
+
+        {/* duration bar */}
+        <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
+          <span className="text-[11px] text-slate-400 font-medium">{fmtDur(dur)}</span>
+          <div className="w-full flex items-center gap-1.5">
+            <div className="flex-1 h-px bg-slate-200" />
+            <div className="w-6 h-6 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
+              <Plane className="w-3 h-3 text-slate-400 rotate-90" />
+            </div>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+          <span className="text-[11px] text-slate-400">
+            {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
+          </span>
+        </div>
+
+        {/* arrival */}
+        <div className="shrink-0 w-16 text-right">
+          <div className="text-[22px] font-black text-slate-900 leading-none tabular-nums">
+            {fmtTime(flight.arrivalTime)}
+          </div>
+          <div className="text-[11px] font-bold text-slate-400 tracking-wider mt-1">
+            {flight.arrivalAirportCode}
+          </div>
+        </div>
+
+        {/* airline */}
+        <div className="shrink-0 ml-3 text-right hidden sm:block w-28">
+          <div className="text-[13px] font-semibold text-slate-600 truncate">{flight.airlineName}</div>
+          <div className="text-[11px] font-mono text-slate-400 mt-0.5">{flight.flightNumber}</div>
+        </div>
       </div>
     </div>
   )
 }
 
-function FlightCard({ combo, isRoundTrip }: { combo: Combo; isRoundTrip: boolean }) {
+/* ── FlightCard ──────────────────────────────────────────────── */
+function FlightCard({ combo, isRoundTrip, onSelect }: { combo: Combo; isRoundTrip: boolean; onSelect: () => void }) {
+  const priceLabel = isRoundTrip && combo.ret ? 'total · both legs'
+                   : isRoundTrip             ? 'outbound only'
+                   :                           'per person'
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
-      {combo.badges.length > 0 && (
-        <div className="flex gap-2 mb-3">
-          {combo.badges.map(b => (
-            <span key={b} className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${BADGE_STYLE[b]}`}>{b}</span>
-          ))}
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-200 overflow-hidden flex">
+      {/* left: flight details */}
+      <div className="flex-1 min-w-0">
+        {combo.badges.length > 0 && (
+          <div className="flex gap-1.5 px-6 pt-4">
+            {combo.badges.map(b => (
+              <span key={b} className={`text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full ${BADGE_CLASS[b]}`}>
+                {b}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <FlightLeg flight={combo.outbound} direction={isRoundTrip ? 'Outbound' : undefined} />
+
+        {isRoundTrip && combo.ret && (
+          <>
+            <div className="mx-6 border-t border-dashed border-slate-100" />
+            <FlightLeg flight={combo.ret} direction="Return" />
+          </>
+        )}
+      </div>
+
+      {/* right: price panel */}
+      <div className="w-44 shrink-0 flex flex-col items-center justify-center gap-4 py-6 px-5 border-l border-slate-100 bg-gradient-to-b from-slate-50/80 to-white">
+        <div className="text-center">
+          <div className="text-[32px] font-black text-slate-900 leading-none tabular-nums">
+            €{Math.round(combo.totalPrice)}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1.5 font-medium">{priceLabel}</div>
         </div>
-      )}
-
-      <FlightLeg flight={combo.outbound} label={isRoundTrip ? 'Outbound' : undefined} />
-
-      {isRoundTrip && combo.ret && (
-        <>
-          <div className="border-t border-dashed border-slate-100 my-4" />
-          <FlightLeg flight={combo.ret} label="Return" />
-        </>
-      )}
-
-      <div className="flex items-end justify-between mt-4 pt-3 border-t border-slate-100">
-        <div>
-          <div className="text-2xl font-extrabold text-slate-900">€{Math.round(combo.totalPrice)}</div>
-          <div className="text-xs text-slate-400">{isRoundTrip ? 'total · both legs' : 'per person'}</div>
-        </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors active:scale-95">
+        <button onClick={onSelect} className="w-full py-2.5 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
           Select
         </button>
       </div>
@@ -109,9 +163,11 @@ function FlightCard({ combo, isRoundTrip }: { combo: Combo; isRoundTrip: boolean
   )
 }
 
+/* ── Page ────────────────────────────────────────────────────── */
 export default function SearchResultsPage() {
   const [searchParams] = useSearchParams()
-  const navigate       = useNavigate()
+  const navigate = useNavigate()
+  const { user }  = useAuth()
 
   const from      = searchParams.get('from')      ?? ''
   const to        = searchParams.get('to')        ?? ''
@@ -125,10 +181,15 @@ export default function SearchResultsPage() {
   const [outbound, setOutbound] = useState<FlightDto[]>([])
   const [returns,  setReturns]  = useState<FlightDto[]>([])
   const [loading,  setLoading]  = useState(true)
+  const [allDates, setAllDates] = useState(!depParam)
   const [selDep,   setSelDep]   = useState<string | null>(depParam ?? null)
   const [selRet,   setSelRet]   = useState<string | null>(retParam ?? null)
   const [sort,     setSort]     = useState<Sort>('cheapest')
+  const [showAuth,     setShowAuth]     = useState(false)
+  const [pendingCombo, setPendingCombo] = useState<Combo | null>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
 
+  /* fetch */
   useEffect(() => {
     if (!from || !to) return
     setLoading(true)
@@ -141,6 +202,7 @@ export default function SearchResultsPage() {
       .finally(() => setLoading(false))
   }, [from, to, isRoundTrip])
 
+  /* price map */
   const priceByDate = useMemo(() => {
     const map = new Map<string, number>()
     outbound.forEach(f => {
@@ -154,28 +216,33 @@ export default function SearchResultsPage() {
 
   const availDates = useMemo(() => Array.from(priceByDate.keys()).sort(), [priceByDate])
 
+  /* auto-select nearest date (skip when in allDates mode) */
   useEffect(() => {
-    if (availDates.length === 0) return
+    if (allDates || availDates.length === 0) return
     if (selDep && priceByDate.has(selDep)) return
     if (!selDep) { setSelDep(availDates[0]); return }
-    const selTime = new Date(selDep).getTime()
-    const nearest = availDates.reduce((best, cur) =>
-      Math.abs(new Date(cur).getTime() - selTime) < Math.abs(new Date(best).getTime() - selTime) ? cur : best
-    )
-    setSelDep(nearest)
-  }, [availDates, selDep, priceByDate])
+    const t = new Date(selDep).getTime()
+    setSelDep(availDates.reduce((b, c) =>
+      Math.abs(new Date(c).getTime() - t) < Math.abs(new Date(b).getTime() - t) ? c : b
+    ))
+  }, [availDates, selDep, priceByDate, allDates])
 
+  /* visible tab window (7 tabs centred around current) */
   const dateTabs = useMemo(() => {
-    if (availDates.length === 0) return []
-    const idx = selDep ? Math.max(0, availDates.findIndex(d => d >= selDep)) : 0
+    if (!availDates.length) return []
+    const idx   = selDep ? Math.max(0, availDates.findIndex(d => d >= selDep)) : 0
     const start = Math.max(0, idx - 3)
     return availDates.slice(start, start + 7)
   }, [availDates, selDep])
 
+  /* filtered outbound */
   const outFiltered = useMemo(() =>
-    selDep ? outbound.filter(f => f.departureTime && toDateKey(f.departureTime) === selDep) : outbound
-  , [outbound, selDep])
+    !allDates && selDep
+      ? outbound.filter(f => f.departureTime && toDateKey(f.departureTime) === selDep)
+      : outbound
+  , [outbound, allDates, selDep])
 
+  /* return maps */
   const cheapestRetByDate = useMemo(() => {
     const map = new Map<string, FlightDto>()
     returns.forEach(f => {
@@ -190,34 +257,46 @@ export default function SearchResultsPage() {
   const retDates = useMemo(() => Array.from(cheapestRetByDate.keys()).sort(), [cheapestRetByDate])
 
   useEffect(() => {
-    if (!isRoundTrip || retDates.length === 0) return
+    if (!isRoundTrip || !retDates.length) return
     if (selRet && cheapestRetByDate.has(selRet)) return
     setSelRet(retDates[0])
   }, [retDates, selRet, cheapestRetByDate, isRoundTrip])
 
+  /* cheapest return overall — fallback when selRet has no match */
+  const cheapestRetOverall = useMemo(() =>
+    isRoundTrip
+      ? returns.reduce<FlightDto | null>((best, f) => !best || f.price < best.price ? f : best, null)
+      : null
+  , [returns, isRoundTrip])
+
+  /* combos */
   const combos = useMemo<Combo[]>(() => {
-    const bestRet = selRet ? cheapestRetByDate.get(selRet) ?? null : null
+    const bestRet = isRoundTrip
+      ? (selRet ? (cheapestRetByDate.get(selRet) ?? cheapestRetOverall) : cheapestRetOverall)
+      : null
+    const useRet  = isRoundTrip
+
     const raw: Combo[] = outFiltered.map(f => ({
       outbound:      f,
-      ret:           isRoundTrip ? bestRet : null,
-      totalPrice:    f.price + (bestRet?.price ?? 0),
-      totalDuration: durationMin(f) + (bestRet ? durationMin(bestRet) : 0),
+      ret:           useRet && bestRet ? bestRet : null,
+      totalPrice:    f.price + (useRet && bestRet ? Number(bestRet.price) : 0),
+      totalDuration: durationMin(f) + (useRet && bestRet ? durationMin(bestRet) : 0),
       smartScore:    f.analytics?.smartScore ?? null,
-      badges:        [],
+      badges:        [] as Badge[],
     }))
 
-    if (raw.length === 0) return []
+    if (!raw.length) return []
 
-    const minPrice    = Math.min(...raw.map(c => c.totalPrice))
-    const minDur      = Math.min(...raw.map(c => c.totalDuration))
-    const maxScore    = Math.max(...raw.map(c => c.smartScore ?? 0))
-    let cheapDone = false, fastDone = false, bestDone = false
+    const minPrice = Math.min(...raw.map(c => c.totalPrice))
+    const minDur   = Math.min(...raw.map(c => c.totalDuration))
+    const maxScore = Math.max(...raw.map(c => c.smartScore ?? 0))
+    let cd = false, fd = false, bd = false
 
     raw.forEach(c => {
-      if (!cheapDone && c.totalPrice === minPrice)   { c.badges.push('CHEAPEST'); cheapDone = true }
-      if (!fastDone  && c.totalDuration === minDur)  { c.badges.push('FASTEST');  fastDone  = true }
-      if (!bestDone  && maxScore > 0 && c.smartScore === maxScore) { c.badges.push('BEST'); bestDone = true }
-      if (c.outbound.analytics?.isEcoFriendly && c.badges.length === 0) c.badges.push('ECO')
+      if (!cd && c.totalPrice    === minPrice) { c.badges.push('CHEAPEST'); cd = true }
+      if (!fd && c.totalDuration === minDur)   { c.badges.push('FASTEST');  fd = true }
+      if (!bd && maxScore > 0 && c.smartScore === maxScore) { c.badges.push('BEST'); bd = true }
+      if (c.outbound.analytics?.isEcoFriendly && !c.badges.length) c.badges.push('ECO')
     })
 
     return [...raw].sort((a, b) =>
@@ -225,109 +304,220 @@ export default function SearchResultsPage() {
       sort === 'fastest'  ? a.totalDuration - b.totalDuration :
       (b.smartScore ?? 0) - (a.smartScore ?? 0)
     )
-  }, [outFiltered, isRoundTrip, cheapestRetByDate, selRet, sort])
+  }, [outFiltered, selRet, cheapestRetByDate, cheapestRetOverall, isRoundTrip, sort])
 
   const handleTabClick = (date: string) => {
+    setAllDates(false)
     const oldIdx = dateTabs.indexOf(selDep ?? '')
     const newIdx = dateTabs.indexOf(date)
     const offset = newIdx - oldIdx
     setSelDep(date)
     if (isRoundTrip && selRet && offset !== 0) {
-      const retIdx    = retDates.indexOf(selRet)
-      const newRetIdx = Math.max(0, Math.min(retDates.length - 1, retIdx + offset))
-      setSelRet(retDates[newRetIdx] ?? selRet)
+      const ri = retDates.indexOf(selRet)
+      setSelRet(retDates[Math.max(0, Math.min(retDates.length - 1, ri + offset))] ?? selRet)
     }
   }
 
+  const goToBooking = (combo: Combo, token: string) =>
+    navigate('/booking', {
+      state: { outbound: combo.outbound, ret: combo.ret, totalPrice: combo.totalPrice, isRoundTrip, fromCity, toCity, token },
+    })
+
+  const handleSelect = (combo: Combo) => {
+    if (user) {
+      goToBooking(combo, user.token)
+    } else {
+      setPendingCombo(combo)
+      setShowAuth(true)
+    }
+  }
+
+  const scrollTabs = (dir: -1 | 1) =>
+    tabsRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' })
+
+  const minPrice = priceByDate.size ? Math.min(...priceByDate.values()) : 0
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <button onClick={() => navigate('/')}
+
+      {/* ── sticky header ── */}
+      <div className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-20 shadow-sm">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <button
+            onClick={() => {
+              try {
+                sessionStorage.setItem('skywave_last_search', JSON.stringify({
+                  fromAirport: { iataCode: from, icaoCode: from, city: fromCity, name: fromCity, country: '' },
+                  toAirport:   { iataCode: to,   icaoCode: to,   city: toCity,   name: toCity,   country: '' },
+                  tripType:    trip,
+                  departure:   depParam,
+                  returnDate:  retParam,
+                }))
+              } catch { /* ignore */ }
+              navigate('/')
+            }}
             className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium">
             <ChevronLeft className="w-4 h-4" /> Modify search
           </button>
-          <div className="text-slate-900 font-semibold text-sm">
-            {fromCity} → {toCity} · {isRoundTrip ? 'Round trip' : 'One way'}
+          <div className="text-base font-bold text-slate-900">
+            {fromCity} → {toCity}
+            <span className="ml-2 text-sm font-normal text-slate-400">
+              · {isRoundTrip ? 'Round trip' : 'One way'}
+            </span>
           </div>
           <div className="w-32" />
         </div>
       </div>
 
-      {dateTabs.length > 0 && (
+      {/* ── outbound date tabs ── */}
+      {availDates.length > 0 && (
         <div className="bg-white border-b border-slate-100">
-          <div className="max-w-4xl mx-auto flex overflow-x-auto">
-            {dateTabs.map(date => {
-              const price  = priceByDate.get(date)
-              const active = date === selDep
-              return (
-                <button key={date} onClick={() => handleTabClick(date)}
-                  className={`flex flex-col items-center px-5 py-3 border-b-2 transition-colors shrink-0 ${
-                    active ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="text-xs font-medium">{fmtTab(date)}</span>
-                  {price !== undefined && (
-                    <span className="text-sm font-bold mt-0.5">€{Math.round(price)}</span>
-                  )}
-                </button>
-              )
-            })}
+          <div className="max-w-5xl mx-auto flex items-center">
+            <button onClick={() => scrollTabs(-1)}
+              className="p-3 text-slate-400 hover:text-slate-700 transition-colors shrink-0">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div ref={tabsRef} className="results-tab-scroll flex overflow-x-auto">
+              {/* All dates tab */}
+              <button onClick={() => { setAllDates(true); setSelDep(null) }}
+                className={`flex flex-col items-center px-5 py-3.5 border-b-2 transition-all shrink-0 ${
+                  allDates
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-400 hover:text-slate-700'
+                }`}
+              >
+                <span className="text-xs font-bold whitespace-nowrap">All dates</span>
+                {minPrice > 0 && (
+                  <span className="text-xs font-semibold mt-0.5 opacity-80">
+                    from €{Math.round(minPrice)}
+                  </span>
+                )}
+              </button>
+
+              {dateTabs.map(date => {
+                const price  = priceByDate.get(date)
+                const active = !allDates && date === selDep
+                return (
+                  <button key={date} onClick={() => handleTabClick(date)}
+                    className={`flex flex-col items-center px-5 py-3.5 border-b-2 transition-all shrink-0 ${
+                      active
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <span className="text-xs font-semibold whitespace-nowrap">{fmtTabDate(date)}</span>
+                    {price !== undefined && (
+                      <span className={`text-sm font-bold mt-0.5 ${active ? '' : 'text-slate-700'}`}>
+                        €{Math.round(price)}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            <button onClick={() => scrollTabs(1)}
+              className="p-3 text-slate-400 hover:text-slate-700 transition-colors shrink-0">
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
+      {/* ── return date chips ── */}
       {isRoundTrip && retDates.length > 0 && (
         <div className="bg-white border-b border-slate-100">
-          <div className="max-w-4xl mx-auto flex items-center gap-2 px-4 py-2.5 overflow-x-auto">
-            <span className="text-xs text-slate-400 font-medium shrink-0">Return:</span>
+          <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 overflow-x-auto results-tab-scroll">
+            <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 shrink-0">
+              Return
+            </span>
             {retDates.slice(0, 10).map(date => (
               <button key={date} onClick={() => setSelRet(date)}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors shrink-0 ${
+                className={`text-xs px-3.5 py-1.5 rounded-full border font-semibold transition-all shrink-0 whitespace-nowrap ${
                   date === selRet
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'border-slate-200 text-slate-600 hover:border-blue-300'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'
                 }`}
               >
-                {fmtTab(date)} · €{Math.round(cheapestRetByDate.get(date)!.price)}
+                {fmtTabDate(date)} · €{Math.round(cheapestRetByDate.get(date)!.price)}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 pt-5 pb-10">
-        <div className="flex items-center gap-2 mb-4">
+      {/* ── no return flights notice ── */}
+      {isRoundTrip && !loading && returns.length === 0 && (
+        <div className="bg-amber-50 border-b border-amber-100">
+          <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 text-sm text-amber-700">
+            <Info className="w-4 h-4 shrink-0" />
+            No return flights found for <strong>{toCity} → {fromCity}</strong>. Showing outbound prices only.
+          </div>
+        </div>
+      )}
+
+      {/* ── results ── */}
+      <div className="max-w-5xl mx-auto px-4 pt-5 pb-12">
+        {/* sort + count */}
+        <div className="flex items-center gap-2 mb-5">
           {(['cheapest', 'fastest', 'best'] as Sort[]).map(s => (
             <button key={s} onClick={() => setSort(s)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors capitalize ${
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all capitalize ${
                 sort === s
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-slate-500 border border-slate-200 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
               {s}
             </button>
           ))}
-          <span className="ml-auto text-sm text-slate-400">
-            {loading ? '' : `${combos.length} result${combos.length !== 1 ? 's' : ''}`}
+          <span className="ml-auto text-sm text-slate-400 font-medium">
+            {!loading && `${combos.length} result${combos.length !== 1 ? 's' : ''}`}
           </span>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-24 text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin" /> Loading flights…
+          <div className="flex flex-col items-center justify-center gap-3 py-36 text-slate-400">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-sm font-medium">Searching flights…</span>
           </div>
         ) : combos.length === 0 ? (
-          <div className="text-center py-24 text-slate-400">No flights found for this route.</div>
+          <div className="flex flex-col items-center justify-center py-36 gap-2 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+              <Plane className="w-7 h-7 text-slate-300" />
+            </div>
+            <p className="text-slate-700 font-bold text-lg">No flights found</p>
+            <p className="text-slate-400 text-sm">Try different dates or tap "All dates"</p>
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             {combos.map((combo, i) => (
-              <FlightCard key={`${combo.outbound.id}_${i}`} combo={combo} isRoundTrip={isRoundTrip} />
+              <FlightCard
+                key={`${combo.outbound.id}_${i}`}
+                combo={combo}
+                isRoundTrip={isRoundTrip}
+                onSelect={() => handleSelect(combo)}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {showAuth && (
+        <AuthModal
+          onClose={() => { setShowAuth(false); setPendingCombo(null) }}
+          onSuccess={(_type) => {
+            setShowAuth(false)
+            if (pendingCombo) {
+              const stored = localStorage.getItem('skywave_user')
+              const token  = stored ? (JSON.parse(stored) as { token: string }).token : ''
+              goToBooking(pendingCombo, token)
+            }
+            setPendingCombo(null)
+          }}
+        />
+      )}
     </div>
   )
 }

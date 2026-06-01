@@ -60,13 +60,26 @@ export interface SearchBoxState {
   onToBrowseClose:      () => void
 }
 
+function loadSavedSearch() {
+  try {
+    const raw = sessionStorage.getItem('skywave_last_search')
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
 export function useSearchBox(): SearchBoxState {
-  const [tripType,    setTripType]    = useState<TripType>('roundTrip')
+  const [tripType,    setTripType]    = useState<TripType>(() => loadSavedSearch()?.tripType ?? 'roundTrip')
   const [flexDates,   setFlexDates]   = useState(true)
-  const [fromAirport, setFromAirport] = useState<Airport | null>(null)
-  const [toAirport,   setToAirport]   = useState<Airport | null>(null)
-  const [departure,   setDeparture]   = useState<Date | null>(null)
-  const [returnDate,  setReturnDate]  = useState<Date | null>(null)
+  const [fromAirport, setFromAirport] = useState<Airport | null>(() => loadSavedSearch()?.fromAirport ?? null)
+  const [toAirport,   setToAirport]   = useState<Airport | null>(() => loadSavedSearch()?.toAirport ?? null)
+  const [departure,   setDeparture]   = useState<Date | null>(() => {
+    const d = loadSavedSearch()?.departure
+    return d ? new Date(d + 'T00:00:00') : null
+  })
+  const [returnDate,  setReturnDate]  = useState<Date | null>(() => {
+    const d = loadSavedSearch()?.returnDate
+    return d ? new Date(d + 'T00:00:00') : null
+  })
 
   const [browseField,     setBrowseField]     = useState<'from' | 'to' | null>(null)
   const [browseCountry,   setBrowseCountry]   = useState<string | null>(null)

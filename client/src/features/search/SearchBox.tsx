@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Plane, ArrowLeftRight, Calendar, Search, ChevronDown, Users, Loader2 } from 'lucide-react'
+import { Plane, ArrowLeftRight, Calendar, Search, ChevronDown, Users, Loader2, X } from 'lucide-react'
 import AirportSelect from './AirportSelect'
 import DateField from './DateField'
 import FlexDatesGrid from './FlexDatesGrid'
@@ -40,6 +40,14 @@ export default function SearchBox() {
   const navigate      = useNavigate()
   const minReturnDate = calcMinReturnDate(sb.departure)
   const canSearch     = !!sb.fromAirport && !!sb.toAirport
+  const hasSearch     = !!(sb.fromAirport || sb.toAirport || sb.departure || sb.returnDate)
+
+  const handleClear = () => {
+    sb.setFromAirport(null)
+    sb.setToAirport(null)
+    sb.setDeparture(null)
+    sb.setReturnDate(null)
+  }
 
   const handleSearch = () => {
     if (!canSearch) return
@@ -159,7 +167,15 @@ export default function SearchBox() {
           <div className="flex items-center gap-5">
             {t.filters.map(f => <FilterChip key={f} label={f} />)}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            {hasSearch && (
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-500 transition-colors"
+              >
+                <X className="w-3 h-3" /> Clear search
+              </button>
+            )}
             <span className="text-xs text-slate-500 font-medium">{t.flexibleDates}</span>
             <button onClick={() => sb.setFlexDates(!sb.flexDates)}
               className={`relative w-9 h-5 rounded-full transition-colors ${sb.flexDates ? 'bg-blue-500' : 'bg-gray-600'}`}>

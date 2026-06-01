@@ -63,7 +63,7 @@ export interface LocaleSchema {
 export const en: LocaleSchema = {
   navbar: {
     brand:      'SkyWave',
-    links:      ['Flights', 'Hotels', 'Offers', 'Explore', 'Travel Guide'],
+    links:      ['Flights', 'Hotels', 'Offers', 'Explore', 'My Bookings'],
     activeLink: 'Flights',
     language:   'EN',
     signIn:     'Sign in',

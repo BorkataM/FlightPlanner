@@ -3,6 +3,9 @@ import { AuthProvider } from './context/AuthContext'
 import { LocaleProvider } from './context/LocaleContext'
 import LandingPage from './pages/LandingPage'
 import SearchResultsPage from './pages/SearchResultsPage'
+import BookingPage from './pages/BookingPage'
+import MyBookingsPage from './pages/MyBookingsPage'
+import BoardingPassPage from './pages/BoardingPassPage'
 
 function App() {
   return (
@@ -10,8 +13,11 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/"       element={<LandingPage />} />
-            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/"            element={<LandingPage />} />
+            <Route path="/search"      element={<SearchResultsPage />} />
+            <Route path="/booking"     element={<BookingPage />} />
+            <Route path="/my-bookings"   element={<MyBookingsPage />} />
+            <Route path="/boarding-pass" element={<BoardingPassPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

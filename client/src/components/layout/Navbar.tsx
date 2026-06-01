@@ -1,19 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
 import { Globe, Heart, ChevronDown, LogOut, Check } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import SkyWaveLogo from '../../assets/logo/SkyWaveLogo'
 import { useAuth } from '../../context/AuthContext'
 import { useLocale, LANGUAGES } from '../../context/LocaleContext'
 import type { LocaleCode } from '../../context/LocaleContext'
 
+const MY_BOOKINGS_LABELS = new Set(['My Bookings', 'Моите резервации'])
+
 interface NavLinkProps {
-  label:   string
-  active?: boolean
+  label:    string
+  active?:  boolean
+  onClick?: () => void
 }
 
-function NavLink({ label, active = false }: NavLinkProps) {
+function NavLink({ label, active = false, onClick }: NavLinkProps) {
   return (
     <a
       href="#"
+      onClick={e => { e.preventDefault(); onClick?.() }}
       className={`text-sm font-medium transition-colors ${
         active
           ? 'text-indigo-700 border-b-2 border-indigo-600 pb-0.5'
@@ -82,7 +87,8 @@ interface NavbarProps {
 export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
   const { user }                    = useAuth()
   const { t: locale, locale: code, setLocale } = useLocale()
-  const t = locale.navbar
+  const t        = locale.navbar
+  const navigate = useNavigate()
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 nav-blur">
@@ -95,7 +101,12 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
 
         <div className="flex items-center gap-7">
           {t.links.map(label => (
-            <NavLink key={label} label={label} active={label === t.activeLink} />
+            <NavLink
+              key={label}
+              label={label}
+              active={label === t.activeLink}
+              onClick={MY_BOOKINGS_LABELS.has(label) ? () => navigate('/my-bookings') : undefined}
+            />
           ))}
         </div>
 
