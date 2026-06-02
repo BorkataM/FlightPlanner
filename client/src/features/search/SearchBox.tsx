@@ -47,6 +47,7 @@ export default function SearchBox() {
     sb.setToAirport(null)
     sb.setDeparture(null)
     sb.setReturnDate(null)
+    sessionStorage.removeItem('skywave_last_search')
   }
 
   const handleSearch = () => {

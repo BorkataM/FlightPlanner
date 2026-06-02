@@ -34,7 +34,7 @@ export default function MyBookingsPage() {
   const hasTrips = trips.length > 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Navbar */}
       <div className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-20 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -49,7 +49,7 @@ export default function MyBookingsPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 pt-6 pb-16">
+      <div className="max-w-6xl mx-auto px-6 pt-6 pb-16 flex-1 flex flex-col">
 
         {!user ? (
           <EmptyState
@@ -120,7 +120,7 @@ function EmptyState({
   title: string; sub: string; action: string; onAction: () => void
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
       <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-2">
         <Ticket className="w-7 h-7 text-blue-400" />
       </div>
