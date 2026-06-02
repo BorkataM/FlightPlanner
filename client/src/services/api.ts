@@ -135,3 +135,47 @@ export const bookingsApi = {
   create:        (flightId: number, token?: string) => authPost<BookingRecord>(`${BASE_URL}/api/bookings`, { flightId }, token),
   getMyBookings: (token?: string)                   => authGet<BookingRecord[]>(`${BASE_URL}/api/bookings`, token),
 }
+
+export interface WeatherForecast {
+  temperatureC:    number
+  condition:       string
+  description:     string
+  windSpeedKmh:    number
+  humidity:        number
+  iconCode:        string
+  forecastTimeUtc: string
+  city:            string
+}
+
+export interface DelayRisk {
+  risk:              'Low' | 'Medium' | 'High'
+  reason:            string
+  departureWeather:  WeatherForecast
+}
+
+export interface AirportGeo {
+  lat:      number
+  lon:      number
+  name:     string
+  city:     string
+  iataCode: string
+}
+
+export interface FlightGeo {
+  departure: AirportGeo
+  arrival:   AirportGeo
+}
+
+export const weatherApi = {
+  getForecast: (lat: number, lon: number, date: string, token?: string) =>
+    authGet<WeatherForecast>(`${BASE_URL}/api/weather?lat=${lat}&lon=${lon}&date=${date}`, token),
+
+  getDelayRisk: (flightId: number, token?: string) =>
+    authGet<DelayRisk>(`${BASE_URL}/api/weather/delay-risk?flightId=${flightId}`, token),
+
+  getDestinationForecast: (flightId: number, token?: string) =>
+    authGet<WeatherForecast>(`${BASE_URL}/api/weather/destination?flightId=${flightId}`, token),
+
+  getFlightGeo: (flightId: number, token?: string) =>
+    authGet<FlightGeo>(`${BASE_URL}/api/weather/geo?flightId=${flightId}`, token),
+}
