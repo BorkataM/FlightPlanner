@@ -3,7 +3,7 @@ import type { LocaleSchema } from './en'
 export const bg: LocaleSchema = {
   navbar: {
     brand:      'SkyWave',
-    links:      ['Полети', 'Хотели', 'Оферти', 'Изследвай', 'Моите резервации'],
+    links:      ['Полети', 'Хотели', 'Оферти', 'Пътешественици', 'Моите резервации'],
     activeLink: 'Полети',
     language:   'BG',
     signIn:     'Вход',

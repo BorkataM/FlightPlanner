@@ -9,5 +9,9 @@ namespace FlightPlanner.Core.Interfaces
         Task<bool> IsFollowingAsync(int currentUserId, int targetUserId);
         Task<IEnumerable<UserSummaryDto>> GetFollowersAsync(int userId);
         Task<IEnumerable<UserSummaryDto>> GetFollowingAsync(int userId);
+
+        Task<UserStatsDto?> GetUserStatsAsync(int targetUserId, int currentUserId);
+        Task<IEnumerable<UserSearchResultDto>> SearchUsersAsync(string query, int currentUserId, int limit);
+        Task<IEnumerable<string>> GetVisitedCountriesAsync(int userId);
     }
 }

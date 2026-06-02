@@ -77,6 +77,36 @@ namespace FlightPlanner.API.Controllers
             return Ok(following);
         }
 
+        [HttpGet("stats/me")]
+        public async Task<ActionResult<UserStatsDto>> GetMyStats()
+        {
+            var id    = GetCurrentUserId();
+            var stats = await _socialService.GetUserStatsAsync(id, id);
+            return stats is null ? NotFound() : Ok(stats);
+        }
+
+        [HttpGet("stats/{userId:int}")]
+        public async Task<ActionResult<UserStatsDto>> GetUserStats(int userId)
+        {
+            var stats = await _socialService.GetUserStatsAsync(userId, GetCurrentUserId());
+            return stats is null ? NotFound() : Ok(stats);
+        }
+
+        [HttpGet("visited-countries")]
+        public async Task<ActionResult<IEnumerable<string>>> GetVisitedCountries()
+        {
+            var countries = await _socialService.GetVisitedCountriesAsync(GetCurrentUserId());
+            return Ok(countries);
+        }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<UserSearchResultDto>>> Search(
+            [FromQuery] string? q, [FromQuery] int limit = 20)
+        {
+            var results = await _socialService.SearchUsersAsync(q ?? "", GetCurrentUserId(), Math.Clamp(limit, 1, 50));
+            return Ok(results);
+        }
+
         private int GetCurrentUserId()
         {
             var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub)

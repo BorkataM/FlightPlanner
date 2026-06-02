@@ -6,6 +6,7 @@ import SearchResultsPage from './pages/SearchResultsPage'
 import BookingPage from './pages/BookingPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import BoardingPassPage from './pages/BoardingPassPage'
+import TravelersPage from './pages/TravelersPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/booking"     element={<BookingPage />} />
             <Route path="/my-bookings"   element={<MyBookingsPage />} />
             <Route path="/boarding-pass" element={<BoardingPassPage />} />
+            <Route path="/travelers"     element={<TravelersPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

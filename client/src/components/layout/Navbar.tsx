@@ -7,6 +7,7 @@ import { useLocale, LANGUAGES } from '../../context/LocaleContext'
 import type { LocaleCode } from '../../context/LocaleContext'
 
 const MY_BOOKINGS_LABELS = new Set(['My Bookings', 'Моите резервации'])
+const TRAVELERS_LABELS   = new Set(['Travelers', 'Пътешественици'])
 
 interface NavLinkProps {
   label:    string
@@ -105,7 +106,11 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
               key={label}
               label={label}
               active={label === t.activeLink}
-              onClick={MY_BOOKINGS_LABELS.has(label) ? () => navigate('/my-bookings') : undefined}
+              onClick={
+                MY_BOOKINGS_LABELS.has(label) ? () => navigate('/my-bookings') :
+                TRAVELERS_LABELS.has(label)   ? () => navigate('/travelers')   :
+                undefined
+              }
             />
           ))}
         </div>

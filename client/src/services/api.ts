@@ -55,6 +55,18 @@ async function authPost<T>(url: string, body: unknown, token?: string): Promise<
   return res.json() as Promise<T>
 }
 
+async function authDelete<T>(url: string, token?: string): Promise<T> {
+  const tok = token ?? getToken()
+  const headers: Record<string, string> = {}
+  if (tok) headers['Authorization'] = `Bearer ${tok}`
+  const res = await fetch(url, { method: 'DELETE', headers })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { message?: string }).message ?? res.statusText)
+  }
+  return res.json() as Promise<T>
+}
+
 export interface BookingRecord {
   id:                number
   flightId:          number
@@ -164,6 +176,43 @@ export interface AirportGeo {
 export interface FlightGeo {
   departure: AirportGeo
   arrival:   AirportGeo
+}
+
+export interface UserStats {
+  id:                      number
+  firstName:               string
+  lastName:                string
+  email:                   string
+  flightsCount:            number
+  countriesVisited:        number
+  followersCount:          number
+  followingCount:          number
+  isFollowedByCurrentUser: boolean
+}
+
+export interface UserSearchResult {
+  id:                      number
+  firstName:               string
+  lastName:                string
+  email:                   string
+  flightsCount:            number
+  followersCount:          number
+  isFollowedByCurrentUser: boolean
+}
+
+export const socialApi = {
+  getMyStats:           (token?: string) =>
+    authGet<UserStats>(`${BASE_URL}/api/social/stats/me`, token),
+  getUserStats:         (id: number, token?: string) =>
+    authGet<UserStats>(`${BASE_URL}/api/social/stats/${id}`, token),
+  getVisitedCountries:  (token?: string) =>
+    authGet<string[]>(`${BASE_URL}/api/social/visited-countries`, token),
+  search:               (q: string, token?: string) =>
+    authGet<UserSearchResult[]>(`${BASE_URL}/api/social/search?q=${encodeURIComponent(q)}`, token),
+  follow:   (id: number, token?: string) =>
+    authPost<{ message: string }>(`${BASE_URL}/api/social/follow/${id}`, {}, token),
+  unfollow: (id: number, token?: string) =>
+    authDelete<{ message: string }>(`${BASE_URL}/api/social/follow/${id}`, token),
 }
 
 export const weatherApi = {

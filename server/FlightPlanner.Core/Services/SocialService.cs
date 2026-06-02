@@ -65,5 +65,47 @@ namespace FlightPlanner.Core.Services
                 FollowedAt = f.FollowedAt
             });
         }
+
+        public async Task<UserStatsDto?> GetUserStatsAsync(int targetUserId, int currentUserId)
+        {
+            var raw = await _socialRepository.GetUserStatsAsync(targetUserId);
+            if (raw is null) return null;
+
+            var isFollowed = currentUserId != targetUserId
+                && await _socialRepository.IsFollowingAsync(currentUserId, targetUserId);
+
+            return new UserStatsDto
+            {
+                Id                      = raw.Id,
+                FirstName               = raw.FirstName,
+                LastName                = raw.LastName,
+                Email                   = raw.Email,
+                FlightsCount            = raw.FlightsCount,
+                CountriesVisited        = raw.CountriesVisited,
+                FollowersCount          = raw.FollowersCount,
+                FollowingCount          = raw.FollowingCount,
+                IsFollowedByCurrentUser = isFollowed,
+            };
+        }
+
+        public Task<IEnumerable<string>> GetVisitedCountriesAsync(int userId) =>
+            _socialRepository.GetVisitedCountriesAsync(userId);
+
+        public async Task<IEnumerable<UserSearchResultDto>> SearchUsersAsync(string query, int currentUserId, int limit)
+        {
+            var raws = (await _socialRepository.SearchUsersAsync(query, currentUserId, limit)).ToList();
+            var followedIds = await _socialRepository.GetFollowedIdsAsync(currentUserId, raws.Select(r => r.Id));
+
+            return raws.Select(r => new UserSearchResultDto
+            {
+                Id                      = r.Id,
+                FirstName               = r.FirstName,
+                LastName                = r.LastName,
+                Email                   = r.Email,
+                FlightsCount            = r.FlightsCount,
+                FollowersCount          = r.FollowersCount,
+                IsFollowedByCurrentUser = followedIds.Contains(r.Id),
+            });
+        }
     }
 }
