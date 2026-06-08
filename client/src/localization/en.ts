@@ -44,6 +44,15 @@ export interface LocaleSchema {
     label:    string
     subtitle: string
     status:   string
+    chat: {
+      title:        string
+      greeting:     string
+      placeholder:  string
+      send:         string
+      errorMessage: string
+      emptyState:   string
+      suggestions:  readonly string[]
+    }
   }
   stats: {
     countries: { value: string; label: string }
@@ -110,6 +119,19 @@ export const en: LocaleSchema = {
     label:    'AI Smart Scorer Co-Pilot',
     subtitle: 'Analyzing your inputs — personalized smart results incoming',
     status:   'Scoring live',
+    chat: {
+      title:        'SkyWave AI',
+      greeting:     "Hi {name}! I'm SkyWave AI. Ask me to find flights, compare options, or check your bookings.",
+      placeholder:  'Ask about flights, prices, destinations…',
+      send:         'Send',
+      errorMessage: 'Something went wrong. Please try again.',
+      emptyState:   'No messages yet. Say hello!',
+      suggestions:  [
+        'Find me the smartest flights from Sofia',
+        'Show my recent bookings',
+        'What are the cheapest flights to London?',
+      ],
+    },
   },
 
   stats: {

@@ -10,10 +10,6 @@ function getToken(): string | null {
   } catch { return null }
 }
 
-function authHeaders(): Record<string, string> {
-  const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
 
 async function get<T>(url: string): Promise<T> {
   const res = await fetch(url)
@@ -35,7 +31,7 @@ async function post<T>(url: string, body: unknown): Promise<T> {
 }
 
 async function authGet<T>(url: string, token?: string): Promise<T> {
-  const tok = token ?? getToken()
+  const tok = token || getToken()
   const headers: Record<string, string> = {}
   if (tok) headers['Authorization'] = `Bearer ${tok}`
   const res = await fetch(url, { headers })
@@ -44,7 +40,7 @@ async function authGet<T>(url: string, token?: string): Promise<T> {
 }
 
 async function authPost<T>(url: string, body: unknown, token?: string): Promise<T> {
-  const tok = token ?? getToken()
+  const tok = token || getToken()
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (tok) headers['Authorization'] = `Bearer ${tok}`
   const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) })
@@ -56,7 +52,7 @@ async function authPost<T>(url: string, body: unknown, token?: string): Promise<
 }
 
 async function authDelete<T>(url: string, token?: string): Promise<T> {
-  const tok = token ?? getToken()
+  const tok = token || getToken()
   const headers: Record<string, string> = {}
   if (tok) headers['Authorization'] = `Bearer ${tok}`
   const res = await fetch(url, { method: 'DELETE', headers })
@@ -136,11 +132,24 @@ export const airportsApi = {
 export const flightsApi = {
   search:   (params: FlightSearchParams) => get<FlightDto[]>(buildFlightSearchUrl(params)),
   smartest: (limit = 10)                 => get<FlightDto[]>(`${BASE_URL}/api/flights/smartest?limit=${limit}`),
+  getById:  (id: number)                 => get<FlightDto>(`${BASE_URL}/api/flights/${id}`),
+}
+
+export interface AiChatHistoryMessage {
+  role:    'user' | 'assistant'
+  content: string
+}
+
+export interface AiChatResponse {
+  message:            string
+  flightIdsMentioned: number[]
+  toolCallsMade:      string[]
 }
 
 export const aiApi = {
   score: (params: unknown) => post(`${AI_URL}/ai/score`, params),
-  chat:  (message: string) => post(`${AI_URL}/ai/chat`, { message }),
+  chat:  (message: string, conversationHistory: AiChatHistoryMessage[] = []) =>
+    authPost<AiChatResponse>(`${BASE_URL}/api/ai/chat`, { message, conversationHistory }),
 }
 
 export const bookingsApi = {

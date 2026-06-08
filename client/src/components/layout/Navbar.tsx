@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Globe, Heart, ChevronDown, LogOut, Check } from 'lucide-react'
+import { Globe, ChevronDown, LogOut, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import SkyWaveLogo from '../../assets/logo/SkyWaveLogo'
 import { useAuth } from '../../context/AuthContext'
@@ -119,10 +119,6 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
           <span className="text-slate-600 text-sm font-medium">€ EUR</span>
 
           <LanguageDropdown locale={code} label={t.language} setLocale={setLocale} />
-
-          <button className="text-slate-400 hover:text-slate-700 transition-colors">
-            <Heart className="w-5 h-5" />
-          </button>
 
           {user ? (
             <div className="flex items-center gap-3">

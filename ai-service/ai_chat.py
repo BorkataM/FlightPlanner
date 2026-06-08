@@ -241,6 +241,14 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
 
             tool_result = await _execute_tool(tool_name, tool_args, db, user_context)
 
+            if tool_name in ("search_flights", "get_smartest_flights"):
+                try:
+                    results = json.loads(tool_result)
+                    if isinstance(results, list):
+                        flight_ids.extend(r["id"] for r in results if "id" in r)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
             messages.append(
                 {
                     "role": "tool",

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -193,6 +193,10 @@ export default function BookingPage() {
   const { user }  = useAuth()
   const state     = location.state as BookingState | null
 
+  useEffect(() => {
+    if (!user && !state?.token) navigate('/', { replace: true })
+  }, [user, state, navigate])
+
   const [step, setStep] = useState<1 | 2>(1)
 
   /* step 1 – passenger */
@@ -259,7 +263,7 @@ export default function BookingPage() {
     setPaying(true)
     setPayError('')
     try {
-      const token = state.token
+      const token = state?.token || user?.token || ''
       const outboundBooking = await bookingsApi.create(outbound.id, token)
       let retBooking = null
       if (isRoundTrip && ret) retBooking = await bookingsApi.create(ret.id, token)

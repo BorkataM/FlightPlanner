@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LocaleProvider } from './context/LocaleContext'
+import { ChatProvider } from './features/ai-copilot/ChatContext'
+import ChatWidget from './features/ai-copilot/ChatWidget'
 import LandingPage from './pages/LandingPage'
 import SearchResultsPage from './pages/SearchResultsPage'
 import BookingPage from './pages/BookingPage'
@@ -13,14 +15,17 @@ function App() {
     <LocaleProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/"            element={<LandingPage />} />
-            <Route path="/search"      element={<SearchResultsPage />} />
-            <Route path="/booking"     element={<BookingPage />} />
-            <Route path="/my-bookings"   element={<MyBookingsPage />} />
-            <Route path="/boarding-pass" element={<BoardingPassPage />} />
-            <Route path="/travelers"     element={<TravelersPage />} />
-          </Routes>
+          <ChatProvider>
+            <Routes>
+              <Route path="/"              element={<LandingPage />} />
+              <Route path="/search"        element={<SearchResultsPage />} />
+              <Route path="/booking"       element={<BookingPage />} />
+              <Route path="/my-bookings"   element={<MyBookingsPage />} />
+              <Route path="/boarding-pass" element={<BoardingPassPage />} />
+              <Route path="/travelers"     element={<TravelersPage />} />
+            </Routes>
+            <ChatWidget />
+          </ChatProvider>
         </BrowserRouter>
       </AuthProvider>
     </LocaleProvider>
