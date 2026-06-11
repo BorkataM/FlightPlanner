@@ -44,11 +44,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       .slice(-MAX_HISTORY)
       .map(t => ({ role: t.role, content: t.content }))
 
+    const isBookingRequest = /\b(book|reserve|purchase|buy)\b/i.test(message)
+
     try {
       const res = await aiApi.chat(message, history)
 
       let flights: FlightDto[] | undefined
-      if (res.flightIdsMentioned?.length) {
+      if (isBookingRequest && res.flightIdsMentioned?.length) {
         const settled = await Promise.allSettled(
           res.flightIdsMentioned.map(id => flightsApi.getById(id))
         )

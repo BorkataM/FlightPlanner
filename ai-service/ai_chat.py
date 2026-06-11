@@ -10,7 +10,10 @@ An agentic loop runs until the model produces a plain-text response
 (no pending tool calls).
 """
 import json
+import logging
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -103,17 +106,17 @@ TOOLS: list[dict] = [
     },
 ]
 
-_SYSTEM_PROMPT_BASE = """You are FlightAI, an intelligent flight assistant for the FlightPlanner platform.
+_SYSTEM_PROMPT_BASE = """You are FlightAI, a smart flight assistant for the FlightPlanner platform.
 
-Your job is to help users find the smartest flights — balancing price, environmental impact,
-and punctuality. You have access to live flight data through the tools provided.
+Your job is to help users find the best flights — balancing price, environmental impact, and punctuality.
 
 Guidelines:
 - Always use a tool to fetch real data before making recommendations.
-- When recommending flights, highlight the SmartScore, CO₂ emissions, and price.
-- Explain trade-offs clearly (e.g. cheaper but higher emissions).
-- Be concise and friendly.
-- If the user mentions a city name but not a code, do your best to infer the IATA code.
+- Keep responses short and direct — 2-4 sentences max, no bullet lists unless showing multiple flights.
+- Lead with the answer, not the reasoning. Skip intros like "Great question!" or "Let me check...".
+- Mention SmartScore, price, and CO₂ only when directly relevant.
+- Never ask more than one follow-up question.
+- If the user mentions a city name but not a code, infer the IATA code yourself.
 """
 
 
@@ -150,6 +153,21 @@ def _flight_to_dict(flight) -> dict:
         "is_eco_friendly": getattr(flight.Analytics, "IsEcoFriendly", None),
         "is_best_value": getattr(flight.Analytics, "IsBestValue", None),
     }
+
+
+def _assistant_message_to_dict(msg) -> dict:
+    """Convert a ChatCompletionMessage response object to a plain dict safe for re-use in messages."""
+    d: dict = {"role": "assistant", "content": msg.content}
+    if msg.tool_calls:
+        d["tool_calls"] = [
+            {
+                "id": tc.id,
+                "type": "function",
+                "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+            }
+            for tc in msg.tool_calls
+        ]
+    return d
 
 
 def _booking_to_dict(booking) -> dict:
@@ -215,21 +233,35 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
     tools_used: list[str] = []
     flight_ids: list[int] = []
 
-    # Agentic loop — keep going while the model wants to call tools
-    while True:
+    # Agentic loop — keep going while the model wants to call tools.
+    # We only append the assistant message to history when it has tool_calls
+    # (i.e. the loop continues). The final text response is never appended so
+    # the messages list never ends with a null-content assistant entry.
+    MAX_ITERATIONS = 3
+    choice = None
+    for _ in range(MAX_ITERATIONS):
         response = await client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
-            max_completion_tokens=1024,
+            max_completion_tokens=512,  # tool call JSON is ~100 tokens; save 2048 for final text
         )
 
         choice = response.choices[0]
-        messages.append(choice.message)
+        logger.info(
+            "model=%s finish=%s content=%r tool_calls=%s",
+            settings.OPENAI_MODEL,
+            choice.finish_reason,
+            choice.message.content,
+            [tc.function.name for tc in (choice.message.tool_calls or [])],
+        )
 
         if choice.finish_reason != "tool_calls":
             break
+
+        # Has tool calls — add the assistant turn and execute each tool
+        messages.append(_assistant_message_to_dict(choice.message))
 
         for tool_call in choice.message.tool_calls:
             tool_name = tool_call.function.name
@@ -257,7 +289,27 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
                 }
             )
 
-    final_message = choice.message.content or ""
+    final_message = (choice.message.content or "") if choice else ""
+
+    # Model ran tool calls but returned no text — ask for a plain summary.
+    # At this point messages ends cleanly with the last tool_result entry,
+    # so no null-content assistant entry is present to confuse the model.
+    if not final_message.strip() and tools_used:
+        messages.append({"role": "user", "content": "Based on the flight data above, give me a short recommendation in 2-3 sentences."})
+        for attempt in range(3):
+            summary = await client.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=messages,
+                max_completion_tokens=1024,
+            )
+            summary_content = summary.choices[0].message.content
+            logger.info("summary attempt=%d finish=%s content=%r", attempt, summary.choices[0].finish_reason, summary_content)
+            if summary_content and summary_content.strip():
+                final_message = summary_content
+                break
+        else:
+            final_message = "I searched the available flights but couldn't generate a response. Please try again."
+
     return ChatResponse(
         message=final_message,
         flight_ids_mentioned=list(set(flight_ids)),

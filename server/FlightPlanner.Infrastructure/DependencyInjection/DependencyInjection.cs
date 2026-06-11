@@ -51,7 +51,7 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
             services.AddHttpClient<IAiChatService, AiChatClient>(client =>
             {
                 client.BaseAddress = new Uri(aiServiceUrl);
-                client.Timeout = TimeSpan.FromSeconds(60);
+                client.Timeout = TimeSpan.FromSeconds(90);
             });
 
             var rawWeatherKey = configuration["Weather:ApiKey"] ?? "";

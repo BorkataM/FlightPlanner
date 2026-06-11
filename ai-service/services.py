@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from models import Airline, Airport, Flight, FlightAnalytics
 
@@ -264,10 +264,13 @@ async def search_flights(
     arrival_code: str | None = None,
     limit: int = 10,
 ) -> list[Flight]:
+    dep = aliased(Airport)
+    arr = aliased(Airport)
+
     query = (
         select(Flight)
-        .join(Flight.DepartureAirport)
-        .join(Flight.ArrivalAirport)
+        .join(dep, Flight.DepartureAirportId == dep.Id)
+        .join(arr, Flight.ArrivalAirportId == arr.Id)
         .options(
             selectinload(Flight.DepartureAirport),
             selectinload(Flight.ArrivalAirport),
@@ -278,9 +281,10 @@ async def search_flights(
     )
     if departure_code:
         code = departure_code.upper()
-        query = query.where(
-            (Airport.IcaoCode == code) | (Airport.IataCode == code)
-        )
+        query = query.where((dep.IcaoCode == code) | (dep.IataCode == code))
+    if arrival_code:
+        code = arrival_code.upper()
+        query = query.where((arr.IcaoCode == code) | (arr.IataCode == code))
     result = await db.execute(query)
     return list(result.scalars().all())
 

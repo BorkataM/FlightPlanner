@@ -1,6 +1,35 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ChatTurn } from './types'
 import ChatFlightCard from './ChatFlightCard'
+
+function useTypewriter(text: string, animate: boolean) {
+  const [displayed, setDisplayed] = useState(animate ? '' : text)
+  const [done, setDone] = useState(!animate)
+
+  useEffect(() => {
+    if (!animate) {
+      setDisplayed(text)
+      setDone(true)
+      return
+    }
+    setDisplayed('')
+    setDone(false)
+    let i = 0
+    // Aim for ~2 s total regardless of length; min 1 char per tick
+    const charsPerTick = Math.max(1, Math.ceil(text.length / 120))
+    const id = setInterval(() => {
+      i = Math.min(i + charsPerTick, text.length)
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) {
+        clearInterval(id)
+        setDone(true)
+      }
+    }, 16)
+    return () => clearInterval(id)
+  }, [text, animate])
+
+  return { displayed, done }
+}
 
 function TypingDots() {
   return (
@@ -29,7 +58,9 @@ function UserBubble({ content }: { content: string }) {
   )
 }
 
-function AssistantBubble({ turn }: { turn: ChatTurn }) {
+function AssistantBubble({ turn, animate }: { turn: ChatTurn; animate: boolean }) {
+  const { displayed, done } = useTypewriter(turn.content, animate && !turn.isError)
+
   return (
     <div className="flex justify-start px-3 py-1">
       <div className="max-w-[90%]">
@@ -40,9 +71,12 @@ function AssistantBubble({ turn }: { turn: ChatTurn }) {
               : 'bg-slate-50 text-slate-800 border border-slate-100'
           }`}
         >
-          {turn.content}
+          {displayed}
+          {!done && (
+            <span className="inline-block w-0.5 h-[1em] bg-slate-500 ml-0.5 align-text-bottom animate-pulse" />
+          )}
         </div>
-        {turn.flights?.map(f => (
+        {done && turn.flights?.map(f => (
           <ChatFlightCard key={f.id} flight={f} />
         ))}
       </div>
@@ -71,12 +105,14 @@ export default function ChatMessageList({ turns, isLoading, emptyStateText }: Pr
     )
   }
 
+  const lastAssistantIdx = turns.reduce((acc, t, i) => t.role === 'assistant' ? i : acc, -1)
+
   return (
     <div className="flex-1 overflow-y-auto py-2" aria-live="polite" aria-label="Chat messages">
       {turns.map((turn, i) =>
         turn.role === 'user'
           ? <UserBubble key={i} content={turn.content} />
-          : <AssistantBubble key={i} turn={turn} />
+          : <AssistantBubble key={i} turn={turn} animate={i === lastAssistantIdx} />
       )}
       {isLoading && (
         <div className="flex justify-start px-3 py-1">

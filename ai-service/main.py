@@ -1,6 +1,9 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -133,4 +136,5 @@ async def chat_endpoint(request: ChatRequest, db: AsyncSession = Depends(get_db)
     try:
         return await ai_chat.chat(request, db)
     except Exception as exc:
+        logger.exception("AI chat error")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
