@@ -57,6 +57,8 @@ namespace FlightPlanner.Core.Services
             FlightNumber = b.Flight?.FlightNumber ?? string.Empty,
             DepartureAirport = b.Flight?.DepartureAirport?.Name ?? string.Empty,
             ArrivalAirport = b.Flight?.ArrivalAirport?.Name ?? string.Empty,
+            DepartureAirportCode = b.Flight?.DepartureAirport?.IataCode ?? b.Flight?.DepartureAirport?.IcaoCode ?? string.Empty,
+            ArrivalAirportCode = b.Flight?.ArrivalAirport?.IataCode ?? b.Flight?.ArrivalAirport?.IcaoCode ?? string.Empty,
             DepartureTime = b.Flight?.DepartureTime ?? default,
             ArrivalTime = b.Flight?.ArrivalTime ?? default,
             Price = b.Flight?.Price ?? 0,

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LocaleProvider } from './context/LocaleContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { ChatProvider } from './features/ai-copilot/ChatContext'
 import ChatWidget from './features/ai-copilot/ChatWidget'
 import LandingPage from './pages/LandingPage'
@@ -12,6 +13,7 @@ import TravelersPage from './pages/TravelersPage'
 
 function App() {
   return (
+    <ThemeProvider>
     <LocaleProvider>
       <AuthProvider>
         <BrowserRouter>
@@ -29,6 +31,7 @@ function App() {
         </BrowserRouter>
       </AuthProvider>
     </LocaleProvider>
+    </ThemeProvider>
   )
 }
 

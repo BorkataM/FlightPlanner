@@ -99,6 +99,13 @@ namespace FlightPlanner.API.Controllers
             return Ok(countries);
         }
 
+        [HttpGet("{userId:int}/visited-countries")]
+        public async Task<ActionResult<IEnumerable<string>>> GetUserVisitedCountries(int userId)
+        {
+            var countries = await _socialService.GetVisitedCountriesAsync(userId);
+            return Ok(countries);
+        }
+
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<UserSearchResultDto>>> Search(
             [FromQuery] string? q, [FromQuery] int limit = 20)

@@ -10,5 +10,7 @@ namespace FlightPlanner.Core.Interfaces
         Task<AuthResponseDto> RefreshAsync(string refreshToken);
         Task<UserProfileDto?> GetProfileAsync(int userId);
         Task<UserProfileDto?> UpdateProfileAsync(int userId, UpdateProfileDto dto);
+        Task<UserAppearanceDto?> GetAppearanceAsync(int userId);
+        Task<UserAppearanceDto?> UpdateAppearanceAsync(int userId, UserAppearanceDto dto);
     }
 }

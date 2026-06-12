@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plane, CalendarDays, Ticket, ArrowLeft } from 'lucide-react'
+import { Plane, CalendarDays, Ticket, ArrowLeft, ArrowUpDown } from 'lucide-react'
 import FlightLoader from '../components/common/FlightLoader'
 import { bookingsApi } from '../services/api'
 import type { BookingRecord } from '../services/api'
@@ -149,6 +149,8 @@ function NextFlightSection({ trip }: { trip: Trip }) {
 }
 
 // ── Left panel ────────────────────────────────────────────────────
+type SortOrder = 'flight' | 'purchase'
+
 function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
   nextTrip:  Trip | undefined
   upcoming:  Trip[]
@@ -157,11 +159,18 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
   onSelect:  (t: Trip) => void
 }) {
   const navigate = useNavigate()
+  const [sort, setSort] = useState<SortOrder>('flight')
   const allTrips = [...upcoming, ...past]
+  const sortedTrips = [...allTrips].sort((a, b) => {
+    if (sort === 'purchase') {
+      return new Date(b.outbound.bookingDate).getTime() - new Date(a.outbound.bookingDate).getTime()
+    }
+    return new Date(b.outbound.departureTime).getTime() - new Date(a.outbound.departureTime).getTime()
+  })
 
   return (
     <div
-      className="w-[300px] flex-shrink-0 flex flex-col overflow-y-auto"
+      className="w-[240px] lg:w-[270px] xl:w-[300px] flex-shrink-0 flex flex-col overflow-y-auto"
       style={{ background: 'linear-gradient(180deg, #09131f 0%, #101e31 100%)' }}
     >
       {/* Top bar */}
@@ -202,9 +211,29 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
         <>
           <div className="mx-5 h-px bg-white/8 mb-4" />
           <div className="px-5 pb-6">
-            <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.18em] mb-3">All Trips</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.18em]">All Trips</p>
+              <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5">
+                <button
+                  onClick={() => setSort('flight')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all ${
+                    sort === 'flight' ? 'bg-white/15 text-white/70' : 'text-white/25 hover:text-white/40'
+                  }`}
+                >
+                  <Plane className="w-2.5 h-2.5 rotate-90" /> Flight
+                </button>
+                <button
+                  onClick={() => setSort('purchase')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all ${
+                    sort === 'purchase' ? 'bg-white/15 text-white/70' : 'text-white/25 hover:text-white/40'
+                  }`}
+                >
+                  <ArrowUpDown className="w-2.5 h-2.5" /> Bought
+                </button>
+              </div>
+            </div>
             <div className="space-y-1.5">
-              {allTrips.map((t, i) => {
+              {sortedTrips.map((t, i) => {
                 const dep  = t.local?.outbound?.departureAirportCode ?? t.outbound.departureAirport.slice(0, 3).toUpperCase()
                 const arr  = t.local?.outbound?.arrivalAirportCode   ?? t.outbound.arrivalAirport.slice(0, 3).toUpperCase()
                 const isUp = isUpcoming(t)
@@ -244,43 +273,43 @@ function RightPanel({ trip }: { trip: Trip }) {
   const dur     = fmtDuration(tripDurationMin(outbound))
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white min-w-0">
+    <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-900 min-w-0 min-h-0">
 
       {/* Top bar */}
-      <div className="flex items-center gap-4 px-8 py-4 border-b border-slate-100">
-        <span className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 shrink-0">
+      <div className="flex items-center gap-3 px-4 lg:px-6 xl:px-8 py-3 lg:py-4 border-b border-slate-100 dark:border-slate-700">
+        <span className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
           {ret ? 'Round Trip' : 'One Way'}
         </span>
         <button
           onClick={() => navigate('/boarding-pass', {
             state: { bookingRef: outbound.confirmationCode, booking: outbound, local },
           })}
-          className="flex items-center gap-2 ml-auto px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shrink-0"
+          className="flex items-center gap-2 ml-auto px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0"
         >
           <Ticket className="w-3.5 h-3.5" /> Show boarding pass
         </button>
         <div className="text-right shrink-0">
           <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Ref</div>
-          <div className="text-sm font-black text-slate-900 font-mono tracking-wider">{outbound.confirmationCode}</div>
+          <div className="text-sm font-black text-slate-900 dark:text-slate-100 font-mono tracking-wider">{outbound.confirmationCode}</div>
         </div>
       </div>
 
       {/* Route header */}
       <div
-        className="px-8 py-7"
+        className="px-4 lg:px-6 xl:px-8 py-5 lg:py-7"
         style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%)' }}
       >
         <div className="flex items-center gap-4">
-          <span className="text-[22px] font-black text-white leading-tight flex-shrink">{depName}</span>
+          <span className="text-base lg:text-[22px] font-black text-white leading-tight flex-shrink">{depName}</span>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Plane className="w-5 h-5 text-white/50 rotate-90 shrink-0" />
             <div className="flex-1 border-t-2 border-dashed border-white/25" />
           </div>
-          <span className="text-[22px] font-black text-white leading-tight text-right flex-shrink">{arrName}</span>
+          <span className="text-base lg:text-[22px] font-black text-white leading-tight text-right flex-shrink">{arrName}</span>
         </div>
       </div>
 
-      <div className="px-8 pt-6 pb-10 space-y-6">
+      <div className="px-4 lg:px-6 xl:px-8 pt-5 lg:pt-6 pb-10 space-y-6">
 
         {/* Outbound flight card */}
         <FlightCard booking={outbound} dir="Outbound" depName={depName} arrName={arrName} dur={dur} />
@@ -306,7 +335,7 @@ function RightPanel({ trip }: { trip: Trip }) {
 
         {/* Get to Airport */}
         <section>
-          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+          <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
             Get to Airport
           </h2>
           <AirportRouteMap flightId={outbound.flightId} />
@@ -325,7 +354,7 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
 }) {
   const isOut = dir === 'Outbound'
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
       <div className="px-6 py-5">
         <div className="flex items-center gap-3 mb-5">
           <span className={`text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full border ${
@@ -341,7 +370,7 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
 
         <div className="flex items-center gap-4">
           <div className="shrink-0">
-            <div className="text-[42px] font-black text-slate-900 tabular-nums leading-none">
+            <div className="text-[42px] font-black text-slate-900 dark:text-slate-100 tabular-nums leading-none">
               {fmtTime(booking.departureTime)}
             </div>
             <div className="text-xs text-slate-400 mt-2 leading-tight">{depName}</div>
@@ -350,17 +379,17 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
           <div className="flex-1 flex flex-col items-center gap-1.5 px-2">
             <span className="text-xs font-semibold text-slate-400">{dur}</span>
             <div className="w-full flex items-center gap-2">
-              <div className="flex-1 h-px bg-slate-200" />
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isOut ? 'bg-blue-50' : 'bg-violet-50'}`}>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isOut ? 'bg-blue-50 dark:bg-blue-950' : 'bg-violet-50 dark:bg-violet-950'}`}>
                 <Plane className={`w-4 h-4 ${isOut ? 'text-blue-500 rotate-90' : 'text-violet-500 -rotate-90'}`} />
               </div>
-              <div className="flex-1 h-px bg-slate-200" />
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
             </div>
             <span className="text-[10px] text-slate-400">Non-stop</span>
           </div>
 
           <div className="shrink-0 text-right">
-            <div className="text-[42px] font-black text-slate-900 tabular-nums leading-none">
+            <div className="text-[42px] font-black text-slate-900 dark:text-slate-100 tabular-nums leading-none">
               {fmtTime(booking.arrivalTime)}
             </div>
             <div className="text-xs text-slate-400 mt-2 leading-tight">{arrName}</div>
@@ -375,12 +404,12 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
 function EmptyRight() {
   const navigate = useNavigate()
   return (
-    <div className="flex-1 flex items-center justify-center bg-slate-50/50">
+    <div className="flex-1 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900">
       <div className="text-center">
-        <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center mx-auto mb-4">
           <Ticket className="w-7 h-7 text-blue-400" />
         </div>
-        <p className="text-slate-700 font-bold text-lg mb-1">No bookings yet</p>
+        <p className="text-slate-700 dark:text-slate-200 font-bold text-lg mb-1">No bookings yet</p>
         <p className="text-slate-400 text-sm max-w-xs mb-6">Once you book a flight it will appear here.</p>
         <button
           onClick={() => navigate('/')}
@@ -420,12 +449,12 @@ export default function MyBookingsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center mx-auto mb-4">
             <Ticket className="w-7 h-7 text-blue-400" />
           </div>
-          <p className="text-slate-700 font-bold text-lg mb-1">Sign in to see your bookings</p>
+          <p className="text-slate-700 dark:text-slate-200 font-bold text-lg mb-1">Sign in to see your bookings</p>
           <p className="text-slate-400 text-sm mb-6">Your trip history is linked to your account.</p>
           <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-xl text-sm transition-colors">
             Go to homepage
@@ -439,7 +468,7 @@ export default function MyBookingsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-red-500 text-sm">{error}</div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-red-500 text-sm">{error}</div>
     )
   }
 

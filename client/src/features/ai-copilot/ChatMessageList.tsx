@@ -67,8 +67,8 @@ function AssistantBubble({ turn, animate }: { turn: ChatTurn; animate: boolean }
         <div
           className={`rounded-2xl rounded-tl-sm px-4 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap ${
             turn.isError
-              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-              : 'bg-slate-50 text-slate-800 border border-slate-100'
+              ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
+              : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-700'
           }`}
         >
           {displayed}
@@ -116,7 +116,7 @@ export default function ChatMessageList({ turns, isLoading, emptyStateText }: Pr
       )}
       {isLoading && (
         <div className="flex justify-start px-3 py-1">
-          <div className="bg-slate-50 border border-slate-100 rounded-2xl rounded-tl-sm">
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-sm">
             <TypingDots />
           </div>
         </div>

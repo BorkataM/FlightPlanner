@@ -5,7 +5,8 @@ import {
   Loader2, Briefcase, Flag, Mail, Check,
 } from 'lucide-react'
 import SkyWaveLogo from '../assets/logo/SkyWaveLogo'
-import { socialApi, type UserStats, type UserSearchResult } from '../services/api'
+import { socialApi, usersApi, type UserStats, type UserSearchResult, type UserSummary } from '../services/api'
+import { alpha2ToFullName } from '../data/countryIsoMap'
 import { useAuth } from '../context/AuthContext'
 import UserProfileModal from '../components/social/UserProfileModal'
 import TravelMapCard from '../components/social/TravelMapCard'
@@ -18,12 +19,16 @@ const DEFAULT_PROFILE: ProfileData = {
   bio: 'Aviation enthusiast ✈  |  Exploring the world one flight at a time.',
 }
 
-function loadProfile(userId: number): ProfileData {
+function loadCachedProfile(userId: number): ProfileData {
   try {
     const raw = localStorage.getItem(`skywave_profile_${userId}`)
     if (raw) return { ...DEFAULT_PROFILE, ...JSON.parse(raw) as ProfileData }
   } catch {}
   return { ...DEFAULT_PROFILE }
+}
+
+function cacheProfile(userId: number, data: ProfileData) {
+  try { localStorage.setItem(`skywave_profile_${userId}`, JSON.stringify(data)) } catch {}
 }
 
 const AVATAR_COLORS = [
@@ -53,7 +58,7 @@ function JourneyCircle({ pct }: { pct: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-black text-slate-900">{pct.toFixed(pct < 1 ? 1 : 0)}%</span>
+        <span className="text-2xl font-black text-slate-900 dark:text-slate-100">{pct.toFixed(pct < 1 ? 1 : 0)}%</span>
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">of the world</span>
       </div>
     </div>
@@ -61,18 +66,21 @@ function JourneyCircle({ pct }: { pct: number }) {
 }
 
 // ── Stat column in the profile stats bar ────────────────────────────────────
-function ProfileStat({ icon: Icon, value, label, sub, color }: {
-  icon: React.ElementType; value: number; label: string; sub: string; color: string
+function ProfileStat({ icon: Icon, value, label, sub, color, onClick }: {
+  icon: React.ElementType; value: number; label: string; sub: string; color: string; onClick?: () => void
 }) {
   return (
-    <div className="flex-1 flex items-center gap-3 px-5 py-4">
+    <div
+      className={`flex-1 flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-3 lg:py-4 ${onClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors' : ''}`}
+      onClick={onClick}
+    >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-xl font-black text-slate-900 tabular-nums leading-none">{value}</span>
-          <span className="text-xs font-bold text-slate-700">{label}</span>
+          <span className="text-xl font-black text-slate-900 dark:text-slate-100 tabular-nums leading-none">{value}</span>
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</span>
         </div>
         <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>
       </div>
@@ -107,7 +115,7 @@ function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: nu
         <span className="text-sm font-black text-white">{initials}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors leading-tight">
+        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 transition-colors leading-tight">
           {user.firstName} {user.lastName}
         </p>
         <p className="text-xs text-slate-400 leading-tight">{user.flightsCount} flights</p>
@@ -117,8 +125,8 @@ function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: nu
         disabled={busy}
         className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
           following
-            ? 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-200'
-            : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
+            ? 'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+            : 'bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-700 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950'
         } ${busy ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
         {busy ? '…' : following ? 'Following' : 'Follow'}
@@ -142,19 +150,36 @@ export default function TravelersPage() {
   const [loadingSearch,    setLoadingSearch]    = useState(false)
   const [selectedId,       setSelectedId]       = useState<number | null>(null)
   const [editOpen,         setEditOpen]         = useState(false)
+  const [countriesOpen,    setCountriesOpen]    = useState(false)
+  const [followModal,      setFollowModal]      = useState<'followers' | 'following' | null>(null)
+  const [followList,       setFollowList]       = useState<UserSummary[]>([])
+  const [followLoading,    setFollowLoading]    = useState(false)
   const [profileData,      setProfileData]      = useState<ProfileData>(DEFAULT_PROFILE)
 
-  // Load own stats + visited countries
+  // Load own stats + visited countries + appearance
   useEffect(() => {
     if (!user) { setLoadingStats(false); setLoadingMap(false); return }
-    setProfileData(loadProfile(user.userId))
-    Promise.all([
+    // Show cached profile instantly, then overwrite with server data
+    setProfileData(loadCachedProfile(user.userId))
+    Promise.allSettled([
       socialApi.getMyStats(user.token),
       socialApi.getVisitedCountries(user.token),
-    ]).then(([stats, countries]) => {
-      setMyStats(stats)
-      setVisitedCountries(countries)
-    }).catch(() => {}).finally(() => {
+      usersApi.getMyAppearance(user.token),
+    ]).then(([statsRes, countriesRes, appearanceRes]) => {
+      if (statsRes.status === 'fulfilled')    { setMyStats(statsRes.value); }
+      if (countriesRes.status === 'fulfilled') setVisitedCountries(countriesRes.value)
+      if (appearanceRes.status === 'fulfilled') {
+        const a = appearanceRes.value
+        const data: ProfileData = {
+          avatarDataUrl:     a.avatarDataUrl ?? null,
+          coverImageDataUrl: a.coverImageDataUrl ?? null,
+          coverGradient:     a.coverGradient ?? DEFAULT_PROFILE.coverGradient,
+          bio:               a.bio ?? DEFAULT_PROFILE.bio,
+        }
+        setProfileData(data)
+        cacheProfile(user.userId, data)
+      }
+    }).finally(() => {
       setLoadingStats(false)
       setLoadingMap(false)
     })
@@ -186,11 +211,25 @@ export default function TravelersPage() {
     ]).then(([s, c]) => { setMyStats(s); setVisitedCountries(c) }).catch(() => {})
   }
 
+  const openFollowModal = (type: 'followers' | 'following') => {
+    if (!user) return
+    setFollowModal(type)
+    setFollowLoading(true)
+    const fn = type === 'followers' ? socialApi.getMyFollowers : socialApi.getMyFollowing
+    fn(user.token).then(setFollowList).catch(() => setFollowList([])).finally(() => setFollowLoading(false))
+  }
+
   const handleProfileSave = (data: ProfileData) => {
     if (!user) return
-    localStorage.setItem(`skywave_profile_${user.userId}`, JSON.stringify(data))
     setProfileData(data)
     setEditOpen(false)
+    cacheProfile(user.userId, data)
+    usersApi.updateMyAppearance({
+      avatarDataUrl:     data.avatarDataUrl,
+      coverImageDataUrl: data.coverImageDataUrl,
+      coverGradient:     data.coverGradient,
+      bio:               data.bio,
+    }, user.token).catch(() => {})
   }
 
   const initials = myStats
@@ -201,16 +240,16 @@ export default function TravelersPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <nav className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+        <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20 shadow-sm">
           <div className="w-full px-6 h-16 flex items-center gap-4">
-            <div className="flex items-center gap-2.5 shrink-0 mr-1">
+            <button onClick={() => navigate('/')} className="flex items-center gap-2.5 shrink-0 mr-1 hover:opacity-80 transition-opacity">
               <SkyWaveLogo idSuffix="travelers-guest" />
-              <span className="text-slate-900 font-semibold text-[1.15rem] tracking-tight">SkyWave</span>
-            </div>
+              <span className="text-slate-900 dark:text-slate-100 font-semibold text-[1.15rem] tracking-tight">SkyWave</span>
+            </button>
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
+              className="flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-sm font-medium transition-colors"
             >
               <ChevronLeft className="w-4 h-4" /> Home
             </button>
@@ -222,10 +261,10 @@ export default function TravelersPage() {
         </nav>
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center space-y-3">
-            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center mx-auto">
               <Users className="w-7 h-7 text-blue-400" />
             </div>
-            <p className="text-slate-700 font-bold text-lg">Sign in to connect with travelers</p>
+            <p className="text-slate-700 dark:text-slate-200 font-bold text-lg">Sign in to connect with travelers</p>
             <p className="text-slate-400 text-sm">See other travelers' journeys and follow friends.</p>
             <button onClick={() => navigate('/')} className="mt-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-colors">
               Go to homepage
@@ -237,20 +276,20 @@ export default function TravelersPage() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
       {/* ── Navbar ── */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+      <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20 shadow-sm">
         <div className="w-full px-6 h-16 flex items-center gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 shrink-0 mr-1">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2.5 shrink-0 mr-1 hover:opacity-80 transition-opacity">
             <SkyWaveLogo idSuffix="travelers" />
-            <span className="text-slate-900 font-semibold text-[1.15rem] tracking-tight">SkyWave</span>
-          </div>
+            <span className="text-slate-900 dark:text-slate-100 font-semibold text-[1.15rem] tracking-tight">SkyWave</span>
+          </button>
 
           {/* Back */}
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-1 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors shrink-0"
+            className="flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-sm font-medium transition-colors shrink-0"
           >
             <ChevronLeft className="w-4 h-4" /> Home
           </button>
@@ -263,7 +302,7 @@ export default function TravelersPage() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search travelers by name or email…"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-transparent rounded-full text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white focus:border-blue-300 transition"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-700 border border-transparent rounded-full text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 focus:border-blue-300 dark:focus:border-slate-500 transition"
             />
           </div>
 
@@ -277,27 +316,27 @@ export default function TravelersPage() {
       </nav>
 
       {/* ── Content ── */}
-      <div className="flex-1 w-full px-6 py-6 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 grid lg:grid-cols-4 gap-6">
+      <div className="flex-1 w-full px-3 lg:px-6 py-4 lg:py-6 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 grid lg:grid-cols-4 gap-3 lg:gap-6">
 
           {/* ── Main column (3/4): profile card + map stacked ── */}
           <div className="lg:col-span-3 flex flex-col gap-5 min-h-0">
 
             {/* Profile cover card */}
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm shrink-0">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm shrink-0">
               {/* Cover */}
               <div
-                className={`relative h-52 flex items-center px-8 gap-6 ${profileData.coverImageDataUrl ? '' : `bg-gradient-to-br ${profileData.coverGradient}`}`}
+                className={`relative h-40 lg:h-52 flex items-center px-4 lg:px-8 gap-4 lg:gap-6 ${profileData.coverImageDataUrl ? '' : `bg-gradient-to-br ${profileData.coverGradient}`}`}
                 style={profileData.coverImageDataUrl ? { backgroundImage: `url(${profileData.coverImageDataUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent pointer-events-none" />
 
                 {/* Avatar */}
                 <div className="relative shrink-0 z-10">
-                  <div className="w-28 h-28 rounded-full border-4 border-white/70 shadow-2xl overflow-hidden bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                  <div className="w-20 h-20 lg:w-28 lg:h-28 rounded-full border-4 border-white/70 shadow-2xl overflow-hidden bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
                     {profileData.avatarDataUrl
                       ? <img src={profileData.avatarDataUrl} alt="avatar" className="w-full h-full object-cover" />
-                      : <span className="text-4xl font-black text-white select-none">{initials}</span>
+                      : <span className="text-2xl lg:text-4xl font-black text-white select-none">{initials}</span>
                     }
                   </div>
                 </div>
@@ -347,11 +386,11 @@ export default function TravelersPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex divide-x divide-slate-100">
-                  <ProfileStat icon={Plane}    value={myStats?.flightsCount    ?? 0} label="Flights"    sub="Total taken" color="bg-blue-50 text-blue-500"    />
-                  <ProfileStat icon={Globe}    value={myStats?.countriesVisited ?? 0} label="Countries"  sub="Visited"     color="bg-emerald-50 text-emerald-500" />
-                  <ProfileStat icon={Users}    value={myStats?.followersCount   ?? 0} label="Followers"  sub="People"      color="bg-violet-50 text-violet-500"  />
-                  <ProfileStat icon={UserPlus} value={myStats?.followingCount   ?? 0} label="Following"  sub="Travelers"   color="bg-sky-50 text-sky-500"        />
+                <div className="flex divide-x divide-slate-100 dark:divide-slate-700">
+                  <ProfileStat icon={Plane}    value={myStats?.flightsCount    ?? 0} label="Flights"    sub="Total taken" color="bg-blue-50 dark:bg-blue-950 text-blue-500"       />
+                  <ProfileStat icon={Globe}    value={myStats?.countriesVisited ?? 0} label="Countries"  sub="Visited"     color="bg-emerald-50 dark:bg-emerald-950 text-emerald-500" />
+                  <ProfileStat icon={Users}    value={myStats?.followersCount   ?? 0} label="Followers"  sub="People"      color="bg-violet-50 dark:bg-violet-950 text-violet-500"    onClick={() => openFollowModal('followers')} />
+                  <ProfileStat icon={UserPlus} value={myStats?.followingCount   ?? 0} label="Following"  sub="Travelers"   color="bg-sky-50 dark:bg-sky-950 text-sky-500"             onClick={() => openFollowModal('following')} />
                 </div>
               )}
             </div>
@@ -367,37 +406,37 @@ export default function TravelersPage() {
           <div className="flex flex-col gap-4 min-h-0">
 
             {/* Your Journey */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Briefcase className="w-4 h-4 text-slate-400" />
-                <h3 className="text-sm font-bold text-slate-700">Your Journey</h3>
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Your Journey</h3>
               </div>
               {loadingStats ? (
                 <div className="w-36 h-36 rounded-full bg-slate-100 animate-pulse mx-auto my-2" />
               ) : (
                 <JourneyCircle pct={journeyPct} />
               )}
-              <div className="mt-3 bg-amber-50 rounded-xl px-3 py-2.5">
-                <p className="text-xs font-semibold text-amber-600 text-center leading-relaxed">
+              <div className="mt-3 bg-amber-50 dark:bg-amber-950 rounded-xl px-3 py-2.5">
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 text-center leading-relaxed">
                   ⭐ Keep exploring! You've got a whole world to discover.
                 </p>
               </div>
             </div>
 
             {/* Top Countries */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Flag className="w-4 h-4 text-slate-400" />
-                  <h3 className="text-sm font-bold text-slate-700">Top Countries</h3>
+                  <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Top Countries</h3>
                 </div>
-                <button className="text-xs font-semibold text-blue-600 hover:text-blue-700">View all</button>
+                <button onClick={() => setCountriesOpen(true)} className="text-xs font-semibold text-blue-600 hover:text-blue-700">View all</button>
               </div>
 
               {visitedCountries.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center">
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-2">
-                    <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-600 p-5 text-center">
+                  <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center mx-auto mb-2">
+                    <svg className="w-5 h-5 text-slate-300 dark:text-slate-500" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
                     </svg>
                   </div>
@@ -409,7 +448,7 @@ export default function TravelersPage() {
                   {visitedCountries.slice(0, 5).map(country => (
                     <div key={country} className="flex items-center gap-2.5">
                       <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                      <span className="text-sm font-medium text-slate-700 truncate">{country}</span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{alpha2ToFullName(country)}</span>
                     </div>
                   ))}
                   {visitedCountries.length > 5 && (
@@ -420,10 +459,9 @@ export default function TravelersPage() {
             </div>
 
             {/* Suggested Travelers */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-700">Suggested Travelers</h3>
-                <button className="text-xs font-semibold text-blue-600 hover:text-blue-700">View all</button>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-0">
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Suggested Travelers</h3>
               </div>
 
               {loadingSearch ? (
@@ -464,6 +502,86 @@ export default function TravelersPage() {
           userId={selectedId}
           onClose={() => { setSelectedId(null); refreshStats() }}
         />
+      )}
+
+      {followModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setFollowModal(null)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                {followModal === 'followers'
+                  ? <Users className="w-4 h-4 text-violet-500" />
+                  : <UserPlus className="w-4 h-4 text-sky-500" />
+                }
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 capitalize">{followModal}</h3>
+              </div>
+              {!followLoading && <span className="text-xs font-semibold text-slate-400">{followList.length} people</span>}
+            </div>
+            <div className="overflow-y-auto flex-1 px-5 py-3">
+              {followLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
+                </div>
+              ) : followList.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-8 h-8 text-slate-200 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-sm text-slate-400">No {followModal} yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {followList.map(u => (
+                    <div key={u.id} className="flex items-center gap-3 cursor-pointer group" onClick={() => { setFollowModal(null); setSelectedId(u.id) }}>
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatarGradient(u.id)} flex items-center justify-center shrink-0 shadow-sm`}>
+                        <span className="text-sm font-black text-white">
+                          {u.firstName[0]}{u.lastName[0]}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 transition-colors truncate">
+                          {u.firstName} {u.lastName}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
+              <button onClick={() => setFollowModal(null)} className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {countriesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setCountriesOpen(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <Flag className="w-4 h-4 text-slate-400" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">All Visited Countries</h3>
+              </div>
+              <span className="text-xs font-semibold text-slate-400">{visitedCountries.length} / 195</span>
+            </div>
+            <div className="overflow-y-auto flex-1 px-5 py-3 space-y-2.5">
+              {visitedCountries.map((c, i) => (
+                <div key={c} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-slate-400 w-5 text-right shrink-0">{i + 1}</span>
+                  <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{alpha2ToFullName(c)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
+              <button onClick={() => setCountriesOpen(false)} className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {editOpen && (

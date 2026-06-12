@@ -41,6 +41,27 @@ namespace FlightPlanner.API.Controllers
             return Ok(profile);
         }
 
+        [HttpGet("me/appearance")]
+        public async Task<ActionResult<UserAppearanceDto>> GetMyAppearance()
+        {
+            var appearance = await _userService.GetAppearanceAsync(GetCurrentUserId());
+            return appearance is null ? NotFound() : Ok(appearance);
+        }
+
+        [HttpPut("me/appearance")]
+        public async Task<ActionResult<UserAppearanceDto>> UpdateMyAppearance([FromBody] UserAppearanceDto dto)
+        {
+            var appearance = await _userService.UpdateAppearanceAsync(GetCurrentUserId(), dto);
+            return appearance is null ? NotFound() : Ok(appearance);
+        }
+
+        [HttpGet("{userId:int}/appearance")]
+        public async Task<ActionResult<UserAppearanceDto>> GetUserAppearance(int userId)
+        {
+            var appearance = await _userService.GetAppearanceAsync(userId);
+            return appearance is null ? NotFound() : Ok(appearance);
+        }
+
         private int GetCurrentUserId()
         {
             var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub)

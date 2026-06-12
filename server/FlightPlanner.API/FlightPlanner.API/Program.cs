@@ -53,6 +53,7 @@ using (var scope = app.Services.CreateScope())
         await FlightPlannerDbContext.SeedAirlinesAsync(context);
         await FlightPlannerDbContext.SeedFlightsAsync(context);
         await FlightPlannerDbContext.SeedSofiaExtendedFlightsAsync(context);
+        await FlightPlannerDbContext.SeedMassEuropeanFlightsAsync(context);
         Console.WriteLine("Seed process completed successfully.");
     }
     catch (Exception ex)

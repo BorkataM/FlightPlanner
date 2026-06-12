@@ -102,3 +102,4 @@ class ChatResponse(BaseModel):
     message: str
     flight_ids_mentioned: list[int] = []
     tool_calls_made: list[str] = []
+    checkout_data: dict | None = None

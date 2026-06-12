@@ -123,12 +123,12 @@ export default function AirportSelect({
             value={query}
             onChange={handleInput}
             placeholder={placeholder}
-            className="bg-transparent text-slate-900 text-base font-semibold outline-none w-full placeholder-slate-400 mt-0.5"
+            className="bg-transparent text-slate-900 dark:text-slate-100 text-base font-semibold outline-none w-full placeholder-slate-400 mt-0.5"
           />
         ) : (
           <div className="text-base font-semibold mt-0.5 truncate">
             {value
-              ? <span className="text-slate-900">{value.city}</span>
+              ? <span className="text-slate-900 dark:text-slate-100">{value.city}</span>
               : <span className="text-slate-400">{placeholder}</span>
             }
           </div>
@@ -157,11 +157,11 @@ export default function AirportSelect({
             <button
               key={airport.icaoCode}
               onClick={() => handleSelect(airport)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left border-t border-slate-100 first:border-0"
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left border-t border-slate-100 dark:border-slate-700 first:border-0"
             >
               <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
               <div className="min-w-0">
-                <div className="text-slate-900 text-sm font-semibold">{airport.city}</div>
+                <div className="text-slate-900 dark:text-slate-100 text-sm font-semibold">{airport.city}</div>
                 <div className="text-slate-400 text-xs truncate">
                   {airport.name} · {airport.iataCode ?? airport.icaoCode}
                 </div>

@@ -1,4 +1,6 @@
 import math
+import random
+import string
 from datetime import datetime
 from decimal import Decimal
 
@@ -6,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
-from models import Airline, Airport, Flight, FlightAnalytics
+from models import Airline, Airport, Booking, Flight, FlightAnalytics
 
 
 # ---------------------------------------------------------------------------
@@ -287,6 +289,61 @@ async def search_flights(
         query = query.where((arr.IcaoCode == code) | (arr.IataCode == code))
     result = await db.execute(query)
     return list(result.scalars().all())
+
+
+async def initiate_booking(db: AsyncSession, flight_id: int, passenger_first_name: str, passenger_last_name: str) -> dict:
+    flight = await get_flight_by_id(db, flight_id)
+    if flight is None:
+        return {"error": "Flight not found."}
+    return {
+        "ready_for_checkout": True,
+        "flight_id": flight_id,
+        "passenger": {"first_name": passenger_first_name, "last_name": passenger_last_name},
+        "price_usd": float(flight.Price) if flight.Price else None,
+        "flight_number": getattr(flight, "FlightNumber", None),
+        "departure": getattr(flight.DepartureAirport, "IataCode", None),
+        "arrival": getattr(flight.ArrivalAirport, "IataCode", None),
+        "departure_city": getattr(flight.DepartureAirport, "City", None),
+        "arrival_city": getattr(flight.ArrivalAirport, "City", None),
+    }
+
+
+async def create_booking(db: AsyncSession, user_id: int, flight_id: int) -> dict:
+    existing = await db.execute(
+        select(Booking).where(Booking.UserId == user_id, Booking.FlightId == flight_id)
+    )
+    if existing.scalar_one_or_none():
+        return {"error": "You already have a booking for this flight."}
+
+    flight = await get_flight_by_id(db, flight_id)
+    if flight is None:
+        return {"error": "Flight not found."}
+
+    confirmation_code = "SKY" + "".join(random.choices(string.digits, k=6))
+    seat_number = f"{random.randint(1, 35)}{random.choice('ABCDEF')}"
+
+    booking = Booking(
+        UserId=user_id,
+        FlightId=flight_id,
+        BookingDate=datetime.utcnow(),
+        SeatNumber=seat_number,
+        ConfirmationCode=confirmation_code,
+    )
+    db.add(booking)
+    await db.commit()
+    await db.refresh(booking)
+
+    return {
+        "success": True,
+        "booking_id": booking.Id,
+        "confirmation_code": confirmation_code,
+        "seat_number": seat_number,
+        "flight_number": getattr(flight, "FlightNumber", None),
+        "departure": getattr(flight.DepartureAirport, "IataCode", None),
+        "arrival": getattr(flight.ArrivalAirport, "IataCode", None),
+        "departure_time": str(flight.DepartureTime) if flight.DepartureTime else None,
+        "price_usd": float(flight.Price) if flight.Price else None,
+    }
 
 
 async def get_user_bookings(db: AsyncSession, user_id: int) -> list:

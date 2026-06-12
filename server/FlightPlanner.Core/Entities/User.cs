@@ -21,6 +21,11 @@ namespace FlightPlanner.Core.Entities
         public int Age { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        public string? AvatarDataUrl { get; set; }
+        public string? CoverImageDataUrl { get; set; }
+        public string? CoverGradient { get; set; }
+        public string? Bio { get; set; }
+
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
         public ICollection<UserFollow> Following { get; set; } = new List<UserFollow>();

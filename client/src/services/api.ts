@@ -51,6 +51,18 @@ async function authPost<T>(url: string, body: unknown, token?: string): Promise<
   return res.json() as Promise<T>
 }
 
+async function authPut<T>(url: string, body: unknown, token?: string): Promise<T> {
+  const tok = token || getToken()
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (tok) headers['Authorization'] = `Bearer ${tok}`
+  const res = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { message?: string }).message ?? res.statusText)
+  }
+  return res.json() as Promise<T>
+}
+
 async function authDelete<T>(url: string, token?: string): Promise<T> {
   const tok = token || getToken()
   const headers: Record<string, string> = {}
@@ -64,17 +76,19 @@ async function authDelete<T>(url: string, token?: string): Promise<T> {
 }
 
 export interface BookingRecord {
-  id:                number
-  flightId:          number
-  flightNumber:      string
-  departureAirport:  string
-  arrivalAirport:    string
-  departureTime:     string
-  arrivalTime:       string
-  price:             number
-  bookingDate:       string
-  seatNumber:        string
-  confirmationCode:  string
+  id:                    number
+  flightId:              number
+  flightNumber:          string
+  departureAirport:      string
+  arrivalAirport:        string
+  departureAirportCode:  string
+  arrivalAirportCode:    string
+  departureTime:         string
+  arrivalTime:           string
+  price:                 number
+  bookingDate:           string
+  seatNumber:            string
+  confirmationCode:      string
 }
 
 export interface FlightSearchParams {
@@ -140,10 +154,19 @@ export interface AiChatHistoryMessage {
   content: string
 }
 
+export interface AiCheckoutData {
+  flightId:        number
+  passenger:       { firstName: string; lastName: string }
+  priceUsd:        number | null
+  departureCity?:  string | null
+  arrivalCity?:    string | null
+}
+
 export interface AiChatResponse {
   message:            string
   flightIdsMentioned: number[]
   toolCallsMade:      string[]
+  checkoutData?:      AiCheckoutData | null
 }
 
 export const aiApi = {
@@ -209,6 +232,14 @@ export interface UserSearchResult {
   isFollowedByCurrentUser: boolean
 }
 
+export interface UserSummary {
+  id:         number
+  firstName:  string
+  lastName:   string
+  email:      string
+  followedAt: string
+}
+
 export const socialApi = {
   getMyStats:           (token?: string) =>
     authGet<UserStats>(`${BASE_URL}/api/social/stats/me`, token),
@@ -218,10 +249,32 @@ export const socialApi = {
     authGet<string[]>(`${BASE_URL}/api/social/visited-countries`, token),
   search:               (q: string, token?: string) =>
     authGet<UserSearchResult[]>(`${BASE_URL}/api/social/search?q=${encodeURIComponent(q)}`, token),
+  getUserVisitedCountries: (id: number, token?: string) =>
+    authGet<string[]>(`${BASE_URL}/api/social/${id}/visited-countries`, token),
+  getMyFollowers:  (token?: string) =>
+    authGet<UserSummary[]>(`${BASE_URL}/api/social/followers`, token),
+  getMyFollowing:  (token?: string) =>
+    authGet<UserSummary[]>(`${BASE_URL}/api/social/following`, token),
   follow:   (id: number, token?: string) =>
     authPost<{ message: string }>(`${BASE_URL}/api/social/follow/${id}`, {}, token),
   unfollow: (id: number, token?: string) =>
     authDelete<{ message: string }>(`${BASE_URL}/api/social/follow/${id}`, token),
+}
+
+export interface UserAppearance {
+  avatarDataUrl:     string | null
+  coverImageDataUrl: string | null
+  coverGradient:     string | null
+  bio:               string | null
+}
+
+export const usersApi = {
+  getMyAppearance:    (token?: string) =>
+    authGet<UserAppearance>(`${BASE_URL}/api/users/me/appearance`, token),
+  updateMyAppearance: (data: UserAppearance, token?: string) =>
+    authPut<UserAppearance>(`${BASE_URL}/api/users/me/appearance`, data, token),
+  getUserAppearance:  (id: number, token?: string) =>
+    authGet<UserAppearance>(`${BASE_URL}/api/users/${id}/appearance`, token),
 }
 
 export const weatherApi = {

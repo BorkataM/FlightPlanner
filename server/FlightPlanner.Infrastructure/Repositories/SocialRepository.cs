@@ -124,20 +124,21 @@ namespace FlightPlanner.Infrastructure.Repositories
 
         public async Task<IEnumerable<string>> GetVisitedCountriesAsync(int userId)
         {
-            var dep = _context.Bookings
+            var dep = await _context.Bookings
                 .Where(b => b.UserId == userId)
-                .Select(b => b.Flight.DepartureAirport.Country);
+                .Select(b => b.Flight.DepartureAirport.Country)
+                .ToListAsync();
 
-            var arr = _context.Bookings
+            var arr = await _context.Bookings
                 .Where(b => b.UserId == userId)
-                .Select(b => b.Flight.ArrivalAirport.Country);
+                .Select(b => b.Flight.ArrivalAirport.Country)
+                .ToListAsync();
 
-            return await dep
-                .Union(arr)
-                .Where(c => c != null && c != "")
+            return dep.Concat(arr)
+                .Where(c => !string.IsNullOrEmpty(c))
                 .Distinct()
                 .OrderBy(c => c)
-                .ToListAsync();
+                .ToList();
         }
     }
 }

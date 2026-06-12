@@ -120,6 +120,11 @@
   background-clip: text;
   display: inline-block;
 }
+.hero-bg-image {
+  background-size: cover;
+  background-position: center;
+  transition: filter 0.7s ease;
+}
 .hero-blob-orange { background: radial-gradient(circle, rgba(200,100,20,0.18) 0%, transparent 70%); }
 .hero-blob-amber  { background: radial-gradient(circle, rgba(160,70,10,0.14)  0%, transparent 70%); }
 
@@ -254,7 +259,7 @@
     box-shadow: 0 24px 64px rgba(30,64,175,0.22), 0 4px 16px rgba(0,0,0,0.08);
     overflow: visible;
   }
-  .hero-overlay {
+  .hero-overlay-day {
     background:
       linear-gradient(105deg,
         rgba(30,64,175,0.94)  0%,
@@ -266,6 +271,17 @@
       radial-gradient(ellipse at 80% 55%, rgba(251,146,60,0.30) 0%, transparent 50%),
       radial-gradient(ellipse at 65% 20%, rgba(99,102,241,0.18) 0%, transparent 45%);
   }
+  .hero-overlay-night {
+    background:
+      linear-gradient(105deg,
+        rgba(2,5,20,0.98)    0%,
+        rgba(4,8,28,0.96)    22%,
+        rgba(4,8,28,0.68)    50%,
+        rgba(2,5,18,0.26)    72%,
+        transparent           86%
+      ),
+      radial-gradient(ellipse at 88% 12%, rgba(180,210,255,0.10) 0%, transparent 38%);
+  }
   .nav-blur {
     background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(16px);
@@ -273,4 +289,83 @@
     border-bottom: 1px solid #E0E7FF;
     box-shadow: 0 1px 8px rgba(30,64,175,0.08);
   }
+}
+
+/* ── dark mode ─────────────────────────────────────────────────── */
+.dark body {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+.dark ::-webkit-scrollbar-track { background: #1e293b; }
+.dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+.dark .nav-blur {
+  background: rgba(15, 23, 42, 0.97);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.4);
+}
+
+.dark .glass-card {
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+
+.dark .search-glass {
+  background: #1e293b;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.dark .auth-field {
+  border-color: rgba(255,255,255,0.10);
+  background: #1e293b;
+}
+.dark .auth-field:focus-within {
+  background: #263557;
+  border-color: #7C3AED;
+}
+
+.dark .browse-panel {
+  background: #1e293b;
+  border-color: rgba(255,255,255,0.06);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.dark .browse-airport-sidebar {
+  border-left-color: rgba(255,255,255,0.06);
+}
+
+.dark .airport-dropdown {
+  background: #1e293b;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* dark datepicker */
+.dark .react-datepicker {
+  background: #1e293b !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.dark .react-datepicker__header {
+  background: #162033 !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+.dark .react-datepicker__current-month { color: #f1f5f9 !important; }
+.dark .react-datepicker__day-name      { color: #94a3b8 !important; }
+.dark .react-datepicker__day           { color: #e2e8f0 !important; }
+.dark .react-datepicker__day:hover     { background: #334155 !important; color: #ffffff !important; }
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--keyboard-selected {
+  background: linear-gradient(135deg,#7C3AED,#5B21B6) !important;
+  color: #fff !important;
+}
+.dark .react-datepicker__day--disabled      { color: #475569 !important; }
+.dark .react-datepicker__day--outside-month { color: #475569 !important; }
+.dark .react-datepicker__day.dp-in-range    { background: rgba(124,58,237,0.25) !important; color: #c4b5fd !important; }
+.dark .react-datepicker__navigation-icon::before { border-color: #94a3b8 !important; }
+.dark .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before { border-color: #f1f5f9 !important; }
+.dark .dp-day-price { color: #34d399; }
+
+/* hero night mode */
+.dark .hero-bg-image {
+  filter: brightness(0.30) saturate(0.55);
 }

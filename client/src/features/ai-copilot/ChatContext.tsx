@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { aiApi, flightsApi } from '../../services/api'
 import type { AiChatHistoryMessage } from '../../services/api'
 import type { ChatTurn } from './types'
@@ -35,6 +36,7 @@ const MAX_HISTORY = 12
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, { turns: [], isLoading: false })
   const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate()
 
   const sendMessage = useCallback(async (message: string) => {
     dispatch({ type: 'ADD_TURN', turn: { role: 'user', content: message } })
@@ -42,12 +44,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     const history: AiChatHistoryMessage[] = state.turns
       .slice(-MAX_HISTORY)
-      .map(t => ({ role: t.role, content: t.content }))
-
-    const isBookingRequest = /\b(book|reserve|purchase|buy)\b/i.test(message)
+      .map(t => ({ role: t.role, content: t.rawContent ?? t.content }))
 
     try {
       const res = await aiApi.chat(message, history)
+
+      const checkoutData = res.checkoutData
+      const isBookingRequest = /\b(book|reserve|purchase|buy)\b/i.test(message)
 
       let flights: FlightDto[] | undefined
       if (isBookingRequest && res.flightIdsMentioned?.length) {
@@ -64,12 +67,55 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       dispatch({
         type: 'ADD_TURN',
         turn: {
-          role:      'assistant',
-          content:   res.message,
-          flights:   flights?.length ? flights : undefined,
-          toolsUsed: res.toolCallsMade,
+          role:       'assistant',
+          content:    res.message.replace(/\[flight_id:\s*\d+\]/g, '').trim(),
+          rawContent: res.message,
+          flights:    flights?.length ? flights : undefined,
+          toolsUsed:  res.toolCallsMade,
         },
       })
+
+      const bookingInitiated = res.toolCallsMade?.includes('initiate_booking')
+
+      if (bookingInitiated && checkoutData?.flightId) {
+        const flightId = checkoutData.flightId
+        try {
+          setIsOpen(false)
+          const flight =
+            flights?.find(f => f.id === flightId) ??
+            await flightsApi.getById(flightId)
+          const tok = (() => {
+            try {
+              const s = localStorage.getItem('skywave_user')
+              return s ? (JSON.parse(s) as { token: string }).token : ''
+            } catch { return '' }
+          })()
+          navigate('/booking', {
+            state: {
+              outbound:    flight,
+              ret:         null,
+              totalPrice:  flight.price,
+              isRoundTrip: false,
+              fromCity:    checkoutData.departureCity ?? flight.departureCity ?? '',
+              toCity:      checkoutData.arrivalCity   ?? flight.arrivalCity   ?? '',
+              token:       tok,
+              passenger:   checkoutData.passenger,
+            },
+          })
+        } catch (navErr) {
+          console.error('[ChatContext] Navigation to booking failed:', navErr)
+          dispatch({
+            type: 'ADD_TURN',
+            turn: {
+              role:    'assistant',
+              content: 'I prepared your checkout but had trouble opening the payment page. Please try booking again.',
+              isError: true,
+            },
+          })
+        }
+      } else if (bookingInitiated && !checkoutData?.flightId) {
+        console.warn('[ChatContext] initiate_booking called but checkoutData.flightId is missing:', checkoutData)
+      }
     } catch (err) {
       dispatch({
         type: 'ADD_TURN',

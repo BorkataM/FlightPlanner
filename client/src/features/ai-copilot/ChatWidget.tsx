@@ -20,14 +20,14 @@ function GreetingCard({
   const text = greeting.replace('{name}', firstName)
   return (
     <div className="px-4 pt-4 pb-2">
-      <div className="bg-gradient-to-br from-blue-50 to-violet-50 border border-blue-100 rounded-xl p-4">
-        <p className="text-[13px] text-slate-700 leading-relaxed mb-3">{text}</p>
+      <div className="bg-gradient-to-br from-blue-50 to-violet-50 dark:from-slate-800 dark:to-slate-800 border border-blue-100 dark:border-slate-700 rounded-xl p-4">
+        <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed mb-3">{text}</p>
         <div className="flex flex-col gap-1.5">
           {suggestions.map(s => (
             <button
               key={s}
               onClick={() => onSuggestion(s)}
-              className="text-left text-[12px] text-blue-600 hover:text-blue-800 bg-white hover:bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 transition-colors leading-snug"
+              className="text-left text-[12px] text-blue-600 hover:text-blue-800 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-slate-600 border border-blue-100 dark:border-slate-600 rounded-lg px-3 py-2 transition-colors leading-snug"
             >
               {s}
             </button>
@@ -83,7 +83,7 @@ export default function ChatWidget() {
           role="dialog"
           aria-label="SkyWave AI chat"
           aria-modal="true"
-          className="fixed bottom-6 right-6 z-[9999] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden
+          className="fixed bottom-6 right-6 z-[9999] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden
                      w-[370px] h-[580px]
                      max-sm:inset-0 max-sm:w-auto max-sm:h-auto max-sm:rounded-none"
         >

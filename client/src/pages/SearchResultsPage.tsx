@@ -43,10 +43,10 @@ const fmtLegDate = (s?: string | null) =>
 
 /* ── badge styles ────────────────────────────────────────────── */
 const BADGE_CLASS: Record<Badge, string> = {
-  CHEAPEST: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  FASTEST:  'bg-sky-50     text-sky-700     border border-sky-200',
-  BEST:     'bg-violet-50  text-violet-700  border border-violet-200',
-  ECO:      'bg-teal-50    text-teal-700    border border-teal-200',
+  CHEAPEST: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
+  FASTEST:  'bg-sky-50     dark:bg-sky-950  text-sky-700     dark:text-sky-400  border border-sky-200     dark:border-sky-800',
+  BEST:     'bg-violet-50  dark:bg-violet-950 text-violet-700  dark:text-violet-400 border border-violet-200  dark:border-violet-800',
+  ECO:      'bg-teal-50    dark:bg-teal-950 text-teal-700    dark:text-teal-400 border border-teal-200    dark:border-teal-800',
 }
 
 /* ── FlightLeg ───────────────────────────────────────────────── */
@@ -62,8 +62,8 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
         {direction && (
           <span className={`text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full border ${
             direction === 'Outbound'
-              ? 'bg-blue-50 text-blue-500 border-blue-100'
-              : 'bg-violet-50 text-violet-500 border-violet-100'
+              ? 'bg-blue-50 dark:bg-blue-950 text-blue-500 border-blue-100 dark:border-blue-900'
+              : 'bg-violet-50 dark:bg-violet-950 text-violet-500 border-violet-100 dark:border-violet-900'
           }`}>
             {direction}
           </span>
@@ -74,7 +74,7 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
       <div className="flex items-center gap-4">
         {/* departure */}
         <div className="shrink-0 w-16">
-          <div className="text-[22px] font-black text-slate-900 leading-none tabular-nums">
+          <div className="text-[22px] font-black text-slate-900 dark:text-slate-100 leading-none tabular-nums">
             {fmtTime(flight.departureTime)}
           </div>
           <div className="text-[11px] font-bold text-slate-400 tracking-wider mt-1">
@@ -86,11 +86,11 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
         <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
           <span className="text-[11px] text-slate-400 font-medium">{fmtDur(dur)}</span>
           <div className="w-full flex items-center gap-1.5">
-            <div className="flex-1 h-px bg-slate-200" />
-            <div className="w-6 h-6 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+            <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center shrink-0 shadow-sm">
               <Plane className="w-3 h-3 text-slate-400 rotate-90" />
             </div>
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
           </div>
           <span className="text-[11px] text-slate-400">
             {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
@@ -99,7 +99,7 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
 
         {/* arrival */}
         <div className="shrink-0 w-16 text-right">
-          <div className="text-[22px] font-black text-slate-900 leading-none tabular-nums">
+          <div className="text-[22px] font-black text-slate-900 dark:text-slate-100 leading-none tabular-nums">
             {fmtTime(flight.arrivalTime)}
           </div>
           <div className="text-[11px] font-bold text-slate-400 tracking-wider mt-1">
@@ -109,7 +109,7 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
 
         {/* airline */}
         <div className="shrink-0 ml-3 text-right hidden sm:block w-28">
-          <div className="text-[13px] font-semibold text-slate-600 truncate">{flight.airlineName}</div>
+          <div className="text-[13px] font-semibold text-slate-600 dark:text-slate-300 truncate">{flight.airlineName}</div>
           <div className="text-[11px] font-mono text-slate-400 mt-0.5">{flight.flightNumber}</div>
         </div>
       </div>
@@ -124,7 +124,7 @@ function FlightCard({ combo, isRoundTrip, onSelect }: { combo: Combo; isRoundTri
                    :                           'per person'
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-200 overflow-hidden flex">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-200 overflow-hidden flex">
       {/* left: flight details */}
       <div className="flex-1 min-w-0">
         {combo.badges.length > 0 && (
@@ -141,16 +141,16 @@ function FlightCard({ combo, isRoundTrip, onSelect }: { combo: Combo; isRoundTri
 
         {isRoundTrip && combo.ret && (
           <>
-            <div className="mx-6 border-t border-dashed border-slate-100" />
+            <div className="mx-6 border-t border-dashed border-slate-100 dark:border-slate-700" />
             <FlightLeg flight={combo.ret} direction="Return" />
           </>
         )}
       </div>
 
       {/* right: price panel */}
-      <div className="w-44 shrink-0 flex flex-col items-center justify-center gap-4 py-6 px-5 border-l border-slate-100 bg-gradient-to-b from-slate-50/80 to-white">
+      <div className="w-32 lg:w-44 shrink-0 flex flex-col items-center justify-center gap-3 lg:gap-4 py-5 lg:py-6 px-3 lg:px-5 border-l border-slate-100 dark:border-slate-700 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-700/50 dark:to-slate-800">
         <div className="text-center">
-          <div className="text-[32px] font-black text-slate-900 leading-none tabular-nums">
+          <div className="text-[24px] lg:text-[32px] font-black text-slate-900 dark:text-slate-100 leading-none tabular-nums">
             €{Math.round(combo.totalPrice)}
           </div>
           <div className="text-[11px] text-slate-400 mt-1.5 font-medium">{priceLabel}</div>
@@ -338,10 +338,10 @@ export default function SearchResultsPage() {
   const minPrice = priceByDate.size ? Math.min(...priceByDate.values()) : 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
 
       {/* ── sticky header ── */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-20 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3 lg:py-4 sticky top-0 z-20 shadow-sm">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <button
             onClick={() => {
@@ -356,10 +356,10 @@ export default function SearchResultsPage() {
               } catch { /* ignore */ }
               navigate('/')
             }}
-            className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium">
+            className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium">
             <ChevronLeft className="w-4 h-4" /> Modify search
           </button>
-          <div className="text-base font-bold text-slate-900">
+          <div className="text-base font-bold text-slate-900 dark:text-slate-100">
             {fromCity} → {toCity}
             <span className="ml-2 text-sm font-normal text-slate-400">
               · {isRoundTrip ? 'Round trip' : 'One way'}
@@ -371,10 +371,10 @@ export default function SearchResultsPage() {
 
       {/* ── outbound date tabs ── */}
       {availDates.length > 0 && (
-        <div className="bg-white border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
           <div className="max-w-5xl mx-auto flex items-center">
             <button onClick={() => scrollTabs(-1)}
-              className="p-3 text-slate-400 hover:text-slate-700 transition-colors shrink-0">
+              className="p-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors shrink-0">
               <ChevronLeft className="w-4 h-4" />
             </button>
 
@@ -384,7 +384,7 @@ export default function SearchResultsPage() {
                 className={`flex flex-col items-center px-5 py-3.5 border-b-2 transition-all shrink-0 ${
                   allDates
                     ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-400 hover:text-slate-700'
+                    : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 <span className="text-xs font-bold whitespace-nowrap">All dates</span>
@@ -403,12 +403,12 @@ export default function SearchResultsPage() {
                     className={`flex flex-col items-center px-5 py-3.5 border-b-2 transition-all shrink-0 ${
                       active
                         ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
                     <span className="text-xs font-semibold whitespace-nowrap">{fmtTabDate(date)}</span>
                     {price !== undefined && (
-                      <span className={`text-sm font-bold mt-0.5 ${active ? '' : 'text-slate-700'}`}>
+                      <span className={`text-sm font-bold mt-0.5 ${active ? '' : 'text-slate-700 dark:text-slate-300'}`}>
                         €{Math.round(price)}
                       </span>
                     )}
@@ -418,7 +418,7 @@ export default function SearchResultsPage() {
             </div>
 
             <button onClick={() => scrollTabs(1)}
-              className="p-3 text-slate-400 hover:text-slate-700 transition-colors shrink-0">
+              className="p-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors shrink-0">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -427,7 +427,7 @@ export default function SearchResultsPage() {
 
       {/* ── return date chips ── */}
       {isRoundTrip && retDates.length > 0 && (
-        <div className="bg-white border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
           <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 overflow-x-auto results-tab-scroll">
             <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 shrink-0">
               Return
@@ -437,7 +437,7 @@ export default function SearchResultsPage() {
                 className={`text-xs px-3.5 py-1.5 rounded-full border font-semibold transition-all shrink-0 whitespace-nowrap ${
                   date === selRet
                     ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'
+                    : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-blue-300 hover:text-blue-600'
                 }`}
               >
                 {fmtTabDate(date)} · €{Math.round(cheapestRetByDate.get(date)!.price)}
@@ -449,8 +449,8 @@ export default function SearchResultsPage() {
 
       {/* ── no return flights notice ── */}
       {isRoundTrip && !loading && returns.length === 0 && (
-        <div className="bg-amber-50 border-b border-amber-100">
-          <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 text-sm text-amber-700">
+        <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-100 dark:border-amber-900">
+          <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
             <Info className="w-4 h-4 shrink-0" />
             No return flights found for <strong>{toCity} → {fromCity}</strong>. Showing outbound prices only.
           </div>
@@ -466,7 +466,7 @@ export default function SearchResultsPage() {
               className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all capitalize ${
                 sort === s
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:border-blue-300 hover:text-blue-600'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
               {s}
@@ -484,10 +484,10 @@ export default function SearchResultsPage() {
           </div>
         ) : combos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-36 gap-2 text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-              <Plane className="w-7 h-7 text-slate-300" />
+            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-2">
+              <Plane className="w-7 h-7 text-slate-300 dark:text-slate-500" />
             </div>
-            <p className="text-slate-700 font-bold text-lg">No flights found</p>
+            <p className="text-slate-700 dark:text-slate-200 font-bold text-lg">No flights found</p>
             <p className="text-slate-400 text-sm">Try different dates or tap "All dates"</p>
           </div>
         ) : (

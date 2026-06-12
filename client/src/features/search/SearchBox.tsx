@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plane, ArrowLeftRight, Calendar, Search, ChevronDown, Users, Loader2, X } from 'lucide-react'
+import { Plane, ArrowLeftRight, Calendar, Search, ChevronDown, Users, Loader2, X, Hotel } from 'lucide-react'
 import AirportSelect from './AirportSelect'
 import DateField from './DateField'
 import FlexDatesGrid from './FlexDatesGrid'
@@ -29,15 +30,56 @@ const Tab = ({ icon, label, active, onClick }: { icon: React.ReactNode; label: s
   </button>
 )
 
-const FilterChip = ({ label }: { label: string }) => (
-  <button className="text-slate-500 hover:text-slate-900 text-xs font-medium transition-colors whitespace-nowrap">{label}</button>
-)
+function PassengerPicker({ count, onChange }: { count: number; onChange: (n: number) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors font-medium text-xs"
+      >
+        <Users className="w-3.5 h-3.5" />
+        {count} {count === 1 ? 'Passenger' : 'Passengers'}
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-50 p-4 w-40">
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide text-center mb-3">Passengers</p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => onChange(Math.max(1, count - 1))}
+              disabled={count <= 1}
+              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-lg leading-none"
+            >−</button>
+            <span className="w-6 text-center text-sm font-bold text-slate-800 dark:text-slate-100">{count}</span>
+            <button
+              onClick={() => onChange(Math.min(9, count + 1))}
+              disabled={count >= 9}
+              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-lg leading-none"
+            >+</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function SearchBox() {
   const { t: locale } = useLocale()
   const t             = locale.search
   const sb            = useSearchBox()
   const navigate      = useNavigate()
+  const [passengers, setPassengers] = useState(1)
   const minReturnDate = calcMinReturnDate(sb.departure)
   const canSearch     = !!sb.fromAirport && !!sb.toAirport
   const hasSearch     = !!(sb.fromAirport || sb.toAirport || sb.departure || sb.returnDate)
@@ -54,7 +96,7 @@ export default function SearchBox() {
     if (!canSearch) return
     const from = sb.fromAirport!.iataCode ?? sb.fromAirport!.icaoCode
     const to   = sb.toAirport!.iataCode   ?? sb.toAirport!.icaoCode
-    const params = new URLSearchParams({ from, to, trip: sb.tripType, fromCity: sb.fromAirport!.city, toCity: sb.toAirport!.city })
+    const params = new URLSearchParams({ from, to, trip: sb.tripType, fromCity: sb.fromAirport!.city, toCity: sb.toAirport!.city, passengers: String(passengers) })
     if (sb.departure)                    params.set('departure',  toDateStr(sb.departure))
     if (sb.returnDate && sb.isRoundTrip) params.set('returnDate', toDateStr(sb.returnDate))
     navigate(`/search?${params}`)
@@ -64,22 +106,21 @@ export default function SearchBox() {
     <>
       <div className="search-glass rounded-2xl w-full max-w-[900px]">
 
-        <div className="flex items-center justify-between px-4 pt-3 pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between px-4 pt-3 pb-3">
           <div className="flex items-center gap-1">
             <Tab icon={<Plane className="w-3.5 h-3.5" />} label={t.tabs.flights} active onClick={() => {}} />
+            <Tab icon={<Hotel className="w-3.5 h-3.5" />} label={t.tabs.hotels} active={false} onClick={() => window.open('https://www.booking.bg', '_blank')} />
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <button onClick={sb.handleTripTypeToggle} className="flex items-center gap-1 hover:text-slate-900 transition-colors font-medium">
+          <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <button onClick={sb.handleTripTypeToggle} className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-100 transition-colors font-medium">
               {sb.isRoundTrip ? t.roundTrip : t.oneWay} <ChevronDown className="w-3 h-3" />
             </button>
-            <button className="flex items-center gap-1.5 hover:text-slate-900 transition-colors font-medium">
-              <Users className="w-3.5 h-3.5" /> {t.passengers} <ChevronDown className="w-3 h-3" />
-            </button>
+            <PassengerPicker count={passengers} onChange={setPassengers} />
           </div>
         </div>
 
-        <div className="relative flex items-stretch border-b border-slate-100">
-          <div className={`flex-1 grid divide-x divide-slate-100 ${sb.isRoundTrip ? ROUND_TRIP_GRID : ONE_WAY_GRID}`}>
+        <div className="relative flex items-stretch">
+          <div className={`flex-1 grid ${sb.isRoundTrip ? ROUND_TRIP_GRID : ONE_WAY_GRID}`}>
             <AirportSelect
               label={t.fields.from.label}
               icon={<Plane className="w-4 h-4 rotate-45" />}
@@ -93,7 +134,7 @@ export default function SearchBox() {
               closeSignal={sb.fromCloseSignal}
             />
 
-            <button onClick={sb.swapAirports} className="flex items-center justify-center px-3 text-gray-500 hover:text-white transition-colors">
+            <button onClick={sb.swapAirports} className="flex items-center justify-center px-3 text-gray-500 dark:text-slate-400 hover:text-white transition-colors">
               <ArrowLeftRight className="w-4 h-4" />
             </button>
 
@@ -164,25 +205,20 @@ export default function SearchBox() {
           )}
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-5">
-            {t.filters.map(f => <FilterChip key={f} label={f} />)}
-          </div>
-          <div className="flex items-center gap-4">
-            {hasSearch && (
-              <button
-                onClick={handleClear}
-                className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-500 transition-colors"
-              >
-                <X className="w-3 h-3" /> Clear search
-              </button>
-            )}
-            <span className="text-xs text-slate-500 font-medium">{t.flexibleDates}</span>
-            <button onClick={() => sb.setFlexDates(!sb.flexDates)}
-              className={`relative w-9 h-5 rounded-full transition-colors ${sb.flexDates ? 'bg-blue-500' : 'bg-gray-600'}`}>
-              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${sb.flexDates ? 'left-4' : 'left-0.5'}`} />
+        <div className="flex items-center justify-end px-4 py-2.5 gap-4">
+          {hasSearch && (
+            <button
+              onClick={handleClear}
+              className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <X className="w-3 h-3" /> Clear search
             </button>
-          </div>
+          )}
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.flexibleDates}</span>
+          <button onClick={() => sb.setFlexDates(!sb.flexDates)}
+            className={`relative w-9 h-5 rounded-full transition-colors ${sb.flexDates ? 'bg-blue-500' : 'bg-gray-600'}`}>
+            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${sb.flexDates ? 'left-4' : 'left-0.5'}`} />
+          </button>
         </div>
       </div>
 
@@ -198,7 +234,7 @@ export default function SearchBox() {
             <p className="text-blue-200 text-sm opacity-70">{t.noFlights}</p>
           )}
           {sb.previewDestinations.length > 0 && (
-            <div className="dest-scroll grid grid-cols-4 gap-2.5 max-h-[280px] overflow-y-auto pr-1">
+            <div className="dest-scroll grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 max-h-[280px] overflow-y-auto pr-1">
               {sb.previewDestinations.map(d => {
                 const airport = sb.destAirports.find(a => (a.iataCode ?? a.icaoCode) === d.code)
                 return (

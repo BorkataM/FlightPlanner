@@ -92,6 +92,26 @@ namespace FlightPlanner.Core.Services
             return MapProfile(updated);
         }
 
+        public async Task<UserAppearanceDto?> GetAppearanceAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            return user is null ? null : MapAppearance(user);
+        }
+
+        public async Task<UserAppearanceDto?> UpdateAppearanceAsync(int userId, UserAppearanceDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user is null) return null;
+
+            user.AvatarDataUrl     = dto.AvatarDataUrl;
+            user.CoverImageDataUrl = dto.CoverImageDataUrl;
+            user.CoverGradient     = dto.CoverGradient;
+            user.Bio               = dto.Bio;
+
+            var updated = await _userRepository.UpdateAsync(user);
+            return MapAppearance(updated);
+        }
+
         private AuthResponseDto BuildResponse(User user) => new()
         {
             Token = _tokenService.CreateToken(user),
@@ -110,6 +130,14 @@ namespace FlightPlanner.Core.Services
             LastName = user.LastName,
             Age = user.Age,
             CreatedAt = user.CreatedAt
+        };
+
+        private static UserAppearanceDto MapAppearance(User user) => new()
+        {
+            AvatarDataUrl     = user.AvatarDataUrl,
+            CoverImageDataUrl = user.CoverImageDataUrl,
+            CoverGradient     = user.CoverGradient,
+            Bio               = user.Bio,
         };
     }
 }

@@ -276,7 +276,7 @@ export default function BoardingPassPage() {
 
   if (!raw) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-500 mb-4">No boarding pass data found.</p>
           <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">
@@ -322,8 +322,8 @@ export default function BoardingPassPage() {
       passenger, bookingRef, direction, compact,
     }
     if (bk) return {
-      depCode:   bk.departureAirport,
-      arrCode:   bk.arrivalAirport,
+      depCode:   bk.departureAirportCode || bk.departureAirport.slice(0, 4).toUpperCase(),
+      arrCode:   bk.arrivalAirportCode   || bk.arrivalAirport.slice(0, 4).toUpperCase(),
       depCity:   dCity || bk.departureAirport,
       arrCity:   aCity || bk.arrivalAirport,
       depTime:   fmtTime(bk.departureTime),
@@ -357,18 +357,18 @@ export default function BoardingPassPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-slate-50 print:bg-white flex flex-col">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 print:bg-white flex flex-col">
 
         {/* ── header ──────────────────────────────────────────── */}
-        <div className="print:hidden bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-20 shadow-sm">
+        <div className="print:hidden bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3 lg:py-4 sticky top-0 z-20 shadow-sm">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between">
             <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium"
+              onClick={() => raw?.fromBooking ? navigate('/', { replace: true }) : navigate(-1)}
+              className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
-            <span className="font-black text-slate-900 tracking-tight">SkyWave</span>
+            <button onClick={() => navigate('/')} className="font-black text-slate-900 dark:text-slate-100 tracking-tight hover:opacity-70 transition-opacity">SkyWave</button>
             <button
               onClick={() => window.print()}
               className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
@@ -383,7 +383,7 @@ export default function BoardingPassPage() {
 
           {/* title — pinned at top, centered */}
           <div className="print:hidden text-center pt-10 pb-6 px-6">
-            <h1 className="text-2xl font-black text-slate-900 mb-1">Your Boarding Pass</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-1">Your Boarding Pass</h1>
             <p className="text-slate-400 text-sm">
               Booking reference:&nbsp;
               <span className="font-black text-blue-600 tracking-[0.15em] font-mono">{bookingRef}</span>
@@ -397,19 +397,19 @@ export default function BoardingPassPage() {
           </div>
 
           {/* cards — fill remaining height, centered in both axes */}
-          <div className="flex-1 flex items-center justify-center px-6 pb-10">
+          <div className="flex-1 flex items-center justify-center px-4 lg:px-6 pb-10">
             <div
-              className={`bp-cards flex gap-8 justify-center items-center ${
-                hasReturn ? 'flex-row' : 'flex-col'
+              className={`bp-cards flex gap-6 xl:gap-8 justify-center items-center ${
+                hasReturn ? 'flex-col xl:flex-row' : 'flex-col'
               }`}
             >
               {outboundCard && (
-                <div className={`bp-card-wrap shrink-0 ${hasReturn ? 'w-[700px]' : 'w-full max-w-[800px]'}`}>
+                <div className={`bp-card-wrap shrink-0 ${hasReturn ? 'w-full max-w-[700px]' : 'w-full max-w-[800px]'}`}>
                   <BoardingPassCard {...outboundCard} />
                 </div>
               )}
               {returnCard && (
-                <div className="bp-card-wrap w-[700px] shrink-0">
+                <div className="bp-card-wrap w-full max-w-[700px] shrink-0">
                   <BoardingPassCard {...returnCard} />
                 </div>
               )}

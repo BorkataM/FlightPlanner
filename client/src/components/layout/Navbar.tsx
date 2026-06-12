@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
-import { Globe, ChevronDown, LogOut, Check } from 'lucide-react'
+import { Globe, ChevronDown, LogOut, Check, Sun, Moon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import SkyWaveLogo from '../../assets/logo/SkyWaveLogo'
 import { useAuth } from '../../context/AuthContext'
 import { useLocale, LANGUAGES } from '../../context/LocaleContext'
 import type { LocaleCode } from '../../context/LocaleContext'
+import { useTheme } from '../../context/ThemeContext'
 
 const MY_BOOKINGS_LABELS = new Set(['My Bookings', 'Моите резервации'])
 const TRAVELERS_LABELS   = new Set(['Travelers', 'Пътешественици'])
+const HOTELS_LABELS      = new Set(['Hotels', 'Хотели'])
 
 interface NavLinkProps {
   label:    string
@@ -22,8 +24,8 @@ function NavLink({ label, active = false, onClick }: NavLinkProps) {
       onClick={e => { e.preventDefault(); onClick?.() }}
       className={`text-sm font-medium transition-colors ${
         active
-          ? 'text-indigo-700 border-b-2 border-indigo-600 pb-0.5'
-          : 'text-slate-500 hover:text-indigo-700'
+          ? 'text-indigo-700 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 pb-0.5'
+          : 'text-slate-500 dark:text-slate-400 hover:text-indigo-700 dark:hover:text-indigo-400'
       }`}
     >
       {label}
@@ -53,7 +55,7 @@ function LanguageDropdown({ locale, label, setLocale }: LanguageDropdownProps) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 text-slate-600 text-sm font-medium hover:text-slate-900 transition-colors"
+        className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
       >
         <Globe className="w-4 h-4" />
         {label}
@@ -61,13 +63,13 @@ function LanguageDropdown({ locale, label, setLocale }: LanguageDropdownProps) {
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 w-40">
+        <div className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden z-50 w-40">
           {LANGUAGES.map(lang => (
             <button
               key={lang.code}
               onClick={() => { setLocale(lang.code); setOpen(false) }}
-              className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-slate-50 transition-colors ${
-                locale === lang.code ? 'text-indigo-600 font-semibold' : 'text-slate-700'
+              className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+                locale === lang.code ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-700 dark:text-slate-300'
               }`}
             >
               {lang.label}
@@ -88,19 +90,20 @@ interface NavbarProps {
 export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
   const { user }                    = useAuth()
   const { t: locale, locale: code, setLocale } = useLocale()
+  const { theme, toggleTheme }      = useTheme()
   const t        = locale.navbar
   const navigate = useNavigate()
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 nav-blur">
-      <div className="max-w-[1280px] mx-auto flex items-center justify-between px-8 h-16">
+      <div className="max-w-[1280px] mx-auto flex items-center justify-between px-4 lg:px-6 xl:px-8 h-14 lg:h-16">
 
-        <div className="flex items-center gap-2.5">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <SkyWaveLogo />
-          <span className="text-slate-900 font-semibold text-[1.15rem] tracking-tight">{t.brand}</span>
-        </div>
+          <span className="text-slate-900 dark:text-slate-100 font-semibold text-base lg:text-[1.15rem] tracking-tight">{t.brand}</span>
+        </button>
 
-        <div className="flex items-center gap-7">
+        <div className="flex items-center gap-4 lg:gap-5 xl:gap-7">
           {t.links.map(label => (
             <NavLink
               key={label}
@@ -109,31 +112,40 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
               onClick={
                 MY_BOOKINGS_LABELS.has(label) ? () => navigate('/my-bookings') :
                 TRAVELERS_LABELS.has(label)   ? () => navigate('/travelers')   :
+                HOTELS_LABELS.has(label)      ? () => window.open('https://www.booking.bg', '_blank') :
                 undefined
               }
             />
           ))}
         </div>
 
-        <div className="flex items-center gap-5">
-          <span className="text-slate-600 text-sm font-medium">€ EUR</span>
+        <div className="flex items-center gap-3 xl:gap-5">
+          <span className="hidden xl:block text-slate-600 dark:text-slate-400 text-sm font-medium">€ EUR</span>
 
           <LanguageDropdown locale={code} label={t.language} setLocale={setLocale} />
 
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+
           {user ? (
-            <div className="flex items-center gap-3">
-              <span className="text-slate-700 text-sm font-semibold">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <span className="hidden sm:block text-slate-700 dark:text-slate-300 text-sm font-semibold">
                 Hi, {user.firstName}
               </span>
               <button
                 onClick={onLogout}
-                className="flex items-center gap-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+                className="flex items-center gap-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <button onClick={onSignIn} className="text-slate-700 text-sm font-medium hover:text-slate-900 transition-colors">
+            <button onClick={onSignIn} className="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
               {t.signIn}
             </button>
           )}

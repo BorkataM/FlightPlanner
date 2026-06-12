@@ -1,6 +1,22 @@
 import { useState, useRef } from 'react'
 import { X, Camera, ImageIcon } from 'lucide-react'
 
+function resizeImage(dataUrl: string, maxW: number, maxH: number): Promise<string> {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => {
+      let { width: w, height: h } = img
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.src = dataUrl
+  })
+}
+
 export interface ProfileData {
   avatarDataUrl:    string | null
   coverGradient:    string
@@ -39,7 +55,10 @@ export default function EditProfileModal({ initials, initial, onClose, onSave }:
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = ev => setAvatarDataUrl(ev.target?.result as string)
+    reader.onload = async ev => {
+      const resized = await resizeImage(ev.target?.result as string, 300, 300)
+      setAvatarDataUrl(resized)
+    }
     reader.readAsDataURL(file)
     e.target.value = ''
   }
@@ -48,7 +67,10 @@ export default function EditProfileModal({ initials, initial, onClose, onSave }:
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = ev => setCoverImageDataUrl(ev.target?.result as string)
+    reader.onload = async ev => {
+      const resized = await resizeImage(ev.target?.result as string, 1200, 400)
+      setCoverImageDataUrl(resized)
+    }
     reader.readAsDataURL(file)
     e.target.value = ''
   }

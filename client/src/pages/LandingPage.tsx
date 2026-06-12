@@ -23,7 +23,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden" style={{ background: '#EFF6FF' }}>
+    <div className="h-screen overflow-hidden bg-[#EFF6FF] dark:bg-slate-900">
       <Navbar onSignIn={() => setShowAuth(true)} onLogout={handleLogout} />
       <HeroSection />
 

@@ -17,6 +17,7 @@ export interface BookingState {
   fromCity:    string
   toCity:      string
   token:       string
+  passenger?:  { firstName: string; lastName: string }
 }
 
 type BaggageType   = 'personal' | 'carryOn'
@@ -68,8 +69,8 @@ const COUNTRIES = [
 ]
 
 /* ── shared styles ──────────────────────────────────────── */
-const inputCls  = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-300 bg-white'
-const selectCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white cursor-pointer'
+const inputCls  = 'w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all placeholder-slate-300 bg-white dark:bg-slate-700'
+const selectCls = 'w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all bg-white dark:bg-slate-700 cursor-pointer'
 
 /* ── small components ───────────────────────────────────── */
 function ProgressDot({ n, label, state }: { n: number; label: string; state: 'done' | 'active' | 'upcoming' }) {
@@ -77,8 +78,8 @@ function ProgressDot({ n, label, state }: { n: number; label: string; state: 'do
     <div className="flex flex-col items-center gap-1.5">
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
         state === 'done'   ? 'bg-emerald-500 text-white' :
-        state === 'active' ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
-                             'bg-slate-200 text-slate-400'
+        state === 'active' ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900' :
+                             'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
       }`}>
         {state === 'done' ? <Check className="w-4 h-4" /> : n}
       </div>
@@ -101,7 +102,7 @@ function FlightRow({ flight, dir }: { flight: FlightDto; dir: 'Outbound' | 'Retu
       </div>
       <div className="flex items-center gap-3">
         <div className="shrink-0">
-          <div className="text-[20px] font-black text-slate-900 tabular-nums leading-none">
+          <div className="text-[20px] font-black text-slate-900 dark:text-slate-100 tabular-nums leading-none">
             {fmtTime(flight.departureTime)}
           </div>
           <div className="text-[11px] font-bold text-slate-500 mt-1">{flight.departureAirportCode}</div>
@@ -109,16 +110,16 @@ function FlightRow({ flight, dir }: { flight: FlightDto; dir: 'Outbound' | 'Retu
         <div className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
           <span className="text-[10px] text-slate-400">{fmtDur(dur)}</span>
           <div className="w-full flex items-center gap-1">
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
             <Plane className="w-3 h-3 text-slate-400 rotate-90 shrink-0" />
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
           </div>
           <span className="text-[10px] text-slate-400">
             {flight.airlineName} · {flight.stops === 0 ? 'Direct' : `${flight.stops} stop`}
           </span>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-[20px] font-black text-slate-900 tabular-nums leading-none">
+          <div className="text-[20px] font-black text-slate-900 dark:text-slate-100 tabular-nums leading-none">
             {fmtTime(flight.arrivalTime)}
           </div>
           <div className="text-[11px] font-bold text-slate-500 mt-1">{flight.arrivalAirportCode}</div>
@@ -142,11 +143,11 @@ function FormField({ label, required, children }: { label: string; required?: bo
 function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
   return (
     <div className="flex items-center gap-3 mb-5">
-      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+      <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
         {icon}
       </div>
       <div>
-        <div className="text-sm font-bold text-slate-900">{title}</div>
+        <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{title}</div>
         {sub && <div className="text-xs text-slate-400 mt-0.5">{sub}</div>}
       </div>
     </div>
@@ -157,7 +158,7 @@ function OptionCard({ selected, onClick, children }: { selected: boolean; onClic
   return (
     <button type="button" onClick={onClick}
       className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-        selected ? 'border-blue-600 bg-blue-50/60' : 'border-slate-200 bg-white hover:border-slate-300'
+        selected ? 'border-blue-600 bg-blue-50/60 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500'
       }`}
     >
       {children}
@@ -179,7 +180,7 @@ function SummaryRow({ label, value, mono }: { label: string; value: string; mono
   return (
     <div>
       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</div>
-      <div className={`font-semibold text-slate-800 mt-0.5 capitalize ${mono ? 'font-mono text-blue-600 text-base' : 'text-sm'}`}>
+      <div className={`font-semibold text-slate-800 dark:text-slate-200 mt-0.5 capitalize ${mono ? 'font-mono text-blue-600 text-base' : 'text-sm'}`}>
         {value}
       </div>
     </div>
@@ -200,8 +201,8 @@ export default function BookingPage() {
   const [step, setStep] = useState<1 | 2>(1)
 
   /* step 1 – passenger */
-  const [firstName,   setFirstName]   = useState('')
-  const [lastName,    setLastName]    = useState('')
+  const [firstName,   setFirstName]   = useState(state?.passenger?.firstName ?? '')
+  const [lastName,    setLastName]    = useState(state?.passenger?.lastName  ?? '')
   const [nationality, setNationality] = useState('')
   const [gender,      setGender]      = useState('')
   const [dobDay,      setDobDay]      = useState('')
@@ -230,7 +231,7 @@ export default function BookingPage() {
   /* guard */
   if (!state) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-500 mb-4">No flight selected.</p>
           <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">
@@ -297,16 +298,16 @@ export default function BookingPage() {
   /* ── Confirmation ──────────────────────────────────────── */
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full text-center">
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
             <Check className="w-10 h-10 text-emerald-600" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-1">Booking Confirmed!</h1>
-          <p className="text-slate-400 mb-8">Your trip to <strong className="text-slate-700">{toCity}</strong> is all set.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-1">Booking Confirmed!</h1>
+          <p className="text-slate-400 mb-8">Your trip to <strong className="text-slate-700 dark:text-slate-300">{toCity}</strong> is all set.</p>
 
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-left mb-6">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6 text-left mb-6">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-700">
               <span className="text-xs text-slate-400 uppercase tracking-widest font-bold">Booking reference</span>
               <span className="text-xl font-black text-blue-600 tracking-[0.2em] font-mono">{bookingRef}</span>
             </div>
@@ -320,7 +321,7 @@ export default function BookingPage() {
               ].map(([lbl, val]) => (
                 <div key={lbl} className="flex justify-between">
                   <span className="text-slate-400">{lbl}</span>
-                  <span className="font-semibold text-slate-900">{val}</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">{val}</span>
                 </div>
               ))}
             </div>
@@ -329,11 +330,13 @@ export default function BookingPage() {
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/boarding-pass', {
+
                 state: {
                   bookingRef,
                   passenger: { firstName, lastName, gender, nationality, dob: `${dobDay}/${dobMonth}/${dobYear}` },
                   outbound, ret, isRoundTrip, fromCity, toCity,
                   baggage, checkedBaggage, insurance, grandTotal,
+                  fromBooking: true,
                 },
               })}
               className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
@@ -341,7 +344,7 @@ export default function BookingPage() {
               View Boarding Pass
             </button>
             <button onClick={() => navigate('/')}
-              className="flex-1 py-3 border border-slate-200 text-slate-600 hover:text-slate-900 font-semibold rounded-xl transition-colors">
+              className="flex-1 py-3 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 font-semibold rounded-xl transition-colors">
               Back to Search
             </button>
           </div>
@@ -352,7 +355,7 @@ export default function BookingPage() {
 
   /* ── price sidebar ─────────────────────────────────────── */
   const PriceSidebar = () => (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sticky top-24">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 sticky top-24">
       <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Price summary</div>
       <div className="space-y-2">
         {[
@@ -361,12 +364,12 @@ export default function BookingPage() {
           ...(checkedExtra  ? [['Checked bag (23 kg)', checkedExtra]] : []),
           ...(insExtra      ? [`Travel ${insurance}`,  insExtra].map(x => [x]) : []),
         ].map(([lbl, amt]) => (
-          <div key={String(lbl)} className="flex justify-between text-sm text-slate-600">
+          <div key={String(lbl)} className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
             <span>{lbl}</span>
             <span>€{Math.round(Number(amt))}</span>
           </div>
         ))}
-        <div className="border-t border-slate-100 pt-3 mt-1 flex justify-between font-black text-slate-900 text-base">
+        <div className="border-t border-slate-100 dark:border-slate-700 pt-3 mt-1 flex justify-between font-black text-slate-900 dark:text-slate-100 text-base">
           <span>Total</span>
           <span>€{Math.round(grandTotal)}</span>
         </div>
@@ -374,13 +377,13 @@ export default function BookingPage() {
       </div>
 
       {/* mini flight strip */}
-      <div className="border-t border-slate-100 mt-4 pt-4 space-y-2">
+      <div className="border-t border-slate-100 dark:border-slate-700 mt-4 pt-4 space-y-2">
         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Your flights</div>
         {[
           { f: outbound, color: 'text-blue-500', rot: 'rotate-90' },
           ...(ret ? [{ f: ret, color: 'text-violet-500', rot: '-rotate-90' }] : []),
         ].map(({ f, color, rot }, i) => (
-          <div key={i} className="flex items-center gap-2 text-[12px] text-slate-600">
+          <div key={i} className="flex items-center gap-2 text-[12px] text-slate-600 dark:text-slate-300">
             <Plane className={`w-3 h-3 shrink-0 ${color} ${rot}`} />
             <span className="tabular-nums font-medium">
               {fmtTime(f.departureTime)} {f.departureAirportCode} → {fmtTime(f.arrivalTime)} {f.arrivalAirportCode}
@@ -393,33 +396,33 @@ export default function BookingPage() {
 
   /* ── page ──────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* sticky header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-20 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3 lg:py-4 sticky top-0 z-20 shadow-sm">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <button
             onClick={() => step === 2 ? (setStep(1), window.scrollTo({ top: 0 })) : navigate(-1)}
-            className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium"
+            className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium"
           >
             <ChevronLeft className="w-4 h-4" />
             {step === 2 ? 'Back' : 'Results'}
           </button>
-          <span className="font-black text-slate-900 tracking-tight">SkyWave</span>
+          <button onClick={() => navigate('/')} className="font-black text-slate-900 dark:text-slate-100 tracking-tight hover:opacity-70 transition-opacity">SkyWave</button>
           <span className="text-xs text-slate-400 font-medium">Step {step} of 2</span>
         </div>
       </div>
 
       {/* progress */}
-      <div className="bg-white border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-center">
           <ProgressDot n={1} label="Passenger & Extras" state={step > 1 ? 'done' : 'active'} />
-          <div className={`w-20 h-px mx-3 ${step > 1 ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+          <div className={`w-20 h-px mx-3 ${step > 1 ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'}`} />
           <ProgressDot n={2} label="Overview & Payment" state={step === 2 ? 'active' : 'upcoming'} />
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pt-6 pb-16">
-        <h1 className="text-2xl font-black text-slate-900 mb-6">
+        <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-6">
           {fromCity} → {toCity}{isRoundTrip ? ' and back' : ''}
         </h1>
 
@@ -428,13 +431,13 @@ export default function BookingPage() {
           <div className="space-y-4">
 
             {/* trip summary */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Trip summary</div>
               <div className="space-y-4">
                 <FlightRow flight={outbound} dir="Outbound" />
                 {ret && (
                   <>
-                    <div className="border-t border-dashed border-slate-100" />
+                    <div className="border-t border-dashed border-slate-100 dark:border-slate-700" />
                     <FlightRow flight={ret} dir="Return" />
                   </>
                 )}
@@ -445,7 +448,7 @@ export default function BookingPage() {
             {step === 1 && (
               <>
                 {/* passenger */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<User className="w-4 h-4 text-blue-600" />}
                     title="Primary Passenger"
@@ -482,7 +485,7 @@ export default function BookingPage() {
                     </div>
 
                     <FormField label="Date of birth" required>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input value={dobDay} onChange={e => setDobDay(e.target.value.replace(/\D/,'').slice(0,2))}
                           placeholder="DD" className={inputCls} />
                         <select value={dobMonth} onChange={e => setDobMonth(e.target.value)} className={selectCls}>
@@ -497,7 +500,7 @@ export default function BookingPage() {
                 </div>
 
                 {/* cabin baggage */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<Briefcase className="w-4 h-4 text-blue-600" />}
                     title="Cabin Baggage"
@@ -506,7 +509,7 @@ export default function BookingPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <OptionCard selected={baggage === 'personal'} onClick={() => setBaggage('personal')}>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-bold text-slate-900">Personal item</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Personal item</span>
                         <RadioDot checked={baggage === 'personal'} />
                       </div>
                       <div className="text-xs text-slate-500 mb-1">Must fit under front seat</div>
@@ -516,18 +519,18 @@ export default function BookingPage() {
 
                     <OptionCard selected={baggage === 'carryOn'} onClick={() => setBaggage('carryOn')}>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-bold text-slate-900">Carry-on bundle</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Carry-on bundle</span>
                         <RadioDot checked={baggage === 'carryOn'} />
                       </div>
                       <div className="text-xs text-slate-500 mb-1">Personal item + cabin bag + priority boarding</div>
                       <div className="text-xs text-slate-400 font-mono">up to 20 kg</div>
-                      <div className="text-sm font-bold text-slate-900 mt-3">+€{CARRY_ON_PRICE}</div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-3">+€{CARRY_ON_PRICE}</div>
                     </OptionCard>
                   </div>
                 </div>
 
                 {/* checked baggage */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<Briefcase className="w-4 h-4 text-blue-600" />}
                     title="Checked Baggage"
@@ -536,7 +539,7 @@ export default function BookingPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <OptionCard selected={!checkedBaggage} onClick={() => setCheckedBaggage(false)}>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-bold text-slate-900">No checked baggage</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">No checked baggage</span>
                         <RadioDot checked={!checkedBaggage} />
                       </div>
                       <div className="text-sm font-bold text-emerald-600">Included</div>
@@ -544,17 +547,17 @@ export default function BookingPage() {
 
                     <OptionCard selected={checkedBaggage} onClick={() => setCheckedBaggage(true)}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-bold text-slate-900">23 kg bag</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">23 kg bag</span>
                         <RadioDot checked={checkedBaggage} />
                       </div>
                       <div className="text-xs text-slate-400 mb-3">Max 23 kg · hard or soft case</div>
-                      <div className="text-sm font-bold text-slate-900">+€{CHECKED_PRICE}</div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-slate-100">+€{CHECKED_PRICE}</div>
                     </OptionCard>
                   </div>
                 </div>
 
                 {/* insurance */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <div className="flex items-center justify-between mb-5">
                     <SectionHeader
                       icon={<Shield className="w-4 h-4 text-blue-600" />}
@@ -563,7 +566,7 @@ export default function BookingPage() {
                     />
                     <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-2">by AXA Assistance</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {(
                       [
                         { type: 'none'  as InsuranceType, label: 'No insurance', price: 0,               features: [] },
@@ -573,7 +576,7 @@ export default function BookingPage() {
                     ).map(({ type, label, price, features }) => (
                       <OptionCard key={type} selected={insurance === type} onClick={() => setInsurance(type)}>
                         <div className="flex justify-between items-start mb-3">
-                          <span className="text-sm font-bold text-slate-900 leading-snug">{label}</span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">{label}</span>
                           <RadioDot checked={insurance === type} />
                         </div>
                         {features.length === 0
@@ -589,7 +592,7 @@ export default function BookingPage() {
                             </ul>
                           )
                         }
-                        <div className={`text-sm font-bold ${price === 0 ? 'text-slate-400' : 'text-slate-900'}`}>
+                        <div className={`text-sm font-bold ${price === 0 ? 'text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
                           {price === 0 ? 'Free' : `+€${price}`}
                         </div>
                       </OptionCard>
@@ -602,7 +605,7 @@ export default function BookingPage() {
                   className={`w-full py-4 rounded-2xl font-bold text-white text-base flex items-center justify-center gap-2 transition-all ${
                     step1Valid
                       ? 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg active:scale-[0.99]'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                   }`}
                 >
                   Continue <ChevronRight className="w-5 h-5" />
@@ -614,7 +617,7 @@ export default function BookingPage() {
             {step === 2 && (
               <>
                 {/* booking summary */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Passenger & extras</div>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                     <SummaryRow label="Full name"     value={`${firstName} ${lastName}`} />
@@ -628,7 +631,7 @@ export default function BookingPage() {
                 </div>
 
                 {/* contact */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<Mail className="w-4 h-4 text-blue-600" />}
                     title="Contact Details"
@@ -647,7 +650,7 @@ export default function BookingPage() {
                 </div>
 
                 {/* payment */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<CreditCard className="w-4 h-4 text-blue-600" />}
                     title="Pay with Card"
@@ -701,7 +704,7 @@ export default function BookingPage() {
                       />
                     </FormField>
 
-                    <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 rounded-xl">
+                    <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-700 rounded-xl">
                       <Info className="w-4 h-4 text-slate-400 shrink-0 mt-px" />
                       <p className="text-xs text-slate-400 leading-relaxed">
                         Your payment is secured with 256-bit SSL encryption.
@@ -712,7 +715,7 @@ export default function BookingPage() {
                 </div>
 
                 {payError && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                  <div className="flex items-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl text-sm text-red-600 dark:text-red-400">
                     <Info className="w-4 h-4 shrink-0" /> {payError}
                   </div>
                 )}
@@ -722,7 +725,7 @@ export default function BookingPage() {
                   className={`w-full py-4 rounded-2xl font-black text-white text-base flex items-center justify-center gap-2 transition-all ${
                     step2Valid && !paying
                       ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg active:scale-[0.99]'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                   }`}
                 >
                   {paying

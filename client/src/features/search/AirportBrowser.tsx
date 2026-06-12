@@ -33,9 +33,9 @@ function CountryButton({ country, selected, enabled, onClick }: CountryButtonPro
     <button
       onClick={enabled ? onClick : undefined}
       className={`block w-full text-left py-1 px-2 rounded text-sm mb-0.5 ${
-        !enabled  ? 'text-slate-300 cursor-not-allowed'
+        !enabled  ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
         : selected ? 'bg-indigo-600 text-white font-semibold'
-        :            'text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors'
+        :            'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors'
       }`}
     >
       {toCountryName(country)}
@@ -80,7 +80,7 @@ export default function AirportBrowser({
         </div>
       ) : (
         <>
-          <div className="flex-1 p-5 overflow-y-auto max-h-56 border-r border-slate-100">
+          <div className="flex-1 p-5 overflow-y-auto max-h-56 border-r border-slate-100 dark:border-slate-700">
             <div className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">
               {browseField === 'from'
                 ? t.originCountry
@@ -112,7 +112,7 @@ export default function AirportBrowser({
                   ))}
                 </div>
 
-                <div className="border-t border-slate-100 mb-3" />
+                <div className="border-t border-slate-100 dark:border-slate-700 mb-3" />
 
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.allCountries}</div>
                 <div className="columns-4 gap-x-4">
@@ -130,7 +130,7 @@ export default function AirportBrowser({
 
           <div className="browse-airport-sidebar w-60 shrink-0 flex flex-col">
             <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-              <span className="text-sm font-bold text-slate-900">{t.pickAirport}</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{t.pickAirport}</span>
               {browseCountry && (
                 <button onClick={() => setBrowseCountry(null)} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium">
                   {t.clear}
@@ -148,10 +148,10 @@ export default function AirportBrowser({
                         disabled={!enabled}
                         onClick={() => enabled ? onSelectAirport(a) : undefined}
                         className={`flex items-center justify-between w-full py-2 px-2 rounded-lg text-left group transition-colors ${
-                          enabled ? 'hover:bg-indigo-50 cursor-pointer' : 'opacity-35 cursor-not-allowed'
+                          enabled ? 'hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer' : 'opacity-35 cursor-not-allowed'
                         }`}
                       >
-                        <span className={`text-sm truncate ${enabled ? 'text-slate-800 group-hover:text-indigo-700' : 'text-slate-400'}`}>
+                        <span className={`text-sm truncate ${enabled ? 'text-slate-800 dark:text-slate-200 group-hover:text-indigo-700' : 'text-slate-400'}`}>
                           {a.city}
                         </span>
                         <span className="text-slate-400 text-xs ml-2 shrink-0 font-mono">{a.iataCode ?? a.icaoCode}</span>

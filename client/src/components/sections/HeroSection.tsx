@@ -1,21 +1,37 @@
 import SearchBox from '../../features/search/SearchBox'
+import StarField from './StarField'
 import { IMAGES } from '../../assets/images'
 import { useLocale } from '../../context/LocaleContext'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function HeroSection() {
   const { t: locale } = useLocale()
   const t = locale.hero
+  const { theme } = useTheme()
   return (
     <section
-      className="relative h-full flex flex-col overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: `url('${IMAGES.hero}')` }}
+      className="relative h-full flex flex-col overflow-hidden"
     >
-      <div className="absolute inset-0 hero-overlay" />
+      <div
+        className="absolute inset-0 hero-bg-image"
+        style={{ backgroundImage: `url('${IMAGES.hero}')` }}
+      />
+      <StarField active={theme === 'dark'} />
 
-      <div className="hero-blob-orange absolute right-[8%]  top-[30%] w-96 h-96 rounded-full pointer-events-none" />
-      <div className="hero-blob-amber  absolute right-[18%] bottom-[20%] w-64 h-64 rounded-full pointer-events-none" />
+      {/* day overlay — fades out when dark */}
+      <div className="absolute inset-0 hero-overlay-day pointer-events-none"
+        style={{ zIndex: 2, opacity: theme === 'dark' ? 0 : 1, transition: 'opacity 0.7s ease' }} />
 
-      <div className="relative z-10 flex flex-col justify-center flex-1 px-8 max-w-[1280px] mx-auto w-full pt-20 pb-10">
+      {/* night overlay — fades in when dark */}
+      <div className="absolute inset-0 hero-overlay-night pointer-events-none"
+        style={{ zIndex: 2, opacity: theme === 'dark' ? 1 : 0, transition: 'opacity 0.7s ease' }} />
+
+      <div className="hero-blob-orange absolute right-[8%]  top-[30%] w-96 h-96 rounded-full pointer-events-none"
+        style={{ zIndex: 3, opacity: theme === 'dark' ? 0 : 1, transition: 'opacity 0.7s ease' }} />
+      <div className="hero-blob-amber  absolute right-[18%] bottom-[20%] w-64 h-64 rounded-full pointer-events-none"
+        style={{ zIndex: 3, opacity: theme === 'dark' ? 0 : 1, transition: 'opacity 0.7s ease' }} />
+
+      <div className="relative z-10 flex flex-col justify-center flex-1 px-4 lg:px-6 xl:px-8 max-w-[1280px] mx-auto w-full pt-14 lg:pt-20 pb-6 lg:pb-10">
 
         <div className="flex items-center gap-2 mb-6">
           <span className="hero-tagline text-xs font-semibold tracking-widest uppercase">

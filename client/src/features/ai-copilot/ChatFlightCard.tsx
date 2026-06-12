@@ -11,6 +11,26 @@ const fmt = (s?: string | null) => {
 export default function ChatFlightCard({ flight }: { flight: FlightDto }) {
   const navigate = useNavigate()
 
+  const handleBook = () => {
+    const tok = (() => {
+      try {
+        const s = localStorage.getItem('skywave_user')
+        return s ? (JSON.parse(s) as { token: string }).token : ''
+      } catch { return '' }
+    })()
+    navigate('/booking', {
+      state: {
+        outbound:    flight,
+        ret:         null,
+        totalPrice:  flight.price,
+        isRoundTrip: false,
+        fromCity:    flight.departureCity ?? '',
+        toCity:      flight.arrivalCity   ?? '',
+        token:       tok,
+      },
+    })
+  }
+
   const score = flight.analytics?.smartScore
   const scoreColor =
     score == null ? 'text-slate-400'
@@ -62,7 +82,7 @@ export default function ChatFlightCard({ flight }: { flight: FlightDto }) {
           )}
         </div>
         <button
-          onClick={() => navigate('/booking', { state: { flight } })}
+          onClick={handleBook}
           className="text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors"
         >
           Book

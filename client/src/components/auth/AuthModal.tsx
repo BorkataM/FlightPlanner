@@ -27,7 +27,7 @@ function Field({ icon, type, placeholder, value, onChange, suffix }: FieldProps)
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="flex-1 bg-transparent text-slate-900 text-sm font-medium outline-none placeholder-slate-400"
+        className="flex-1 bg-transparent text-slate-900 dark:text-slate-100 text-sm font-medium outline-none placeholder-slate-400"
       />
       {suffix}
     </div>
@@ -113,20 +113,20 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     <div className="fixed inset-0 z-[200] flex items-end justify-center">
       <div className="auth-overlay absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="auth-panel relative w-full max-w-md bg-white rounded-t-3xl px-8 pb-10 pt-5 shadow-2xl">
-        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-5" />
+      <div className="auth-panel relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl px-8 pb-10 pt-5 shadow-2xl">
+        <div className="w-10 h-1 bg-slate-200 dark:bg-slate-600 rounded-full mx-auto mb-5" />
 
         <button onClick={onClose} className="absolute top-5 right-6 text-slate-400 hover:text-slate-700 transition-colors">
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-1 mb-6">
+        <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1 mb-6">
           {(['signin', 'register'] as AuthView[]).map(v => (
             <button
               key={v}
               onClick={() => { setView(v); setError('') }}
               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                view === v ? 'btn-tab-active text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                view === v ? 'btn-tab-active text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
               {v === 'signin' ? 'Sign in' : 'Register'}
@@ -137,7 +137,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
         <div ref={formRef} className="auth-form-body">
           {view === 'signin' ? (
             <>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Welcome back</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">Welcome back</h2>
               <p className="text-slate-400 text-sm mb-6">Sign in to your SkyWave account</p>
 
               <div className="flex flex-col gap-3">
@@ -164,7 +164,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
             </>
           ) : (
             <>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Join SkyWave</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">Join SkyWave</h2>
               <p className="text-slate-400 text-sm mb-6">Create your free account</p>
 
               <div className="flex flex-col gap-3">

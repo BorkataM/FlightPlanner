@@ -55,7 +55,7 @@ export default function FlexDatesGrid({ flightsByDate, departure, returnDate, on
     view.month === 11 ? { year: view.year + 1, month: 0 } : { year: view.year, month: view.month + 1 },
   ]
 
-  const renderMonth = ({ year, month }: { year: number; month: number }) => {
+  const renderMonthContent = (year: number, month: number) => {
     const first  = new Date(year, month, 1)
     const last   = new Date(year, month + 1, 0)
     const offset = (first.getDay() + 6) % 7
@@ -93,7 +93,7 @@ export default function FlexDatesGrid({ flightsByDate, departure, returnDate, on
     }
 
     return (
-      <div key={`${year}-${month}`} className="flex-1 min-w-0">
+      <>
         <div className="text-sm font-bold text-white text-center mb-3">
           {new Date(year, month).toLocaleString('en', { month: 'long', year: 'numeric' })}
         </div>
@@ -101,7 +101,7 @@ export default function FlexDatesGrid({ flightsByDate, departure, returnDate, on
           {WEEK_DAYS.map(d => <div key={d} className="text-center text-[10px] text-blue-300 font-semibold py-1">{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-0.5">{cells}</div>
-      </div>
+      </>
     )
   }
 
@@ -129,7 +129,12 @@ export default function FlexDatesGrid({ flightsByDate, departure, returnDate, on
         </div>
       </div>
       <div className="flex gap-6">
-        {months.map(m => renderMonth(m))}
+        <div className="flex-1 min-w-0">
+          {renderMonthContent(months[0].year, months[0].month)}
+        </div>
+        <div className="hidden lg:block flex-1 min-w-0">
+          {renderMonthContent(months[1].year, months[1].month)}
+        </div>
       </div>
     </div>
   )

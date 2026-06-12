@@ -40,7 +40,7 @@ export default function DateField({ icon, label, selected, onChange, placeholder
           placeholderText={placeholderText}
           minDate={hasData ? undefined : (minDate ?? new Date())}
           popperPlacement="bottom-start"
-          className="bg-transparent text-slate-900 text-base font-semibold outline-none w-full cursor-pointer placeholder-gray-400 mt-0.5"
+          className="bg-transparent text-slate-900 dark:text-slate-100 text-base font-semibold outline-none w-full cursor-pointer placeholder-gray-400 dark:placeholder-slate-500 mt-0.5"
           filterDate={hasData ? (d) => flightsByDate!.has(toDateKey(d)) : undefined}
           dayClassName={(date) => getRangeDayClass(date, rangeStart ?? null, hoverDate)}
           renderDayContents={(dayNum, date) => {
