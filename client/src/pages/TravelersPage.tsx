@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { useLocale } from '../context/LocaleContext'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft, Search, Plane, Globe, Users, UserPlus,
@@ -91,6 +92,8 @@ function ProfileStat({ icon: Icon, value, label, sub, color, onClick }: {
 // ── Compact traveler row for sidebar ────────────────────────────────────────
 function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: number) => void }) {
   const { user: me } = useAuth()
+  const { t } = useLocale()
+  const tr = t.travelers
   const [following, setFollowing] = useState(user.isFollowedByCurrentUser)
   const [busy, setBusy] = useState(false)
 
@@ -118,7 +121,7 @@ function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: nu
         <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 transition-colors leading-tight">
           {user.firstName} {user.lastName}
         </p>
-        <p className="text-xs text-slate-400 leading-tight">{user.flightsCount} flights</p>
+        <p className="text-xs text-slate-400 leading-tight">{user.flightsCount} {user.flightsCount === 1 ? tr.flight : tr.flights}</p>
       </div>
       <button
         onClick={toggle}
@@ -129,7 +132,7 @@ function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: nu
             : 'bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-700 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950'
         } ${busy ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
-        {busy ? '…' : following ? 'Following' : 'Follow'}
+        {busy ? '…' : following ? tr.following : tr.follow}
       </button>
     </div>
   )
@@ -139,15 +142,20 @@ function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: nu
 export default function TravelersPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { t } = useLocale()
+  const tr = t.travelers
 
   const [myStats,          setMyStats]          = useState<UserStats | null>(null)
   const [visitedCountries, setVisitedCountries] = useState<string[]>([])
   const [results,          setResults]          = useState<UserSearchResult[]>([])
+  const [suggestedUsers,   setSuggestedUsers]   = useState<UserSearchResult[]>([])
   const [query,            setQuery]            = useState('')
   const [debouncedQ,       setDebouncedQ]       = useState('')
   const [loadingStats,     setLoadingStats]     = useState(true)
   const [loadingMap,       setLoadingMap]       = useState(true)
   const [loadingSearch,    setLoadingSearch]    = useState(false)
+  const [dropdownOpen,     setDropdownOpen]     = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
   const [selectedId,       setSelectedId]       = useState<number | null>(null)
   const [editOpen,         setEditOpen]         = useState(false)
   const [countriesOpen,    setCountriesOpen]    = useState(false)
@@ -191,17 +199,41 @@ export default function TravelersPage() {
     return () => clearTimeout(t)
   }, [query])
 
-  // Search
-  const runSearch = useCallback(() => {
+  // Load suggested users once (sidebar content, unaffected by search)
+  useEffect(() => {
     if (!user) return
+    socialApi.search('', user.token).then(setSuggestedUsers).catch(() => {})
+  }, [user])
+
+  // Search for dropdown results
+  const runSearch = useCallback(() => {
+    if (!user || !debouncedQ) { setResults([]); return }
     setLoadingSearch(true)
     socialApi.search(debouncedQ, user.token)
-      .then(setResults)
+      .then(r => { setResults(r); setDropdownOpen(true) })
       .catch(() => {})
       .finally(() => setLoadingSearch(false))
   }, [debouncedQ, user])
 
   useEffect(() => { runSearch() }, [runSearch])
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   const refreshStats = () => {
     if (!user) return
@@ -295,15 +327,54 @@ export default function TravelersPage() {
           </button>
 
           {/* Search */}
-          <div className="flex-1 max-w-xl mx-auto relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <div ref={searchRef} className="flex-1 max-w-xl mx-auto relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
             <input
               type="text"
               value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search travelers by name or email…"
+              onChange={e => { setQuery(e.target.value); if (!e.target.value) setDropdownOpen(false) }}
+              onFocus={() => { if (query && results.length > 0) setDropdownOpen(true) }}
+              placeholder={tr.searchPlaceholder}
               className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-700 border border-transparent rounded-full text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 focus:border-blue-300 dark:focus:border-slate-500 transition"
             />
+
+            {/* Search dropdown */}
+            {dropdownOpen && query && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50">
+                {loadingSearch ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-slate-300" />
+                  </div>
+                ) : results.length === 0 ? (
+                  <div className="flex flex-col items-center py-6 gap-2">
+                    <Users className="w-7 h-7 text-slate-200" />
+                    <p className="text-xs text-slate-400 font-medium">{tr.noTravelersFound}</p>
+                  </div>
+                ) : (
+                  <div className="py-2 max-h-72 overflow-y-auto">
+                    {results.map(u => {
+                      const initials = `${u.firstName[0] ?? ''}${u.lastName[0] ?? ''}`.toUpperCase()
+                      return (
+                        <button
+                          key={u.id}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                          onClick={() => { setSelectedId(u.id); setDropdownOpen(false); setQuery('') }}
+                        >
+                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(u.id)} flex items-center justify-center shrink-0 shadow-sm`}>
+                            <span className="text-xs font-black text-white">{initials}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{u.firstName} {u.lastName}</p>
+                            <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                          </div>
+                          <span className="text-xs text-slate-400 shrink-0">{u.flightsCount} {u.flightsCount === 1 ? tr.flight : tr.flights}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: active tab + bell + avatar */}
@@ -461,34 +532,23 @@ export default function TravelersPage() {
             {/* Suggested Travelers */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-0">
               <div className="mb-4">
-                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Suggested Travelers</h3>
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">{tr.suggestedTravelers}</h3>
               </div>
 
-              {loadingSearch ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-slate-300" />
-                </div>
-              ) : results.length === 0 ? (
+              {suggestedUsers.length === 0 ? (
                 <div className="text-center py-4">
                   <Users className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                  <p className="text-xs text-slate-400 font-medium">
-                    {debouncedQ ? 'No travelers found' : 'No other travelers yet'}
-                  </p>
+                  <p className="text-xs text-slate-400 font-medium">{tr.noTravelersYet}</p>
                 </div>
               ) : (
                 <div className="space-y-3.5">
-                  {results.slice(0, 5).map(u => (
+                  {suggestedUsers.slice(0, 5).map(u => (
                     <TravelerRow
                       key={u.id}
                       user={u}
                       onOpen={id => setSelectedId(id)}
                     />
                   ))}
-                  {results.length > 5 && (
-                    <button className="w-full text-xs font-semibold text-blue-600 hover:text-blue-700 text-center pt-1 transition-colors">
-                      View all travelers ›
-                    </button>
-                  )}
                 </div>
               )}
             </div>
@@ -513,9 +573,11 @@ export default function TravelersPage() {
                   ? <Users className="w-4 h-4 text-violet-500" />
                   : <UserPlus className="w-4 h-4 text-sky-500" />
                 }
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 capitalize">{followModal}</h3>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {followModal === 'followers' ? tr.followersTitle : tr.followingTitle}
+                </h3>
               </div>
-              {!followLoading && <span className="text-xs font-semibold text-slate-400">{followList.length} people</span>}
+              {!followLoading && <span className="text-xs font-semibold text-slate-400">{followList.length} {tr.people}</span>}
             </div>
             <div className="overflow-y-auto flex-1 px-5 py-3">
               {followLoading ? (
@@ -525,7 +587,7 @@ export default function TravelersPage() {
               ) : followList.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-8 h-8 text-slate-200 dark:text-slate-600 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">No {followModal} yet</p>
+                  <p className="text-sm text-slate-400">{followModal === 'followers' ? tr.followersTitle : tr.followingTitle} — 0</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -549,7 +611,7 @@ export default function TravelersPage() {
             </div>
             <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
               <button onClick={() => setFollowModal(null)} className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                Close
+                {tr.close}
               </button>
             </div>
           </div>

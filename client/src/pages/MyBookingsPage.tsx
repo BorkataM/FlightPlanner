@@ -5,6 +5,7 @@ import FlightLoader from '../components/common/FlightLoader'
 import { bookingsApi } from '../services/api'
 import type { BookingRecord } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { useLocale } from '../context/LocaleContext'
 import {
   groupIntoTrips, isUpcoming, getLocalBookings,
   fmtTime, fmtDate, tripDurationMin, fmtDuration,
@@ -69,6 +70,8 @@ function LSummaryRow({ icon: Icon, label, value, color }: {
 
 // ── Next flight section ───────────────────────────────────────────
 function NextFlightSection({ trip }: { trip: Trip }) {
+  const { t } = useLocale()
+  const mb = t.myBookings
   const { outbound, local } = trip
   const depCode = local?.outbound?.departureAirportCode ?? outbound.departureAirport.slice(0, 3).toUpperCase()
   const arrCode = local?.outbound?.arrivalAirportCode   ?? outbound.arrivalAirport.slice(0, 3).toUpperCase()
@@ -79,7 +82,7 @@ function NextFlightSection({ trip }: { trip: Trip }) {
       {/* Label */}
       <div className="flex items-center gap-1.5 mb-3 px-1">
         <Plane className="w-3 h-3 text-white/30 rotate-90" />
-        <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.18em]">Next Flight</span>
+        <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.18em]">{mb.nextFlight}</span>
       </div>
 
       {/* Route card */}
@@ -120,17 +123,17 @@ function NextFlightSection({ trip }: { trip: Trip }) {
 
       {/* Countdown */}
       {gone ? (
-        <p className="text-center font-black text-blue-400 text-sm mb-4">Departing now!</p>
+        <p className="text-center font-black text-blue-400 text-sm mb-4">{mb.departingNow}</p>
       ) : (
         <>
           <div className="flex items-center justify-center gap-3 mb-1.5">
-            <CountdownBox n={d} label="Days" />
+            <CountdownBox n={d} label={mb.days} />
             <span className="text-xl font-black text-white/15 pb-4">:</span>
-            <CountdownBox n={h} label="Hrs" />
+            <CountdownBox n={h} label={mb.hrs} />
             <span className="text-xl font-black text-white/15 pb-4">:</span>
-            <CountdownBox n={m} label="Min" />
+            <CountdownBox n={m} label={mb.min} />
           </div>
-          <p className="text-center text-[9px] text-white/25 font-medium mb-4">until departure</p>
+          <p className="text-center text-[9px] text-white/25 font-medium mb-4">{mb.untilDeparture}</p>
         </>
       )}
 
@@ -138,11 +141,11 @@ function NextFlightSection({ trip }: { trip: Trip }) {
       <div className="space-y-2.5">
         <LDetail
           icon={CalendarDays}
-          label="Departure"
+          label={mb.departure}
           value={`${fmtTime(outbound.departureTime)} · ${fmtDate(outbound.departureTime)}`}
         />
-        <LDetail icon={Plane}  label="Flight"      value={outbound.flightNumber}      mono />
-        <LDetail icon={Ticket} label="Booking ref"  value={outbound.confirmationCode}  mono accent />
+        <LDetail icon={Plane}  label={mb.flight}    value={outbound.flightNumber}     mono />
+        <LDetail icon={Ticket} label={mb.bookingRef} value={outbound.confirmationCode} mono accent />
       </div>
     </div>
   )
@@ -159,6 +162,8 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
   onSelect:  (t: Trip) => void
 }) {
   const navigate = useNavigate()
+  const { t } = useLocale()
+  const mb = t.myBookings
   const [sort, setSort] = useState<SortOrder>('flight')
   const allTrips = [...upcoming, ...past]
   const sortedTrips = [...allTrips].sort((a, b) => {
@@ -179,7 +184,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
           onClick={() => navigate('/')}
           className="flex items-center gap-1.5 text-white/30 hover:text-white/60 text-xs font-semibold transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Home
+          <ArrowLeft className="w-3.5 h-3.5" /> {mb.home}
         </button>
         <span className="text-white/15 text-[9px] font-black tracking-[0.25em]">SKYWAVE</span>
       </div>
@@ -189,7 +194,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
       ) : (
         <div className="mx-4 mb-4 rounded-2xl border border-white/8 px-5 py-8 text-center">
           <Plane className="w-8 h-8 text-white/15 mx-auto mb-3 rotate-90" />
-          <p className="text-sm font-bold text-white/35">No upcoming trips</p>
+          <p className="text-sm font-bold text-white/35">{mb.noUpcomingTrips}</p>
         </div>
       )}
 
@@ -198,11 +203,11 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
 
       {/* Summary */}
       <div className="px-5 pb-4">
-        <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.18em] mb-3">Summary</p>
+        <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.18em] mb-3">{mb.summary}</p>
         <div className="space-y-3">
-          <LSummaryRow icon={Plane}        label="Upcoming"   value={String(upcoming.length)}                color="text-blue-400"   />
-          <LSummaryRow icon={CalendarDays} label="Past trips" value={String(past.length)}                   color="text-white/25"   />
-          <LSummaryRow icon={Ticket}       label="Total"      value={String(upcoming.length + past.length)} color="text-violet-400" />
+          <LSummaryRow icon={Plane}        label={mb.upcoming}  value={String(upcoming.length)}                color="text-blue-400"   />
+          <LSummaryRow icon={CalendarDays} label={mb.pastTrips} value={String(past.length)}                   color="text-white/25"   />
+          <LSummaryRow icon={Ticket}       label={mb.total}     value={String(upcoming.length + past.length)} color="text-violet-400" />
         </div>
       </div>
 
@@ -212,7 +217,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
           <div className="mx-5 h-px bg-white/8 mb-4" />
           <div className="px-5 pb-6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.18em]">All Trips</p>
+              <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.18em]">{mb.allTrips}</p>
               <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5">
                 <button
                   onClick={() => setSort('flight')}
@@ -220,7 +225,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
                     sort === 'flight' ? 'bg-white/15 text-white/70' : 'text-white/25 hover:text-white/40'
                   }`}
                 >
-                  <Plane className="w-2.5 h-2.5 rotate-90" /> Flight
+                  <Plane className="w-2.5 h-2.5 rotate-90" /> {mb.sortFlight}
                 </button>
                 <button
                   onClick={() => setSort('purchase')}
@@ -228,7 +233,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
                     sort === 'purchase' ? 'bg-white/15 text-white/70' : 'text-white/25 hover:text-white/40'
                   }`}
                 >
-                  <ArrowUpDown className="w-2.5 h-2.5" /> Bought
+                  <ArrowUpDown className="w-2.5 h-2.5" /> {mb.sortBought}
                 </button>
               </div>
             </div>
@@ -267,6 +272,8 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
 // ── Right panel ───────────────────────────────────────────────────
 function RightPanel({ trip }: { trip: Trip }) {
   const navigate = useNavigate()
+  const { t } = useLocale()
+  const mb = t.myBookings
   const { outbound, ret, local } = trip
   const depName = outbound.departureAirport
   const arrName = outbound.arrivalAirport
@@ -278,7 +285,7 @@ function RightPanel({ trip }: { trip: Trip }) {
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 lg:px-6 xl:px-8 py-3 lg:py-4 border-b border-slate-100 dark:border-slate-700">
         <span className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
-          {ret ? 'Round Trip' : 'One Way'}
+          {ret ? mb.roundTrip : mb.oneWay}
         </span>
         <button
           onClick={() => navigate('/boarding-pass', {
@@ -286,10 +293,10 @@ function RightPanel({ trip }: { trip: Trip }) {
           })}
           className="flex items-center gap-2 ml-auto px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0"
         >
-          <Ticket className="w-3.5 h-3.5" /> Show boarding pass
+          <Ticket className="w-3.5 h-3.5" /> {mb.showBoardingPass}
         </button>
         <div className="text-right shrink-0">
-          <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Ref</div>
+          <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">{mb.ref}</div>
           <div className="text-sm font-black text-slate-900 dark:text-slate-100 font-mono tracking-wider">{outbound.confirmationCode}</div>
         </div>
       </div>
@@ -328,7 +335,7 @@ function RightPanel({ trip }: { trip: Trip }) {
         {/* Flight Conditions */}
         <section>
           <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-            Flight Conditions
+            {mb.flightConditions}
           </h2>
           <WeatherWidget flightId={outbound.flightId} />
         </section>
@@ -336,7 +343,7 @@ function RightPanel({ trip }: { trip: Trip }) {
         {/* Get to Airport */}
         <section>
           <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
-            Get to Airport
+            {mb.getToAirport}
           </h2>
           <AirportRouteMap flightId={outbound.flightId} />
         </section>
@@ -352,7 +359,10 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
   arrName: string
   dur:     string
 }) {
+  const { t } = useLocale()
+  const mb = t.myBookings
   const isOut = dir === 'Outbound'
+  const dirLabel = isOut ? mb.outbound : mb.return
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
       <div className="px-6 py-5">
@@ -362,7 +372,7 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
               ? 'bg-blue-50 text-blue-500 border-blue-100'
               : 'bg-violet-50 text-violet-500 border-violet-100'
           }`}>
-            {dir}
+            {dirLabel}
           </span>
           <span className="text-xs text-slate-400 font-medium">{fmtDate(booking.departureTime)}</span>
           <span className="ml-auto font-mono text-xs font-bold text-slate-500">{booking.flightNumber}</span>
@@ -385,7 +395,7 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
               </div>
               <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
             </div>
-            <span className="text-[10px] text-slate-400">Non-stop</span>
+            <span className="text-[10px] text-slate-400">{mb.nonStop}</span>
           </div>
 
           <div className="shrink-0 text-right">
@@ -403,19 +413,21 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
 // ── Empty right panel ─────────────────────────────────────────────
 function EmptyRight() {
   const navigate = useNavigate()
+  const { t } = useLocale()
+  const mb = t.myBookings
   return (
     <div className="flex-1 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900">
       <div className="text-center">
         <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center mx-auto mb-4">
           <Ticket className="w-7 h-7 text-blue-400" />
         </div>
-        <p className="text-slate-700 dark:text-slate-200 font-bold text-lg mb-1">No bookings yet</p>
-        <p className="text-slate-400 text-sm max-w-xs mb-6">Once you book a flight it will appear here.</p>
+        <p className="text-slate-700 dark:text-slate-200 font-bold text-lg mb-1">{mb.noBookings}</p>
+        <p className="text-slate-400 text-sm max-w-xs mb-6">{mb.noBookingsSub}</p>
         <button
           onClick={() => navigate('/')}
           className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-colors"
         >
-          Search flights
+          {mb.searchFlights}
         </button>
       </div>
     </div>
@@ -426,6 +438,8 @@ function EmptyRight() {
 export default function MyBookingsPage() {
   const navigate = useNavigate()
   const { user }  = useAuth()
+  const { t } = useLocale()
+  const mb = t.myBookings
 
   const [bookings, setBookings] = useState<BookingRecord[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -454,17 +468,17 @@ export default function MyBookingsPage() {
           <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center mx-auto mb-4">
             <Ticket className="w-7 h-7 text-blue-400" />
           </div>
-          <p className="text-slate-700 dark:text-slate-200 font-bold text-lg mb-1">Sign in to see your bookings</p>
-          <p className="text-slate-400 text-sm mb-6">Your trip history is linked to your account.</p>
+          <p className="text-slate-700 dark:text-slate-200 font-bold text-lg mb-1">{mb.signIn}</p>
+          <p className="text-slate-400 text-sm mb-6">{mb.signInSub}</p>
           <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-xl text-sm transition-colors">
-            Go to homepage
+            {mb.goToHomepage}
           </button>
         </div>
       </div>
     )
   }
 
-  if (loading) return <FlightLoader text="Loading your bookings…" />
+  if (loading) return <FlightLoader text={mb.loading} />
 
   if (error) {
     return (

@@ -20,14 +20,14 @@ function GreetingCard({
   const text = greeting.replace('{name}', firstName)
   return (
     <div className="px-4 pt-4 pb-2">
-      <div className="bg-gradient-to-br from-blue-50 to-violet-50 dark:from-slate-800 dark:to-slate-800 border border-blue-100 dark:border-slate-700 rounded-xl p-4">
-        <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed mb-3">{text}</p>
+      <div className="bg-white/25 dark:bg-white/5 backdrop-blur-md border border-white/40 dark:border-white/10 rounded-2xl p-4">
+        <p className="text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed mb-3">{text}</p>
         <div className="flex flex-col gap-1.5">
           {suggestions.map(s => (
             <button
               key={s}
               onClick={() => onSuggestion(s)}
-              className="text-left text-[12px] text-blue-600 hover:text-blue-800 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-slate-600 border border-blue-100 dark:border-slate-600 rounded-lg px-3 py-2 transition-colors leading-snug"
+              className="text-left text-[12px] text-slate-700 dark:text-slate-200 bg-white/50 hover:bg-white/75 dark:bg-white/8 dark:hover:bg-white/15 border border-white/60 dark:border-white/15 rounded-xl px-3 py-2 transition-all leading-snug backdrop-blur-sm"
             >
               {s}
             </button>
@@ -83,14 +83,20 @@ export default function ChatWidget() {
           role="dialog"
           aria-label="SkyWave AI chat"
           aria-modal="true"
-          className="fixed bottom-6 right-6 z-[9999] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden
+          className="fixed bottom-6 right-6 z-[9999] flex flex-col rounded-3xl overflow-hidden
                      w-[370px] h-[580px]
-                     max-sm:inset-0 max-sm:w-auto max-sm:h-auto max-sm:rounded-none"
+                     max-sm:inset-0 max-sm:w-auto max-sm:h-auto max-sm:rounded-none
+                     backdrop-blur-2xl bg-white/20 dark:bg-slate-900/40
+                     border border-white/30 dark:border-white/10
+                     shadow-[0_8px_40px_rgba(0,0,0,0.22)]"
         >
+          {/* Subtle gradient tint behind everything */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-violet-500/5 to-transparent pointer-events-none" />
+
           {/* Header */}
           <div
-            className="flex items-center gap-2.5 px-4 py-3 shrink-0"
-            style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}
+            className="flex items-center gap-2.5 px-4 py-3 shrink-0 relative border-b border-white/20 dark:border-white/10"
+            style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.88), rgba(124,58,237,0.84))' }}
           >
             <Sparkles className="w-4 h-4 text-white/90" />
             <span className="text-white font-semibold text-[14px] tracking-wide">{ct.title}</span>

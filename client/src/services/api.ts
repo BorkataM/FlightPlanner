@@ -130,9 +130,10 @@ function buildFlightSearchUrl({ from, to, date, limit }: FlightSearchParams): st
 }
 
 export const authApi = {
-  login:    (data: LoginData)    => post<AuthResponse>(`${BASE_URL}/api/auth/login`,    data),
-  register: (data: RegisterData) => post<AuthResponse>(`${BASE_URL}/api/auth/register`, data),
-  refresh:  (refreshToken: string) => post<AuthResponse>(`${BASE_URL}/api/auth/refresh`, { refreshToken }),
+  login:       (data: LoginData)    => post<AuthResponse>(`${BASE_URL}/api/auth/login`,    data),
+  register:    (data: RegisterData) => post<AuthResponse>(`${BASE_URL}/api/auth/register`, data),
+  refresh:     (refreshToken: string) => post<AuthResponse>(`${BASE_URL}/api/auth/refresh`, { refreshToken }),
+  googleAuth:  (credential: string) => post<AuthResponse>(`${BASE_URL}/api/auth/google`, { credential }),
 }
 
 export const airportsApi = {

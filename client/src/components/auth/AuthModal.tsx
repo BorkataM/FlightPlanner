@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect, useRef } from 'react'
 import { X, Eye, EyeOff, Mail, Lock, User, Hash } from 'lucide-react'
+import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../../context/AuthContext'
 
 type AuthView = 'signin' | 'register'
@@ -43,7 +44,7 @@ function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) 
 }
 
 export default function AuthModal({ onClose, onSuccess }: Props) {
-  const { login, register } = useAuth()
+  const { login, register, loginWithGoogle } = useAuth()
 
   const [view,            setView]            = useState<AuthView>('signin')
   const [email,           setEmail]           = useState('')
@@ -161,6 +162,34 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
+
+              <div className="flex items-center gap-3 mt-4">
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+                <span className="text-xs text-slate-400">or</span>
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+              </div>
+
+              <div className="mt-3 flex justify-center">
+                <GoogleLogin
+                  onSuccess={async (res) => {
+                    if (!res.credential) return
+                    setError('')
+                    setLoading(true)
+                    try {
+                      await loginWithGoogle(res.credential)
+                      onSuccess('login')
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : 'Google sign-in failed')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  onError={() => setError('Google sign-in failed')}
+                  shape="pill"
+                  size="large"
+                  text="signin_with"
+                />
+              </div>
             </>
           ) : (
             <>
@@ -194,6 +223,34 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
               >
                 {loading ? 'Creating account…' : 'Create account'}
               </button>
+
+              <div className="flex items-center gap-3 mt-4">
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+                <span className="text-xs text-slate-400">or</span>
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+              </div>
+
+              <div className="mt-3 flex justify-center">
+                <GoogleLogin
+                  onSuccess={async (res) => {
+                    if (!res.credential) return
+                    setError('')
+                    setLoading(true)
+                    try {
+                      await loginWithGoogle(res.credential)
+                      onSuccess('register')
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : 'Google sign-in failed')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  onError={() => setError('Google sign-in failed')}
+                  shape="pill"
+                  size="large"
+                  text="signup_with"
+                />
+              </div>
             </>
           )}
         </div>

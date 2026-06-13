@@ -1,5 +1,6 @@
 using FlightPlanner.Core.DTOs.Auth;
 using FlightPlanner.Core.Interfaces;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlightPlanner.API.Controllers
@@ -9,10 +10,12 @@ namespace FlightPlanner.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(IUserService userService)
+        public AuthController(IUserService userService, IConfiguration configuration)
         {
-            _userService = userService;
+            _userService   = userService;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -40,6 +43,32 @@ namespace FlightPlanner.API.Controllers
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("google")]
+        public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginRequestDto dto)
+        {
+            try
+            {
+                var rawClientId = _configuration["Google:ClientId"] ?? "";
+                var clientId = rawClientId.Replace("${GOOGLE_CLIENT_ID}", Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID") ?? rawClientId);
+                var settings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { clientId }
+                };
+                var payload = await GoogleJsonWebSignature.ValidateAsync(dto.Credential, settings);
+
+                var nameParts = (payload.Name ?? "").Split(' ', 2);
+                var firstName = nameParts[0];
+                var lastName  = nameParts.Length > 1 ? nameParts[1] : "";
+
+                var result = await _userService.GoogleLoginAsync(payload.Email, payload.Subject, firstName, lastName);
+                return Ok(result);
+            }
+            catch (InvalidJwtException)
+            {
+                return Unauthorized(new { message = "Invalid Google credential." });
             }
         }
 

@@ -48,8 +48,38 @@ namespace FlightPlanner.Core.Services
             var user = await _userRepository.GetByEmailAsync(dto.Email.ToLowerInvariant())
                 ?? throw new UnauthorizedAccessException("Invalid email or password.");
 
-            if (!_passwordHasher.Verify(dto.Password, user.PasswordHash))
+            if (string.IsNullOrEmpty(user.PasswordHash) || !_passwordHasher.Verify(dto.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Invalid email or password.");
+
+            return BuildResponse(user);
+        }
+
+        public async Task<AuthResponseDto> GoogleLoginAsync(string email, string googleId, string firstName, string lastName)
+        {
+            var user = await _userRepository.GetByGoogleIdAsync(googleId);
+
+            if (user is null)
+            {
+                user = await _userRepository.GetByEmailAsync(email.ToLowerInvariant());
+                if (user is not null)
+                {
+                    user.GoogleId = googleId;
+                    await _userRepository.UpdateAsync(user);
+                }
+            }
+
+            if (user is null)
+            {
+                user = new User
+                {
+                    Email     = email.ToLowerInvariant(),
+                    GoogleId  = googleId,
+                    FirstName = firstName,
+                    LastName  = string.IsNullOrEmpty(lastName) ? "-" : lastName,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                user = await _userRepository.CreateAsync(user);
+            }
 
             return BuildResponse(user);
         }

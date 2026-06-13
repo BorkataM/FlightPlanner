@@ -20,6 +20,9 @@ namespace FlightPlanner.Infrastructure.Repositories
         public async Task<User?> GetByIdAsync(int id) =>
             await _context.Users.FindAsync(id);
 
+        public async Task<User?> GetByGoogleIdAsync(string googleId) =>
+            await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == googleId);
+
         public async Task<User> CreateAsync(User user)
         {
             _context.Users.Add(user);

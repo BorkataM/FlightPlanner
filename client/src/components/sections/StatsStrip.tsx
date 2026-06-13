@@ -1,6 +1,4 @@
-import { en } from '../../localization/en'
-
-const t = en.stats
+import { useLocale } from '../../context/LocaleContext'
 
 const COLORS = ['#7C3AED', '#0284C7', '#059669']
 
@@ -18,7 +16,8 @@ const Stat = ({ value, unit, label, sub, color }: { value: string; unit?: string
 const Divider = () => <div className="w-px h-14 bg-blue-100" />
 
 export default function StatsStrip() {
-  const stats = [t.countries, t.co2, t.ecoRating]
+  const { t } = useLocale()
+  const stats = [t.stats.countries, t.stats.co2, t.stats.ecoRating]
   return (
     <div className="border-b border-blue-100" style={{ background: '#FFFFFF' }}>
       <div className="max-w-[1280px] mx-auto px-8 py-10 flex items-center justify-center">

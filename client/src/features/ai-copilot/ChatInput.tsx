@@ -28,7 +28,7 @@ export default function ChatInput({ onSend, isLoading, placeholder, sendLabel }:
   }
 
   return (
-    <div className="flex items-end gap-2 px-3 py-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-b-2xl">
+    <div className="flex items-end gap-2 px-3 py-3 border-t border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/10 backdrop-blur-md rounded-b-3xl relative">
       <textarea
         ref={textareaRef}
         value={text}
@@ -37,7 +37,7 @@ export default function ChatInput({ onSend, isLoading, placeholder, sendLabel }:
         disabled={isLoading}
         placeholder={placeholder}
         rows={1}
-        className="flex-1 resize-none rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-[13px] text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-600 disabled:opacity-50 transition-colors leading-relaxed"
+        className="flex-1 resize-none rounded-2xl border border-white/40 dark:border-white/15 bg-white/50 dark:bg-white/8 backdrop-blur-sm px-3 py-2 text-[13px] text-slate-800 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/50 disabled:opacity-50 transition-all leading-relaxed"
         style={{ maxHeight: '96px', overflowY: 'auto' }}
         aria-label={placeholder}
       />

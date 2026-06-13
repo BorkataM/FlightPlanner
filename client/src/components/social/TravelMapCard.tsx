@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
-import { Globe, Plus, Minus } from 'lucide-react'
-import { ALPHA2_TO_NUMERIC } from '../../data/countryIsoMap'
+import { Globe, Plus, Minus, Flag, X } from 'lucide-react'
+import { ALPHA2_TO_NUMERIC, alpha2ToFullName } from '../../data/countryIsoMap'
 import { useTheme } from '../../context/ThemeContext'
+import { useLocale } from '../../context/LocaleContext'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
@@ -16,8 +17,11 @@ export default function TravelMapCard({ visitedCountries, loading, compact }: Pr
   const [zoom, setZoom] = useState(1.8)
   const [center, setCenter] = useState<[number, number]>([10, 20])
   const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
+  const { t } = useLocale()
+  const tr = t.travelers
   const dark = theme === 'dark'
 
   const visitedSet = new Set(
@@ -151,10 +155,59 @@ export default function TravelMapCard({ visitedCountries, loading, compact }: Pr
             Not Visited
           </span>
         </div>
-        <button className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+        >
           View All Countries <span className="text-sm">›</span>
         </button>
       </div>}
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm max-h-[70vh] flex flex-col"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <Flag className="w-4 h-4 text-slate-400" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{tr.allVisitedCountries}</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-400">{visitedCountries.length} / 195</span>
+                <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1 px-5 py-3 space-y-2.5">
+              {visitedCountries.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-6">{tr.noCountriesVisited}</p>
+              ) : (
+                visitedCountries.map((c, i) => (
+                  <div key={c} className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-slate-400 w-5 text-right shrink-0">{i + 1}</span>
+                    <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{alpha2ToFullName(c)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+              >
+                {tr.close}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

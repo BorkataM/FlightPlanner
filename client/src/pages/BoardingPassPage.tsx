@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Plane, Printer } from 'lucide-react'
 import type { FlightDto } from '../features/search/types'
 import type { BookingRecord } from '../services/api'
+import { useLocale } from '../context/LocaleContext'
 
 /* ── types ──────────────────────────────────────────────────── */
 interface PassengerInfo {
@@ -272,15 +273,17 @@ function BoardingPassCard(p: CardProps) {
 export default function BoardingPassPage() {
   const location = useLocation()
   const navigate  = useNavigate()
+  const { t } = useLocale()
+  const bp = t.boardingPass
   const raw = location.state as any // eslint-disable-line @typescript-eslint/no-explicit-any
 
   if (!raw) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-500 mb-4">No boarding pass data found.</p>
+          <p className="text-slate-500 mb-4">{bp.noData}</p>
           <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">
-            Go home
+            {bp.goHome}
           </button>
         </div>
       </div>
@@ -366,14 +369,14 @@ export default function BoardingPassPage() {
               onClick={() => raw?.fromBooking ? navigate('/', { replace: true }) : navigate(-1)}
               className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium"
             >
-              <ChevronLeft className="w-4 h-4" /> Back
+              <ChevronLeft className="w-4 h-4" /> {bp.back}
             </button>
             <button onClick={() => navigate('/')} className="font-black text-slate-900 dark:text-slate-100 tracking-tight hover:opacity-70 transition-opacity">SkyWave</button>
             <button
               onClick={() => window.print()}
               className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
             >
-              <Printer className="w-4 h-4" /> Print
+              <Printer className="w-4 h-4" /> {bp.print}
             </button>
           </div>
         </div>
@@ -383,14 +386,14 @@ export default function BoardingPassPage() {
 
           {/* title — pinned at top, centered */}
           <div className="print:hidden text-center pt-10 pb-6 px-6">
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-1">Your Boarding Pass</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-1">{bp.title}</h1>
             <p className="text-slate-400 text-sm">
-              Booking reference:&nbsp;
+              {bp.bookingRef}&nbsp;
               <span className="font-black text-blue-600 tracking-[0.15em] font-mono">{bookingRef}</span>
               {grandTotal > 0 && (
                 <>
                   <span className="ml-3 text-slate-300">·</span>
-                  <span className="ml-3 font-semibold text-slate-500">€{Math.round(grandTotal)} paid</span>
+                  <span className="ml-3 font-semibold text-slate-500">€{Math.round(grandTotal)} {bp.paid}</span>
                 </>
               )}
             </p>

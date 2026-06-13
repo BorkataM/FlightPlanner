@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLocale } from '../context/LocaleContext'
 import {
   Plane, ChevronLeft, ChevronRight, Check,
   Shield, Briefcase, CreditCard, User, Mail, Info, Loader2,
 } from 'lucide-react'
 import type { FlightDto } from '../features/search/types'
 import { bookingsApi } from '../services/api'
+import GooglePayButton from '@google-pay/button-react'
 
 /* ── types ──────────────────────────────────────────────── */
 export interface BookingState {
@@ -91,13 +93,16 @@ function ProgressDot({ n, label, state }: { n: number; label: string; state: 'do
 }
 
 function FlightRow({ flight, dir }: { flight: FlightDto; dir: 'Outbound' | 'Return' }) {
+  const { t } = useLocale()
+  const bk = t.booking
   const dur = durMin(flight)
+  const dirLabel = dir === 'Outbound' ? bk.outbound : bk.return
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
         <span className={`text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full border ${
           dir === 'Outbound' ? 'bg-blue-50 text-blue-500 border-blue-100' : 'bg-violet-50 text-violet-500 border-violet-100'
-        }`}>{dir}</span>
+        }`}>{dirLabel}</span>
         <span className="text-[12px] text-slate-400 font-medium">{fmtShortDate(flight.departureTime)}</span>
       </div>
       <div className="flex items-center gap-3">
@@ -115,7 +120,7 @@ function FlightRow({ flight, dir }: { flight: FlightDto; dir: 'Outbound' | 'Retu
             <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
           </div>
           <span className="text-[10px] text-slate-400">
-            {flight.airlineName} · {flight.stops === 0 ? 'Direct' : `${flight.stops} stop`}
+            {flight.airlineName} · {flight.stops === 0 ? bk.direct : `${flight.stops} ${bk.stop}`}
           </span>
         </div>
         <div className="text-right shrink-0">
@@ -192,6 +197,8 @@ export default function BookingPage() {
   const location = useLocation()
   const navigate  = useNavigate()
   const { user }  = useAuth()
+  const { t } = useLocale()
+  const bk = t.booking
   const state     = location.state as BookingState | null
 
   useEffect(() => {
@@ -233,9 +240,9 @@ export default function BookingPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-500 mb-4">No flight selected.</p>
+          <p className="text-slate-500 mb-4">{bk.noFlightSelected}</p>
           <button onClick={() => navigate('/')} className="text-blue-600 font-semibold hover:underline">
-            Back to search
+            {bk.backToSearch}
           </button>
         </div>
       </div>
@@ -259,35 +266,48 @@ export default function BookingPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const executeBooking = async () => {
+    const token = state?.token || user?.token || ''
+    const outboundBooking = await bookingsApi.create(outbound.id, token)
+    let retBooking = null
+    if (isRoundTrip && ret) retBooking = await bookingsApi.create(ret.id, token)
+    const code = outboundBooking.confirmationCode || genRef()
+    setBookingRef(code)
+    const existing = JSON.parse(localStorage.getItem('skywave_local_bookings') ?? '[]')
+    existing.unshift({
+      confirmationCode:  code,
+      outboundBookingId: outboundBooking.id,
+      returnBookingId:   retBooking?.id ?? null,
+      passenger: { firstName, lastName, gender, nationality, dob: `${dobDay}/${dobMonth}/${dobYear}` },
+      fromCity, toCity, isRoundTrip,
+      outbound, ret,
+      baggage, checkedBaggage, insurance, grandTotal,
+      createdAt: new Date().toISOString(),
+    })
+    localStorage.setItem('skywave_local_bookings', JSON.stringify(existing))
+    setConfirmed(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const handlePay = async () => {
     if (!step2Valid || paying) return
     setPaying(true)
     setPayError('')
     try {
-      const token = state?.token || user?.token || ''
-      const outboundBooking = await bookingsApi.create(outbound.id, token)
-      let retBooking = null
-      if (isRoundTrip && ret) retBooking = await bookingsApi.create(ret.id, token)
+      await executeBooking()
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+    } finally {
+      setPaying(false)
+    }
+  }
 
-      const code = outboundBooking.confirmationCode || genRef()
-      setBookingRef(code)
-
-      /* persist passenger + booking metadata locally so My Bookings can display them */
-      const existing = JSON.parse(localStorage.getItem('skywave_local_bookings') ?? '[]')
-      existing.unshift({
-        confirmationCode: code,
-        outboundBookingId: outboundBooking.id,
-        returnBookingId:   retBooking?.id ?? null,
-        passenger: { firstName, lastName, gender, nationality, dob: `${dobDay}/${dobMonth}/${dobYear}` },
-        fromCity, toCity, isRoundTrip,
-        outbound, ret,
-        baggage, checkedBaggage, insurance, grandTotal,
-        createdAt: new Date().toISOString(),
-      })
-      localStorage.setItem('skywave_local_bookings', JSON.stringify(existing))
-
-      setConfirmed(true)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+  const handleGooglePay = async () => {
+    if (!email.trim() || paying) return
+    setPaying(true)
+    setPayError('')
+    try {
+      await executeBooking()
     } catch (err) {
       setPayError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
@@ -303,21 +323,21 @@ export default function BookingPage() {
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
             <Check className="w-10 h-10 text-emerald-600" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-1">Booking Confirmed!</h1>
-          <p className="text-slate-400 mb-8">Your trip to <strong className="text-slate-700 dark:text-slate-300">{toCity}</strong> is all set.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-1">{bk.bookingConfirmed}</h1>
+          <p className="text-slate-400 mb-8">{bk.bookingConfirmedSub.replace('{city}', toCity)}</p>
 
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6 text-left mb-6">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-700">
-              <span className="text-xs text-slate-400 uppercase tracking-widest font-bold">Booking reference</span>
+              <span className="text-xs text-slate-400 uppercase tracking-widest font-bold">{bk.bookingReference}</span>
               <span className="text-xl font-black text-blue-600 tracking-[0.2em] font-mono">{bookingRef}</span>
             </div>
             <div className="pt-4 space-y-3 text-sm">
               {[
-                ['Passenger',      `${firstName} ${lastName}`],
-                ['Route',          `${fromCity} → ${toCity}${isRoundTrip ? ' and back' : ''}`],
-                ['Outbound',       `${outbound.flightNumber} · ${fmtShortDate(outbound.departureTime)}`],
-                ...(ret ? [['Return', `${ret.flightNumber} · ${fmtShortDate(ret.departureTime)}`]] : []),
-                ['Total paid',     `€${Math.round(grandTotal)}`],
+                [bk.passenger,   `${firstName} ${lastName}`],
+                [bk.route,       `${fromCity} → ${toCity}${isRoundTrip ? ` ${bk.andBack}` : ''}`],
+                [bk.outbound,    `${outbound.flightNumber} · ${fmtShortDate(outbound.departureTime)}`],
+                ...(ret ? [[bk.return, `${ret.flightNumber} · ${fmtShortDate(ret.departureTime)}`]] : []),
+                [bk.totalPaid,   `€${Math.round(grandTotal)}`],
               ].map(([lbl, val]) => (
                 <div key={lbl} className="flex justify-between">
                   <span className="text-slate-400">{lbl}</span>
@@ -341,11 +361,11 @@ export default function BookingPage() {
               })}
               className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
             >
-              View Boarding Pass
+              {bk.viewBoardingPass}
             </button>
             <button onClick={() => navigate('/')}
               className="flex-1 py-3 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 font-semibold rounded-xl transition-colors">
-              Back to Search
+              {bk.backToSearch}
             </button>
           </div>
         </div>
@@ -356,13 +376,13 @@ export default function BookingPage() {
   /* ── price sidebar ─────────────────────────────────────── */
   const PriceSidebar = () => (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 sticky top-24">
-      <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Price summary</div>
+      <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{bk.priceSummary}</div>
       <div className="space-y-2">
         {[
-          [`1× Adult (${isRoundTrip ? 'round trip' : 'one way'})`, totalPrice],
-          ...(baggageExtra  ? [['Carry-on bundle',    baggageExtra]]  : []),
-          ...(checkedExtra  ? [['Checked bag (23 kg)', checkedExtra]] : []),
-          ...(insExtra      ? [`Travel ${insurance}`,  insExtra].map(x => [x]) : []),
+          [isRoundTrip ? bk.adultRoundTrip : bk.adultOneWay, totalPrice],
+          ...(baggageExtra  ? [[bk.carryOnBundle,              baggageExtra]]  : []),
+          ...(checkedExtra  ? [[`${bk.bag23kg} (23 kg)`,       checkedExtra]]  : []),
+          ...(insExtra      ? [[insurance === 'basic' ? bk.insBasic : bk.insPlus, insExtra]] : []),
         ].map(([lbl, amt]) => (
           <div key={String(lbl)} className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
             <span>{lbl}</span>
@@ -370,15 +390,15 @@ export default function BookingPage() {
           </div>
         ))}
         <div className="border-t border-slate-100 dark:border-slate-700 pt-3 mt-1 flex justify-between font-black text-slate-900 dark:text-slate-100 text-base">
-          <span>Total</span>
+          <span>{bk.total}</span>
           <span>€{Math.round(grandTotal)}</span>
         </div>
-        <p className="text-[10px] text-slate-400 pt-0.5">Including all taxes and fees</p>
+        <p className="text-[10px] text-slate-400 pt-0.5">{bk.taxesNote}</p>
       </div>
 
       {/* mini flight strip */}
       <div className="border-t border-slate-100 dark:border-slate-700 mt-4 pt-4 space-y-2">
-        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Your flights</div>
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{bk.yourFlights}</div>
         {[
           { f: outbound, color: 'text-blue-500', rot: 'rotate-90' },
           ...(ret ? [{ f: ret, color: 'text-violet-500', rot: '-rotate-90' }] : []),
@@ -405,25 +425,25 @@ export default function BookingPage() {
             className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium"
           >
             <ChevronLeft className="w-4 h-4" />
-            {step === 2 ? 'Back' : 'Results'}
+            {step === 2 ? bk.back : bk.results}
           </button>
           <button onClick={() => navigate('/')} className="font-black text-slate-900 dark:text-slate-100 tracking-tight hover:opacity-70 transition-opacity">SkyWave</button>
-          <span className="text-xs text-slate-400 font-medium">Step {step} of 2</span>
+          <span className="text-xs text-slate-400 font-medium">{bk.stepOf.replace('{step}', String(step))}</span>
         </div>
       </div>
 
       {/* progress */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-center">
-          <ProgressDot n={1} label="Passenger & Extras" state={step > 1 ? 'done' : 'active'} />
+          <ProgressDot n={1} label={bk.step1Label} state={step > 1 ? 'done' : 'active'} />
           <div className={`w-20 h-px mx-3 ${step > 1 ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'}`} />
-          <ProgressDot n={2} label="Overview & Payment" state={step === 2 ? 'active' : 'upcoming'} />
+          <ProgressDot n={2} label={bk.step2Label} state={step === 2 ? 'active' : 'upcoming'} />
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pt-6 pb-16">
         <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-6">
-          {fromCity} → {toCity}{isRoundTrip ? ' and back' : ''}
+          {fromCity} → {toCity}{isRoundTrip ? ` ${bk.andBack}` : ''}
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
@@ -432,7 +452,7 @@ export default function BookingPage() {
 
             {/* trip summary */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
-              <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Trip summary</div>
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{bk.tripSummary}</div>
               <div className="space-y-4">
                 <FlightRow flight={outbound} dir="Outbound" />
                 {ret && (
@@ -451,45 +471,45 @@ export default function BookingPage() {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<User className="w-4 h-4 text-blue-600" />}
-                    title="Primary Passenger"
-                    sub="Enter details exactly as in your passport / ID"
+                    title={bk.primaryPassenger}
+                    sub={bk.passengerSub}
                   />
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Given names" required>
+                      <FormField label={bk.givenNames} required>
                         <input value={firstName} onChange={e => setFirstName(e.target.value)}
                           placeholder="e.g. Harry James" className={inputCls} />
                       </FormField>
-                      <FormField label="Surnames" required>
+                      <FormField label={bk.surnames} required>
                         <input value={lastName} onChange={e => setLastName(e.target.value)}
                           placeholder="e.g. Brown" className={inputCls} />
                       </FormField>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Nationality" required>
+                      <FormField label={bk.nationality} required>
                         <select value={nationality} onChange={e => setNationality(e.target.value)} className={selectCls}>
-                          <option value="">Select country</option>
+                          <option value="">{bk.selectCountry}</option>
                           {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </FormField>
-                      <FormField label="Gender" required>
+                      <FormField label={bk.gender} required>
                         <select value={gender} onChange={e => setGender(e.target.value)} className={selectCls}>
-                          <option value="">Select</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other / prefer not to say</option>
+                          <option value="">{bk.selectGender}</option>
+                          <option value="male">{bk.male}</option>
+                          <option value="female">{bk.female}</option>
+                          <option value="other">{bk.other}</option>
                         </select>
                       </FormField>
                     </div>
 
-                    <FormField label="Date of birth" required>
+                    <FormField label={bk.dateOfBirth} required>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input value={dobDay} onChange={e => setDobDay(e.target.value.replace(/\D/,'').slice(0,2))}
                           placeholder="DD" className={inputCls} />
                         <select value={dobMonth} onChange={e => setDobMonth(e.target.value)} className={selectCls}>
-                          <option value="">Month</option>
+                          <option value="">{bk.month}</option>
                           {MONTHS.map((m,i) => <option key={m} value={String(i+1)}>{m}</option>)}
                         </select>
                         <input value={dobYear} onChange={e => setDobYear(e.target.value.replace(/\D/,'').slice(0,4))}
@@ -503,27 +523,27 @@ export default function BookingPage() {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<Briefcase className="w-4 h-4 text-blue-600" />}
-                    title="Cabin Baggage"
-                    sub="Select one option"
+                    title={bk.cabinBaggage}
+                    sub={bk.cabinBaggageSub}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <OptionCard selected={baggage === 'personal'} onClick={() => setBaggage('personal')}>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Personal item</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{bk.personalItem}</span>
                         <RadioDot checked={baggage === 'personal'} />
                       </div>
-                      <div className="text-xs text-slate-500 mb-1">Must fit under front seat</div>
-                      <div className="text-xs text-slate-400 font-mono">20 × 30 × 40 cm</div>
-                      <div className="text-sm font-bold text-emerald-600 mt-3">Included</div>
+                      <div className="text-xs text-slate-500 mb-1">{bk.personalItemSub}</div>
+                      <div className="text-xs text-slate-400 font-mono">{bk.personalItemDim}</div>
+                      <div className="text-sm font-bold text-emerald-600 mt-3">{bk.included}</div>
                     </OptionCard>
 
                     <OptionCard selected={baggage === 'carryOn'} onClick={() => setBaggage('carryOn')}>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">Carry-on bundle</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{bk.carryOnBundle}</span>
                         <RadioDot checked={baggage === 'carryOn'} />
                       </div>
-                      <div className="text-xs text-slate-500 mb-1">Personal item + cabin bag + priority boarding</div>
-                      <div className="text-xs text-slate-400 font-mono">up to 20 kg</div>
+                      <div className="text-xs text-slate-500 mb-1">{bk.carryOnBundleSub}</div>
+                      <div className="text-xs text-slate-400 font-mono">{bk.carryOnBundleDim}</div>
                       <div className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-3">+€{CARRY_ON_PRICE}</div>
                     </OptionCard>
                   </div>
@@ -533,24 +553,24 @@ export default function BookingPage() {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<Briefcase className="w-4 h-4 text-blue-600" />}
-                    title="Checked Baggage"
-                    sub="Large luggage stored in the hold"
+                    title={bk.checkedBaggage}
+                    sub={bk.checkedBaggageSub}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <OptionCard selected={!checkedBaggage} onClick={() => setCheckedBaggage(false)}>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">No checked baggage</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{bk.noCheckedBaggage}</span>
                         <RadioDot checked={!checkedBaggage} />
                       </div>
-                      <div className="text-sm font-bold text-emerald-600">Included</div>
+                      <div className="text-sm font-bold text-emerald-600">{bk.included}</div>
                     </OptionCard>
 
                     <OptionCard selected={checkedBaggage} onClick={() => setCheckedBaggage(true)}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">23 kg bag</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{bk.bag23kg}</span>
                         <RadioDot checked={checkedBaggage} />
                       </div>
-                      <div className="text-xs text-slate-400 mb-3">Max 23 kg · hard or soft case</div>
+                      <div className="text-xs text-slate-400 mb-3">{bk.bag23kgSub}</div>
                       <div className="text-sm font-bold text-slate-900 dark:text-slate-100">+€{CHECKED_PRICE}</div>
                     </OptionCard>
                   </div>
@@ -561,17 +581,17 @@ export default function BookingPage() {
                   <div className="flex items-center justify-between mb-5">
                     <SectionHeader
                       icon={<Shield className="w-4 h-4 text-blue-600" />}
-                      title="Travel Insurance"
-                      sub="Protect your trip"
+                      title={bk.travelInsurance}
+                      sub={bk.insuranceSub}
                     />
-                    <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-2">by AXA Assistance</span>
+                    <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-2">{bk.insProvider}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {(
                       [
-                        { type: 'none'  as InsuranceType, label: 'No insurance', price: 0,               features: [] },
-                        { type: 'basic' as InsuranceType, label: 'Travel Basic', price: INS_BASIC_PRICE, features: ['Medical expenses','Trip cancellation','Assistance'] },
-                        { type: 'plus'  as InsuranceType, label: 'Travel Plus',  price: INS_PLUS_PRICE,  features: ['Medical expenses','Trip cancellation','Assistance','Lost baggage','Liability'] },
+                        { type: 'none'  as InsuranceType, label: bk.noInsurance, price: 0,               features: [] },
+                        { type: 'basic' as InsuranceType, label: bk.insBasic,    price: INS_BASIC_PRICE, features: [bk.medical, bk.cancellation, bk.assistance] },
+                        { type: 'plus'  as InsuranceType, label: bk.insPlus,     price: INS_PLUS_PRICE,  features: [bk.medical, bk.cancellation, bk.assistance, bk.lostBaggage, bk.liability] },
                       ]
                     ).map(({ type, label, price, features }) => (
                       <OptionCard key={type} selected={insurance === type} onClick={() => setInsurance(type)}>
@@ -580,7 +600,7 @@ export default function BookingPage() {
                           <RadioDot checked={insurance === type} />
                         </div>
                         {features.length === 0
-                          ? <div className="text-xs text-slate-400 mb-3">No coverage included</div>
+                          ? <div className="text-xs text-slate-400 mb-3">{bk.noCoverage}</div>
                           : (
                             <ul className="space-y-1 mb-3">
                               {features.map(f => (
@@ -593,7 +613,7 @@ export default function BookingPage() {
                           )
                         }
                         <div className={`text-sm font-bold ${price === 0 ? 'text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
-                          {price === 0 ? 'Free' : `+€${price}`}
+                          {price === 0 ? bk.free : `+€${price}`}
                         </div>
                       </OptionCard>
                     ))}
@@ -608,7 +628,7 @@ export default function BookingPage() {
                       : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  Continue <ChevronRight className="w-5 h-5" />
+                  {bk.continue} <ChevronRight className="w-5 h-5" />
                 </button>
               </>
             )}
@@ -618,15 +638,15 @@ export default function BookingPage() {
               <>
                 {/* booking summary */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
-                  <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Passenger & extras</div>
+                  <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{bk.passengerAndExtras}</div>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                    <SummaryRow label="Full name"     value={`${firstName} ${lastName}`} />
-                    <SummaryRow label="Gender"        value={gender} />
-                    <SummaryRow label="Nationality"   value={nationality} />
-                    <SummaryRow label="Date of birth" value={`${dobDay}/${dobMonth}/${dobYear}`} />
-                    <SummaryRow label="Cabin baggage" value={baggage === 'personal' ? '1× Personal item' : 'Carry-on bundle'} />
-                    <SummaryRow label="Checked bag"   value={checkedBaggage ? '23 kg' : 'None'} />
-                    <SummaryRow label="Insurance"     value={insurance === 'none' ? 'None' : insurance === 'basic' ? 'Travel Basic' : 'Travel Plus'} />
+                    <SummaryRow label={bk.fullName}     value={`${firstName} ${lastName}`} />
+                    <SummaryRow label={bk.gender}       value={gender} />
+                    <SummaryRow label={bk.nationality}  value={nationality} />
+                    <SummaryRow label={bk.dateOfBirth}  value={`${dobDay}/${dobMonth}/${dobYear}`} />
+                    <SummaryRow label={bk.cabinBaggage} value={baggage === 'personal' ? `1× ${bk.personalItem}` : bk.carryOnBundle} />
+                    <SummaryRow label={bk.checkedBag}   value={checkedBaggage ? '23 kg' : bk.insuranceNone} />
+                    <SummaryRow label={bk.travelInsurance} value={insurance === 'none' ? bk.insuranceNone : insurance === 'basic' ? bk.insBasic : bk.insPlus} />
                   </div>
                 </div>
 
@@ -634,15 +654,15 @@ export default function BookingPage() {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<Mail className="w-4 h-4 text-blue-600" />}
-                    title="Contact Details"
-                    sub="We'll send your booking confirmation here"
+                    title={bk.contactDetails}
+                    sub={bk.contactDetailsSub}
                   />
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Email" required>
+                    <FormField label={bk.email} required>
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                         placeholder="your@email.com" className={inputCls} />
                     </FormField>
-                    <FormField label="Phone number" required>
+                    <FormField label={bk.phone} required>
                       <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                         placeholder="+359 88 888 8888" className={inputCls} />
                     </FormField>
@@ -653,11 +673,58 @@ export default function BookingPage() {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <SectionHeader
                     icon={<CreditCard className="w-4 h-4 text-blue-600" />}
-                    title="Pay with Card"
-                    sub="All major cards accepted"
+                    title={bk.payWithCard}
+                    sub={bk.payWithCardSub}
                   />
+
+                  {/* Google Pay */}
+                  <div className={`mb-4 ${!email.trim() ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <GooglePayButton
+                      environment="TEST"
+                      paymentRequest={{
+                        apiVersion: 2,
+                        apiVersionMinor: 0,
+                        allowedPaymentMethods: [{
+                          type: 'CARD',
+                          parameters: {
+                            allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                            allowedCardNetworks: ['MASTERCARD', 'VISA'],
+                          },
+                          tokenizationSpecification: {
+                            type: 'PAYMENT_GATEWAY',
+                            parameters: {
+                              gateway: 'example',
+                              gatewayMerchantId: 'exampleGatewayMerchantId',
+                            },
+                          },
+                        }],
+                        merchantInfo: {
+                          merchantId: '12345678901234567890',
+                          merchantName: 'SkyWave',
+                        },
+                        transactionInfo: {
+                          totalPriceStatus: 'FINAL',
+                          totalPriceLabel: 'Total',
+                          totalPrice: grandTotal.toFixed(2),
+                          currencyCode: 'EUR',
+                          countryCode: 'BG',
+                        },
+                      }}
+                      onLoadPaymentData={() => { handleGooglePay() }}
+                      buttonSizeMode="fill"
+                      buttonType="pay"
+                      style={{ width: '100%', height: '40px' }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+                    <span className="text-xs text-slate-400">or pay by card</span>
+                    <div className="flex-1 h-px bg-slate-200 dark:bg-slate-600" />
+                  </div>
+
                   <div className="space-y-4">
-                    <FormField label="Card number" required>
+                    <FormField label={bk.cardNumber} required>
                       <input
                         value={cardNum}
                         onChange={e => {
@@ -671,7 +738,7 @@ export default function BookingPage() {
                     </FormField>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Expiry (MM/YY)" required>
+                      <FormField label={bk.expiry} required>
                         <input
                           value={cardExpiry}
                           onChange={e => {
@@ -684,7 +751,7 @@ export default function BookingPage() {
                           maxLength={5}
                         />
                       </FormField>
-                      <FormField label="CVV" required>
+                      <FormField label={bk.cvv} required>
                         <input
                           value={cardCvv}
                           onChange={e => setCardCvv(e.target.value.replace(/\D/g,'').slice(0,4))}
@@ -695,7 +762,7 @@ export default function BookingPage() {
                       </FormField>
                     </div>
 
-                    <FormField label="Name on card" required>
+                    <FormField label={bk.nameOnCard} required>
                       <input
                         value={cardName}
                         onChange={e => setCardName(e.target.value.toUpperCase())}
@@ -706,10 +773,7 @@ export default function BookingPage() {
 
                     <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-700 rounded-xl">
                       <Info className="w-4 h-4 text-slate-400 shrink-0 mt-px" />
-                      <p className="text-xs text-slate-400 leading-relaxed">
-                        Your payment is secured with 256-bit SSL encryption.
-                        By paying you agree to our Terms &amp; Conditions.
-                      </p>
+                      <p className="text-xs text-slate-400 leading-relaxed">{bk.securityNote}</p>
                     </div>
                   </div>
                 </div>
@@ -729,7 +793,7 @@ export default function BookingPage() {
                   }`}
                 >
                   {paying
-                    ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing…</>
+                    ? <><Loader2 className="w-5 h-5 animate-spin" /> {bk.processing}</>
                     : <>Pay €{Math.round(grandTotal)} <ChevronRight className="w-5 h-5" /></>
                   }
                 </button>

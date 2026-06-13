@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { DESTINATIONS } from '../../assets/data/destinations'
-import { en } from '../../localization/en'
+import { useLocale } from '../../context/LocaleContext'
 import DestCard from './DestCard'
 
-const t = en.destinations
 const VISIBLE = 4
 
 export default function PopularDestinations() {
+  const { t } = useLocale()
   const [cards, setCards] = useState(DESTINATIONS)
   const [offset, setOffset] = useState(0)
   const maxOffset = cards.length - VISIBLE
@@ -20,8 +20,8 @@ export default function PopularDestinations() {
       <div className="max-w-[1280px] mx-auto px-8">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <div className="text-xs font-semibold tracking-widest uppercase text-indigo-500 mb-2">{t.subtitle}</div>
-            <h2 className="text-3xl font-extrabold text-slate-900">{t.title}</h2>
+            <div className="text-xs font-semibold tracking-widest uppercase text-indigo-500 mb-2">{t.destinations.subtitle}</div>
+            <h2 className="text-3xl font-extrabold text-slate-900">{t.destinations.title}</h2>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setOffset(Math.max(0, offset - 1))} disabled={offset === 0}
@@ -38,7 +38,7 @@ export default function PopularDestinations() {
           <div className="flex gap-4 transition-transform duration-500 ease-out"
             style={{ transform: `translateX(calc(-${offset} * (14rem + 1rem)))` }}>
             {cards.map((dest, i) => (
-              <DestCard key={dest.name} dest={dest} currency={t.currency} fromLabel={t.from} onToggleLike={() => toggleLike(i)} />
+              <DestCard key={dest.name} dest={dest} currency={t.destinations.currency} fromLabel={t.destinations.from} onToggleLike={() => toggleLike(i)} />
             ))}
           </div>
         </div>

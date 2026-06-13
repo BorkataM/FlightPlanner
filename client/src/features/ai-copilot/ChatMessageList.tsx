@@ -37,7 +37,7 @@ function TypingDots() {
       {[0, 0.18, 0.36].map((delay, i) => (
         <span
           key={i}
-          className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"
+          className="w-2 h-2 rounded-full bg-blue-500/70 animate-bounce"
           style={{ animationDelay: `${delay}s`, animationDuration: '0.9s' }}
         />
       ))}
@@ -65,10 +65,10 @@ function AssistantBubble({ turn, animate }: { turn: ChatTurn; animate: boolean }
     <div className="flex justify-start px-3 py-1">
       <div className="max-w-[90%]">
         <div
-          className={`rounded-2xl rounded-tl-sm px-4 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap ${
+          className={`rounded-2xl rounded-tl-sm px-4 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap backdrop-blur-sm ${
             turn.isError
-              ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
-              : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-700'
+              ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300/40 dark:border-rose-500/20'
+              : 'bg-white/40 dark:bg-white/8 text-slate-800 dark:text-slate-100 border border-white/50 dark:border-white/12'
           }`}
         >
           {displayed}
@@ -108,7 +108,7 @@ export default function ChatMessageList({ turns, isLoading, emptyStateText }: Pr
   const lastAssistantIdx = turns.reduce((acc, t, i) => t.role === 'assistant' ? i : acc, -1)
 
   return (
-    <div className="flex-1 overflow-y-auto py-2" aria-live="polite" aria-label="Chat messages">
+    <div className="flex-1 overflow-y-auto py-2 relative" aria-live="polite" aria-label="Chat messages">
       {turns.map((turn, i) =>
         turn.role === 'user'
           ? <UserBubble key={i} content={turn.content} />
@@ -116,7 +116,7 @@ export default function ChatMessageList({ turns, isLoading, emptyStateText }: Pr
       )}
       {isLoading && (
         <div className="flex justify-start px-3 py-1">
-          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-sm">
+          <div className="bg-white/40 dark:bg-white/8 backdrop-blur-sm border border-white/50 dark:border-white/12 rounded-2xl rounded-tl-sm">
             <TypingDots />
           </div>
         </div>

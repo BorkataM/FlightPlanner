@@ -12,10 +12,11 @@ export interface AuthUser {
 }
 
 interface AuthContextValue {
-  user:     AuthUser | null
-  login:    (data: LoginData)    => Promise<void>
-  register: (data: RegisterData) => Promise<void>
-  logout:   () => void
+  user:            AuthUser | null
+  login:           (data: LoginData)    => Promise<void>
+  register:        (data: RegisterData) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
+  logout:          () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -54,13 +55,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persist(toAuthUser(res))
   }, [persist])
 
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const res = await authApi.googleAuth(credential)
+    persist(toAuthUser(res))
+  }, [persist])
+
   const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   )
