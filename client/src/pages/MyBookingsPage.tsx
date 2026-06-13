@@ -174,10 +174,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
   })
 
   return (
-    <div
-      className="w-[240px] lg:w-[270px] xl:w-[300px] flex-shrink-0 flex flex-col overflow-y-auto"
-      style={{ background: 'linear-gradient(180deg, #09131f 0%, #101e31 100%)' }}
-    >
+    <div className="flex-1 flex flex-col overflow-y-auto">
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <button
@@ -445,6 +442,7 @@ export default function MyBookingsPage() {
   const [loading,  setLoading]  = useState(true)
   const [error,    setError]    = useState('')
   const [selected, setSelected] = useState<Trip | undefined>(undefined)
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
@@ -486,16 +484,37 @@ export default function MyBookingsPage() {
     )
   }
 
+  const handleSelectTrip = (trip: Trip) => {
+    setSelected(trip)
+    setMobileView('detail')
+  }
+
   return (
     <div className="h-screen flex overflow-hidden">
-      <LeftPanel
-        nextTrip={upcoming[0]}
-        upcoming={upcoming}
-        past={past}
-        selected={activeTrip}
-        onSelect={setSelected}
-      />
-      {activeTrip ? <RightPanel trip={activeTrip} /> : <EmptyRight />}
+      {/* Left panel: full-width on mobile (list view), fixed width on lg+ */}
+      <div className={`${mobileView === 'detail' ? 'hidden lg:flex' : 'flex'} w-full lg:w-[270px] xl:w-[300px] flex-shrink-0 flex-col overflow-y-auto`}
+        style={{ background: 'linear-gradient(180deg, #09131f 0%, #101e31 100%)' }}>
+        <LeftPanel
+          nextTrip={upcoming[0]}
+          upcoming={upcoming}
+          past={past}
+          selected={activeTrip}
+          onSelect={handleSelectTrip}
+        />
+      </div>
+
+      {/* Right panel: hidden on mobile (list view), full-width on mobile (detail view) */}
+      <div className={`${mobileView === 'list' ? 'hidden lg:flex' : 'flex'} flex-1 flex-col overflow-y-auto`}>
+        {mobileView === 'detail' && (
+          <button
+            onClick={() => setMobileView('list')}
+            className="lg:hidden flex items-center gap-1.5 px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> All Bookings
+          </button>
+        )}
+        {activeTrip ? <RightPanel trip={activeTrip} /> : <EmptyRight />}
+      </div>
     </div>
   )
 }

@@ -119,8 +119,9 @@ export default function SearchBox() {
           </div>
         </div>
 
-        <div className="relative flex items-stretch">
-          <div className={`flex-1 grid ${sb.isRoundTrip ? ROUND_TRIP_GRID : ONE_WAY_GRID}`}>
+        <div className="relative flex flex-col sm:flex-row sm:items-stretch">
+          {/* Airport selects row */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] border-b sm:border-b-0 border-slate-200/40 dark:border-slate-700/40 sm:flex-[3]">
             <AirportSelect
               label={t.fields.from.label}
               icon={<Plane className="w-4 h-4 rotate-45" />}
@@ -151,7 +152,12 @@ export default function SearchBox() {
               onBrowseClose={sb.onToBrowseClose}
               closeSignal={sb.toCloseSignal}
             />
+          </div>
 
+          {/* Date fields + search button row */}
+          <div className={`grid sm:flex-[2] ${sb.isRoundTrip
+            ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]'
+            : 'grid-cols-[minmax(0,1fr)_auto]'}`}>
             <DateField
               icon={<Calendar className="w-4 h-4" />}
               label={t.fields.departure.label}
@@ -173,16 +179,16 @@ export default function SearchBox() {
                 rangeStart={sb.departure}
               />
             )}
-          </div>
 
-          <div className="flex items-center px-4">
-            <button
-              onClick={handleSearch}
-              disabled={!canSearch}
-              className={`btn-search w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 ${canSearch ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}`}
-            >
-              <Search className="w-5 h-5 text-white" />
-            </button>
+            <div className="flex items-center px-4">
+              <button
+                onClick={handleSearch}
+                disabled={!canSearch}
+                className={`btn-search w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 ${canSearch ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}`}
+              >
+                <Search className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
 
           {sb.browseField && (

@@ -476,7 +476,7 @@ export default function BookingPage() {
                   />
 
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField label={bk.givenNames} required>
                         <input value={firstName} onChange={e => setFirstName(e.target.value)}
                           placeholder="e.g. Harry James" className={inputCls} />
@@ -487,7 +487,7 @@ export default function BookingPage() {
                       </FormField>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField label={bk.nationality} required>
                         <select value={nationality} onChange={e => setNationality(e.target.value)} className={selectCls}>
                           <option value="">{bk.selectCountry}</option>
@@ -639,7 +639,7 @@ export default function BookingPage() {
                 {/* booking summary */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
                   <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{bk.passengerAndExtras}</div>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                     <SummaryRow label={bk.fullName}     value={`${firstName} ${lastName}`} />
                     <SummaryRow label={bk.gender}       value={gender} />
                     <SummaryRow label={bk.nationality}  value={nationality} />
@@ -657,7 +657,7 @@ export default function BookingPage() {
                     title={bk.contactDetails}
                     sub={bk.contactDetailsSub}
                   />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label={bk.email} required>
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                         placeholder="your@email.com" className={inputCls} />

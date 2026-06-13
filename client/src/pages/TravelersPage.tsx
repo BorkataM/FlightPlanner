@@ -388,7 +388,7 @@ export default function TravelersPage() {
 
       {/* ── Content ── */}
       <div className="flex-1 w-full px-3 lg:px-6 py-4 lg:py-6 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 grid lg:grid-cols-4 gap-3 lg:gap-6">
+        <div className="flex-1 min-h-0 grid md:grid-cols-[1fr_3fr] lg:grid-cols-4 gap-3 lg:gap-6">
 
           {/* ── Main column (3/4): profile card + map stacked ── */}
           <div className="lg:col-span-3 flex flex-col gap-5 min-h-0">

@@ -154,14 +154,14 @@ function FlightCard({ combo, isRoundTrip, onSelect }: { combo: Combo; isRoundTri
       </div>
 
       {/* right: price panel */}
-      <div className="w-32 lg:w-44 shrink-0 flex flex-col items-center justify-center gap-3 lg:gap-4 py-5 lg:py-6 px-3 lg:px-5 border-l border-slate-100 dark:border-slate-700 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-700/50 dark:to-slate-800">
+      <div className="w-28 sm:w-36 lg:w-44 shrink-0 flex flex-col items-center justify-center gap-3 lg:gap-4 py-5 lg:py-6 px-2 sm:px-3 lg:px-5 border-l border-slate-100 dark:border-slate-700 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-700/50 dark:to-slate-800">
         <div className="text-center">
-          <div className="text-[24px] lg:text-[32px] font-black text-slate-900 dark:text-slate-100 leading-none tabular-nums">
+          <div className="text-[20px] sm:text-[24px] lg:text-[32px] font-black text-slate-900 dark:text-slate-100 leading-none tabular-nums">
             €{Math.round(combo.totalPrice)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1.5 font-medium">{priceLabel}</div>
+          <div className="text-[10px] sm:text-[11px] text-slate-400 mt-1.5 font-medium">{priceLabel}</div>
         </div>
-        <button onClick={onSelect} className="w-full py-2.5 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
+        <button onClick={onSelect} className="w-full py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
           {sr.select}
         </button>
       </div>
@@ -350,7 +350,7 @@ export default function SearchResultsPage() {
 
       {/* ── sticky header ── */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3 lg:py-4 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex items-center gap-3">
           <button
             onClick={() => {
               try {
@@ -364,16 +364,16 @@ export default function SearchResultsPage() {
               } catch { /* ignore */ }
               navigate('/')
             }}
-            className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium">
+            className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-sm font-medium shrink-0">
             <ChevronLeft className="w-4 h-4" /> {sr.modifySearch}
           </button>
-          <div className="text-base font-bold text-slate-900 dark:text-slate-100">
+          <div className="flex-1 text-center text-base font-bold text-slate-900 dark:text-slate-100 truncate">
             {fromCity} → {toCity}
-            <span className="ml-2 text-sm font-normal text-slate-400">
+            <span className="ml-2 text-sm font-normal text-slate-400 hidden sm:inline">
               · {isRoundTrip ? sr.roundTrip : sr.oneWay}
             </span>
           </div>
-          <div className="w-32" />
+          <div className="hidden sm:block w-32 shrink-0" />
         </div>
       </div>
 

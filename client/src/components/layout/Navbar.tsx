@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Globe, ChevronDown, LogOut, Check, Sun, Moon } from 'lucide-react'
+import { Globe, ChevronDown, LogOut, Check, Sun, Moon, Menu, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import SkyWaveLogo from '../../assets/logo/SkyWaveLogo'
 import { useAuth } from '../../context/AuthContext'
@@ -93,28 +93,32 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
   const { theme, toggleTheme }      = useTheme()
   const t        = locale.navbar
   const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const navClick = (label: string) => {
+    setMobileOpen(false)
+    if (MY_BOOKINGS_LABELS.has(label)) navigate('/my-bookings')
+    else if (TRAVELERS_LABELS.has(label)) navigate('/travelers')
+    else if (HOTELS_LABELS.has(label)) window.open('https://www.booking.bg', '_blank')
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 nav-blur">
       <div className="max-w-[1280px] mx-auto flex items-center justify-between px-4 lg:px-6 xl:px-8 h-14 lg:h-16">
 
-        <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
           <SkyWaveLogo />
           <span className="text-slate-900 dark:text-slate-100 font-semibold text-base lg:text-[1.15rem] tracking-tight">{t.brand}</span>
         </button>
 
-        <div className="flex items-center gap-4 lg:gap-5 xl:gap-7">
+        {/* Desktop nav links */}
+        <div className="hidden md:flex items-center gap-4 lg:gap-5 xl:gap-7">
           {t.links.map(label => (
             <NavLink
               key={label}
               label={label}
               active={label === t.activeLink}
-              onClick={
-                MY_BOOKINGS_LABELS.has(label) ? () => navigate('/my-bookings') :
-                TRAVELERS_LABELS.has(label)   ? () => navigate('/travelers')   :
-                HOTELS_LABELS.has(label)      ? () => window.open('https://www.booking.bg', '_blank') :
-                undefined
-              }
+              onClick={() => navClick(label)}
             />
           ))}
         </div>
@@ -149,9 +153,33 @@ export default function Navbar({ onSignIn, onLogout }: NavbarProps) {
               {t.signIn}
             </button>
           )}
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            className="md:hidden text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
 
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg">
+          {t.links.map(label => (
+            <button
+              key={label}
+              onClick={() => navClick(label)}
+              className="block w-full text-left px-5 py-3.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
     </nav>
   )
 }
