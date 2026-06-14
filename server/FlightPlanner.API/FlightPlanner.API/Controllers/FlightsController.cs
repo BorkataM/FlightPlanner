@@ -53,6 +53,13 @@ namespace FlightPlanner.API.Controllers
             return Ok(flights);
         }
 
+        [HttpGet("departure-codes")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDepartureCodes()
+        {
+            var codes = await _flightService.GetDepartureCodesAsync();
+            return Ok(codes);
+        }
+
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<FlightDto>>> Search(
             [FromQuery] string? from,

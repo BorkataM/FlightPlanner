@@ -97,8 +97,8 @@ export function useSearchBox(): SearchBoxState {
   const isRoundTrip = tripType === 'roundTrip'
 
   useEffect(() => {
-    flightsApi.search({ limit: 10000 })
-      .then(flights => setDepartureCodes(new Set(flights.map(f => f.departureAirportCode))))
+    flightsApi.departureCodes()
+      .then(codes => setDepartureCodes(new Set(codes)))
       .catch(() => {})
       .finally(() => setDepartureCodesLoaded(true))
   }, [])

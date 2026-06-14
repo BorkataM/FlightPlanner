@@ -8,5 +8,6 @@ namespace FlightPlanner.Core.Interfaces
         Task<Flight?> GetByIdAsync(int id);
         Task<IEnumerable<Flight>> GetSmartestAsync(int limit);
         Task<IEnumerable<Flight>> SearchAsync(string? departureCode, string? arrivalCode, DateOnly? date, int limit);
+        Task<IEnumerable<string>> GetDepartureCodesAsync();
     }
 }

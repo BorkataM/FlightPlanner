@@ -145,9 +145,10 @@ export const airportsApi = {
 }
 
 export const flightsApi = {
-  search:   (params: FlightSearchParams) => get<FlightDto[]>(buildFlightSearchUrl(params)),
-  smartest: (limit = 10)                 => get<FlightDto[]>(`${BASE_URL}/api/flights/smartest?limit=${limit}`),
-  getById:  (id: number)                 => get<FlightDto>(`${BASE_URL}/api/flights/${id}`),
+  search:         (params: FlightSearchParams) => get<FlightDto[]>(buildFlightSearchUrl(params)),
+  smartest:       (limit = 10)                 => get<FlightDto[]>(`${BASE_URL}/api/flights/smartest?limit=${limit}`),
+  getById:        (id: number)                 => get<FlightDto>(`${BASE_URL}/api/flights/${id}`),
+  departureCodes: ()                           => get<string[]>(`${BASE_URL}/api/flights/departure-codes`),
 }
 
 export interface AiChatHistoryMessage {

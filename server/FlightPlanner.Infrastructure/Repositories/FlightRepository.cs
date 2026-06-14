@@ -76,5 +76,13 @@ namespace FlightPlanner.Infrastructure.Repositories
                 .Take(limit)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<string>> GetDepartureCodesAsync() =>
+            await _context.Flights
+                .Include(f => f.DepartureAirport)
+                .Where(f => f.DepartureAirport.IataCode != null)
+                .Select(f => f.DepartureAirport.IataCode!)
+                .Distinct()
+                .ToListAsync();
     }
 }

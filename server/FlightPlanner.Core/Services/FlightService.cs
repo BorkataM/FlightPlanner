@@ -38,6 +38,9 @@ namespace FlightPlanner.Core.Services
             return flights.Select(Map);
         }
 
+        public async Task<IEnumerable<string>> GetDepartureCodesAsync() =>
+            await _flightRepository.GetDepartureCodesAsync();
+
         private static FlightDto Map(Flight f) => new()
         {
             Id = f.Id,
