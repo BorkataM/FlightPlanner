@@ -1,0 +1,52 @@
+# FlightPlanner full stack: AI service + .NET API + React client.
+# The database is external (Supabase), so no Postgres container is defined.
+# Secrets are read from the root .env file (gitignored) — see .env.example.
+
+services:
+  ai-service:
+    build: ./ai-service
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build: ./server
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_KEY: ${JWT_KEY}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      # Reach the AI service over the compose network, not localhost
+      AI_SERVICE_URL: http://ai-service:8000
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      - ai-service
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      args:
+        # Empty => app uses relative /api and /ai paths (proxied by nginx)
+        VITE_API_URL: ""
+        VITE_AI_URL: ""
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped

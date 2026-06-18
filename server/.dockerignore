@@ -1,0 +1,16 @@
+# Build artifacts
+**/bin/
+**/obj/
+
+# Secrets — provided at runtime via compose env, never baked into the image
+**/.env
+
+# IDE / VS
+.vs/
+**/*.user
+**/*.suo
+
+# Misc
+.claude/
+Dockerfile
+.dockerignore
