@@ -1,0 +1,29 @@
+# Production override: adds a Caddy reverse proxy in front of the stack for
+# automatic HTTPS. Use together with the base file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Only open ports 22, 80 and 443 in your cloud firewall. The client's raw
+# 8080 stays unreachable from the internet (blocked at the cloud firewall),
+# so all traffic goes through Caddy/HTTPS.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - client
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,10 @@
+# Caddy auto-HTTPS reverse proxy. DOMAIN and ACME_EMAIL come from the .env file.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip zstd
+	# Forward everything to the client (nginx), which already proxies /api and /ai
+	reverse_proxy client:80
+}

@@ -1,0 +1,74 @@
+# Render Blueprint — deploys FlightPlanner as 3 services on the free tier.
+# Secrets (sync: false) are entered in the Render dashboard on first deploy,
+# so they are never committed to the repo.
+#
+# NOTE: the public URLs below assume the service names are still available on
+# Render. If Render appends a suffix because a name is taken, update the three
+# hard-coded URLs (AI_SERVICE_URL, VITE_API_URL, VITE_AI_URL) to match.
+
+services:
+  # --- AI service (FastAPI, Docker) ---
+  - type: web
+    name: skywave-ai
+    runtime: docker
+    rootDir: ai-service
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+
+  # --- .NET API (Docker) ---
+  - type: web
+    name: skywave-api
+    runtime: docker
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    envVars:
+      # Render routes traffic to $PORT (default 10000); make Kestrel listen there.
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "10000"
+      - key: AI_SERVICE_URL
+        value: https://skywave-ai.onrender.com
+      - key: DB_HOST
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_KEY
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+  # --- React client (Static Site) ---
+  - type: web
+    name: skywave-web
+    runtime: static
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://skywave-api.onrender.com
+      - key: VITE_AI_URL
+        value: https://skywave-ai.onrender.com
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
