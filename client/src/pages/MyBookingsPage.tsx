@@ -170,7 +170,12 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
     if (sort === 'purchase') {
       return new Date(b.outbound.bookingDate).getTime() - new Date(a.outbound.bookingDate).getTime()
     }
-    return new Date(b.outbound.departureTime).getTime() - new Date(a.outbound.departureTime).getTime()
+    // Flight date: soonest upcoming first, then past trips (most recent first)
+    const aUp = isUpcoming(a), bUp = isUpcoming(b)
+    if (aUp !== bUp) return aUp ? -1 : 1
+    const at = new Date(a.outbound.departureTime).getTime()
+    const bt = new Date(b.outbound.departureTime).getTime()
+    return aUp ? at - bt : bt - at
   })
 
   return (
