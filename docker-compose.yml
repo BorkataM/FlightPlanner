@@ -45,6 +45,8 @@ services:
         # Empty => app uses relative /api and /ai paths (proxied by nginx)
         VITE_API_URL: ""
         VITE_AI_URL: ""
+        # Google OAuth client ID — baked into the SPA at build time
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     ports:
       - "8080:80"
     depends_on:
