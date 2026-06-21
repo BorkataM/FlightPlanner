@@ -27,6 +27,7 @@ function getRangeDayClass(date: Date, rangeStart: Date | null, hoverDate: Date |
 export default function DateField({ icon, label, selected, onChange, placeholderText, minDate, flightsByDate, rangeStart }: Props) {
   const [hoverDate, setHoverDate] = useState<Date | null>(null)
   const hasData = !!flightsByDate && flightsByDate.size > 0
+  const today = new Date(); today.setHours(0, 0, 0, 0)
 
   return (
     <div className="flex items-center gap-3 px-5 py-4">
@@ -38,7 +39,7 @@ export default function DateField({ icon, label, selected, onChange, placeholder
           onChange={onChange}
           dateFormat="d MMM, EEE"
           placeholderText={placeholderText}
-          minDate={hasData ? undefined : (minDate ?? new Date())}
+          minDate={minDate ?? today}
           popperPlacement="bottom-start"
           className="bg-transparent text-slate-900 dark:text-slate-100 text-base font-semibold outline-none w-full cursor-pointer placeholder-gray-400 dark:placeholder-slate-500 mt-0.5"
           filterDate={hasData ? (d) => flightsByDate!.has(toDateKey(d)) : undefined}

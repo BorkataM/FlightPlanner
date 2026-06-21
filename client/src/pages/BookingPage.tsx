@@ -70,6 +70,84 @@ const COUNTRIES = [
   'United Arab Emirates','United Kingdom','United States','Venezuela','Vietnam','Other',
 ]
 
+/* ── validation ─────────────────────────────────────────── */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const NAME_RE  = /^[\p{L}][\p{L} '.-]{1,}$/u
+
+const STEP1_FIELDS = ['firstName', 'lastName', 'nationality', 'gender', 'dob']
+const STEP2_FIELDS = ['email', 'phone', 'cardNum', 'cardExpiry', 'cardCvv', 'cardName']
+
+function nameError(v: string, field: string): string {
+  if (!v.trim()) return `${field} is required`
+  if (!NAME_RE.test(v.trim())) return `${field} can only contain letters`
+  return ''
+}
+
+function dobError(d: string, m: string, y: string): string {
+  if (!d || !m || !y) return 'Date of birth is required'
+  const day = +d, month = +m, year = +y
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  if (year < 1900 || year > today.getFullYear()) return 'Enter a valid year of birth'
+  const daysInMonth = new Date(year, month, 0).getDate()
+  if (day < 1 || day > daysInMonth) return 'Invalid day for that month'
+  const dob = new Date(year, month - 1, day)
+  if (dob > today) return 'Date of birth cannot be in the future'
+  const age = (today.getTime() - dob.getTime()) / (365.25 * 24 * 3600 * 1000)
+  if (age > 120) return 'Please check the year of birth'
+  return ''
+}
+
+function emailError(v: string): string {
+  if (!v.trim()) return 'Email is required'
+  if (!EMAIL_RE.test(v.trim())) return 'Enter a valid email address'
+  return ''
+}
+
+function phoneError(v: string): string {
+  if (!v.trim()) return 'Phone number is required'
+  if (!/^\+?[\d\s().-]+$/.test(v.trim())) return 'Enter a valid phone number'
+  const digits = v.replace(/\D/g, '')
+  if (digits.length < 7 || digits.length > 15) return 'Enter a valid phone number'
+  return ''
+}
+
+function luhnOk(digits: string): boolean {
+  let sum = 0, alt = false
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = +digits[i]
+    if (alt) { n *= 2; if (n > 9) n -= 9 }
+    sum += n; alt = !alt
+  }
+  return sum % 10 === 0
+}
+
+function cardError(v: string): string {
+  const digits = v.replace(/\D/g, '')
+  if (!digits) return 'Card number is required'
+  if (digits.length < 16) return 'Card number must be 16 digits'
+  if (!luhnOk(digits)) return 'This card number is invalid'
+  return ''
+}
+
+function expiryError(v: string): string {
+  const m = v.match(/^(\d{2})\/(\d{2})$/)
+  if (!m) return 'Use MM/YY format'
+  const mm = +m[1], yy = +m[2]
+  if (mm < 1 || mm > 12) return 'Invalid month'
+  const now = new Date()
+  const curYY = now.getFullYear() % 100
+  const curMM = now.getMonth() + 1
+  if (yy < curYY || (yy === curYY && mm < curMM)) return 'Card has expired'
+  if (yy > curYY + 15) return 'Invalid expiry year'
+  return ''
+}
+
+function cvvError(v: string): string {
+  if (!v) return 'CVV is required'
+  if (v.length < 3) return 'CVV must be 3–4 digits'
+  return ''
+}
+
 /* ── shared styles ──────────────────────────────────────── */
 const inputCls  = 'w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all placeholder-slate-300 bg-white dark:bg-slate-700'
 const selectCls = 'w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all bg-white dark:bg-slate-700 cursor-pointer'
@@ -134,13 +212,14 @@ function FlightRow({ flight, dir }: { flight: FlightDto; dir: 'Outbound' | 'Retu
   )
 }
 
-function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function FormField({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
         {label}{required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       {children}
+      {error && <p className="text-[11px] text-red-500 mt-1 font-medium">{error}</p>}
     </div>
   )
 }
@@ -235,6 +314,11 @@ export default function BookingPage() {
   const [paying,      setPaying]      = useState(false)
   const [payError,    setPayError]    = useState('')
 
+  /* validation: show field errors once touched (or after a submit attempt) */
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const touch     = (f: string) => setTouched(p => (p[f] ? p : { ...p, [f]: true }))
+  const touchMany = (fs: string[]) => setTouched(p => ({ ...p, ...Object.fromEntries(fs.map(f => [f, true])) }))
+
   /* guard */
   if (!state) {
     return (
@@ -257,11 +341,26 @@ export default function BookingPage() {
   const insExtra       = insurance === 'basic' ? INS_BASIC_PRICE : insurance === 'plus' ? INS_PLUS_PRICE : 0
   const grandTotal     = totalPrice + baggageExtra + checkedExtra + insExtra
 
-  const step1Valid  = firstName.trim() && lastName.trim() && nationality && gender && dobDay && dobMonth && dobYear
-  const step2Valid  = email.trim() && cardNum.length >= 19 && cardExpiry.length === 5 && cardCvv.length >= 3 && cardName.trim()
+  const errors: Record<string, string> = {
+    firstName:   nameError(firstName, 'First name'),
+    lastName:    nameError(lastName, 'Surname'),
+    nationality: nationality ? '' : 'Please select a nationality',
+    gender:      gender ? '' : 'Please select a gender',
+    dob:         dobError(dobDay, dobMonth, dobYear),
+    email:       emailError(email),
+    phone:       phoneError(phone),
+    cardNum:     cardError(cardNum),
+    cardExpiry:  expiryError(cardExpiry),
+    cardCvv:     cvvError(cardCvv),
+    cardName:    nameError(cardName, 'Name on card'),
+  }
+  const err = (f: string) => (touched[f] ? errors[f] : '')
+
+  const step1Valid = STEP1_FIELDS.every(f => !errors[f])
+  const step2Valid = STEP2_FIELDS.every(f => !errors[f])
 
   const handleContinue = () => {
-    if (!step1Valid) return
+    if (!step1Valid) { touchMany(STEP1_FIELDS); return }
     setStep(2)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -290,7 +389,8 @@ export default function BookingPage() {
   }
 
   const handlePay = async () => {
-    if (!step2Valid || paying) return
+    if (paying) return
+    if (!step2Valid) { touchMany(STEP2_FIELDS); return }
     setPaying(true)
     setPayError('')
     try {
@@ -303,7 +403,9 @@ export default function BookingPage() {
   }
 
   const handleGooglePay = async () => {
-    if (!email.trim() || paying) return
+    if (paying) return
+    if (errors.email)  { touch('email'); return }
+    if (errors.phone)  { touch('phone'); return }
     setPaying(true)
     setPayError('')
     try {
@@ -477,25 +579,27 @@ export default function BookingPage() {
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField label={bk.givenNames} required>
-                        <input value={firstName} onChange={e => setFirstName(e.target.value)}
-                          placeholder="e.g. Harry James" className={inputCls} />
+                      <FormField label={bk.givenNames} required error={err('firstName')}>
+                        <input value={firstName} onChange={e => setFirstName(e.target.value)} onBlur={() => touch('firstName')}
+                          placeholder="e.g. Harry James" className={`${inputCls} ${err('firstName') ? '!border-red-400' : ''}`} />
                       </FormField>
-                      <FormField label={bk.surnames} required>
-                        <input value={lastName} onChange={e => setLastName(e.target.value)}
-                          placeholder="e.g. Brown" className={inputCls} />
+                      <FormField label={bk.surnames} required error={err('lastName')}>
+                        <input value={lastName} onChange={e => setLastName(e.target.value)} onBlur={() => touch('lastName')}
+                          placeholder="e.g. Brown" className={`${inputCls} ${err('lastName') ? '!border-red-400' : ''}`} />
                       </FormField>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField label={bk.nationality} required>
-                        <select value={nationality} onChange={e => setNationality(e.target.value)} className={selectCls}>
+                      <FormField label={bk.nationality} required error={err('nationality')}>
+                        <select value={nationality} onChange={e => { setNationality(e.target.value); touch('nationality') }} onBlur={() => touch('nationality')}
+                          className={`${selectCls} ${err('nationality') ? '!border-red-400' : ''}`}>
                           <option value="">{bk.selectCountry}</option>
                           {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </FormField>
-                      <FormField label={bk.gender} required>
-                        <select value={gender} onChange={e => setGender(e.target.value)} className={selectCls}>
+                      <FormField label={bk.gender} required error={err('gender')}>
+                        <select value={gender} onChange={e => { setGender(e.target.value); touch('gender') }} onBlur={() => touch('gender')}
+                          className={`${selectCls} ${err('gender') ? '!border-red-400' : ''}`}>
                           <option value="">{bk.selectGender}</option>
                           <option value="male">{bk.male}</option>
                           <option value="female">{bk.female}</option>
@@ -504,16 +608,17 @@ export default function BookingPage() {
                       </FormField>
                     </div>
 
-                    <FormField label={bk.dateOfBirth} required>
+                    <FormField label={bk.dateOfBirth} required error={err('dob')}>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input value={dobDay} onChange={e => setDobDay(e.target.value.replace(/\D/,'').slice(0,2))}
-                          placeholder="DD" className={inputCls} />
-                        <select value={dobMonth} onChange={e => setDobMonth(e.target.value)} className={selectCls}>
+                        <input value={dobDay} onChange={e => setDobDay(e.target.value.replace(/\D/,'').slice(0,2))} onBlur={() => touch('dob')}
+                          placeholder="DD" className={`${inputCls} ${err('dob') ? '!border-red-400' : ''}`} />
+                        <select value={dobMonth} onChange={e => { setDobMonth(e.target.value); touch('dob') }}
+                          className={`${selectCls} ${err('dob') ? '!border-red-400' : ''}`}>
                           <option value="">{bk.month}</option>
                           {MONTHS.map((m,i) => <option key={m} value={String(i+1)}>{m}</option>)}
                         </select>
-                        <input value={dobYear} onChange={e => setDobYear(e.target.value.replace(/\D/,'').slice(0,4))}
-                          placeholder="YYYY" className={inputCls} />
+                        <input value={dobYear} onChange={e => setDobYear(e.target.value.replace(/\D/,'').slice(0,4))} onBlur={() => touch('dob')}
+                          placeholder="YYYY" className={`${inputCls} ${err('dob') ? '!border-red-400' : ''}`} />
                       </div>
                     </FormField>
                   </div>
@@ -658,13 +763,13 @@ export default function BookingPage() {
                     sub={bk.contactDetailsSub}
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField label={bk.email} required>
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                        placeholder="your@email.com" className={inputCls} />
+                    <FormField label={bk.email} required error={err('email')}>
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} onBlur={() => touch('email')}
+                        placeholder="your@email.com" className={`${inputCls} ${err('email') ? '!border-red-400' : ''}`} />
                     </FormField>
-                    <FormField label={bk.phone} required>
-                      <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                        placeholder="+359 88 888 8888" className={inputCls} />
+                    <FormField label={bk.phone} required error={err('phone')}>
+                      <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} onBlur={() => touch('phone')}
+                        placeholder="+359 88 888 8888" className={`${inputCls} ${err('phone') ? '!border-red-400' : ''}`} />
                     </FormField>
                   </div>
                 </div>
@@ -677,8 +782,8 @@ export default function BookingPage() {
                     sub={bk.payWithCardSub}
                   />
 
-                  {/* Google Pay */}
-                  <div className={`mb-4 ${!email.trim() ? 'opacity-50 pointer-events-none' : ''}`}>
+                  {/* Google Pay — requires valid contact details */}
+                  <div className={`mb-4 ${errors.email || errors.phone ? 'opacity-50 pointer-events-none' : ''}`}>
                     <GooglePayButton
                       environment="TEST"
                       paymentRequest={{
@@ -724,21 +829,22 @@ export default function BookingPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <FormField label={bk.cardNumber} required>
+                    <FormField label={bk.cardNumber} required error={err('cardNum')}>
                       <input
                         value={cardNum}
                         onChange={e => {
                           const raw = e.target.value.replace(/\D/g,'').slice(0,16)
                           setCardNum(raw.replace(/(.{4})/g,'$1 ').trim())
                         }}
+                        onBlur={() => touch('cardNum')}
                         placeholder="1234 5678 9012 3456"
-                        className={`${inputCls} font-mono tracking-widest`}
+                        className={`${inputCls} font-mono tracking-widest ${err('cardNum') ? '!border-red-400' : ''}`}
                         maxLength={19}
                       />
                     </FormField>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label={bk.expiry} required>
+                      <FormField label={bk.expiry} required error={err('cardExpiry')}>
                         <input
                           value={cardExpiry}
                           onChange={e => {
@@ -746,28 +852,31 @@ export default function BookingPage() {
                             if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2,4)
                             setCardExpiry(v)
                           }}
+                          onBlur={() => touch('cardExpiry')}
                           placeholder="MM/YY"
-                          className={`${inputCls} font-mono`}
+                          className={`${inputCls} font-mono ${err('cardExpiry') ? '!border-red-400' : ''}`}
                           maxLength={5}
                         />
                       </FormField>
-                      <FormField label={bk.cvv} required>
+                      <FormField label={bk.cvv} required error={err('cardCvv')}>
                         <input
                           value={cardCvv}
                           onChange={e => setCardCvv(e.target.value.replace(/\D/g,'').slice(0,4))}
+                          onBlur={() => touch('cardCvv')}
                           placeholder="···"
-                          className={`${inputCls} font-mono`}
+                          className={`${inputCls} font-mono ${err('cardCvv') ? '!border-red-400' : ''}`}
                           maxLength={4}
                         />
                       </FormField>
                     </div>
 
-                    <FormField label={bk.nameOnCard} required>
+                    <FormField label={bk.nameOnCard} required error={err('cardName')}>
                       <input
                         value={cardName}
                         onChange={e => setCardName(e.target.value.toUpperCase())}
+                        onBlur={() => touch('cardName')}
                         placeholder="HARRY J BROWN"
-                        className={`${inputCls} uppercase tracking-wider font-mono`}
+                        className={`${inputCls} uppercase tracking-wider font-mono ${err('cardName') ? '!border-red-400' : ''}`}
                       />
                     </FormField>
 
