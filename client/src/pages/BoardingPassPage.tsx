@@ -3,6 +3,7 @@ import { ChevronLeft, Plane, Printer } from 'lucide-react'
 import type { FlightDto } from '../features/search/types'
 import type { BookingRecord } from '../services/api'
 import { useLocale } from '../context/LocaleContext'
+import AirlineLogo from '../features/search/AirlineLogo'
 
 /* ── types ──────────────────────────────────────────────────── */
 interface PassengerInfo {
@@ -137,10 +138,13 @@ function BoardingPassCard(p: CardProps) {
           <div className="absolute top-3 right-6 w-40 h-40 rounded-full border border-white opacity-10" />
           <div className="absolute top-10 right-14 w-28 h-28 rounded-full border border-white opacity-[0.07]" />
 
-          {/* direction badge */}
-          <div className={`relative inline-flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full ${mbBadge}`}>
-            <Plane className="w-3 h-3" />
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase">{p.direction}</span>
+          {/* direction badge + airline logo */}
+          <div className={`relative flex items-center gap-2 ${mbBadge}`}>
+            <div className="inline-flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
+              <Plane className="w-3 h-3" />
+              <span className="text-[10px] font-black tracking-[0.2em] uppercase">{p.direction}</span>
+            </div>
+            <AirlineLogo flightNumber={p.flightNum} size={26} className="ring-1 ring-white/40" />
           </div>
 
           {/* FROM ✈ TO */}

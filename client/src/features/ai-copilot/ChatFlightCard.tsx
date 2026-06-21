@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Plane } from 'lucide-react'
 import type { FlightDto } from '../search/types'
+import AirlineLogo from '../search/AirlineLogo'
 
 const fmt = (s?: string | null) => {
   if (!s) return '—'
@@ -41,7 +42,10 @@ export default function ChatFlightCard({ flight }: { flight: FlightDto }) {
   return (
     <div className="mt-2 bg-white border border-slate-100 rounded-xl p-3 shadow-sm text-[13px]">
       <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-slate-700">{flight.airlineName}</span>
+        <div className="flex items-center gap-2">
+          <AirlineLogo flightNumber={flight.flightNumber} airlineName={flight.airlineName} size={22} />
+          <span className="font-semibold text-slate-700">{flight.airlineName}</span>
+        </div>
         <span className="text-[11px] text-slate-400 font-mono">{flight.flightNumber}</span>
       </div>
 

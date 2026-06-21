@@ -6,6 +6,7 @@ import type { BookingRecord } from '../../services/api'
 import { fmtTime, fmtDate, tripDurationMin, fmtDuration } from './tripUtils'
 import WeatherWidget from './WeatherWidget'
 import AirportRouteMap from './AirportRouteMap'
+import AirlineLogo from '../../features/search/AirlineLogo'
 
 interface Props {
   trip:     Trip
@@ -37,7 +38,10 @@ function FlightLeg({
             : 'bg-violet-50 text-violet-500 border-violet-200'
         }`}>{dir}</span>
         <span className="text-xs text-slate-500 font-medium">{fmtDate(booking.departureTime)}</span>
-        <span className="ml-auto font-mono text-xs font-bold text-slate-500">{booking.flightNumber}</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <AirlineLogo flightNumber={booking.flightNumber} size={20} />
+          <span className="font-mono text-xs font-bold text-slate-500">{booking.flightNumber}</span>
+        </div>
       </div>
 
       {/* Row 2: departure — timeline — arrival */}

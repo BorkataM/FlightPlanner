@@ -6,6 +6,7 @@ import type { FlightDto } from '../features/search/types'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/auth/AuthModal'
 import { useLocale } from '../context/LocaleContext'
+import AirlineLogo from '../features/search/AirlineLogo'
 
 type Sort  = 'cheapest' | 'fastest' | 'best'
 type Badge = 'CHEAPEST' | 'FASTEST' | 'BEST' | 'ECO'
@@ -112,9 +113,12 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
         </div>
 
         {/* airline */}
-        <div className="shrink-0 ml-3 text-right hidden sm:block w-28">
-          <div className="text-[13px] font-semibold text-slate-600 dark:text-slate-300 truncate">{flight.airlineName}</div>
-          <div className="text-[11px] font-mono text-slate-400 mt-0.5">{flight.flightNumber}</div>
+        <div className="shrink-0 ml-3 hidden sm:flex items-center gap-2 w-36 justify-end">
+          <AirlineLogo flightNumber={flight.flightNumber} airlineName={flight.airlineName} size={30} />
+          <div className="text-right min-w-0">
+            <div className="text-[13px] font-semibold text-slate-600 dark:text-slate-300 truncate">{flight.airlineName}</div>
+            <div className="text-[11px] font-mono text-slate-400 mt-0.5">{flight.flightNumber}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -205,7 +209,16 @@ export default function SearchResultsPage() {
       ? flightsApi.search({ from: to, to: from, limit: 1000 })
       : Promise.resolve([] as FlightDto[])
     Promise.all([flightsApi.search({ from, to, limit: 1000 }), retFetch])
-      .then(([out, ret]) => { setOutbound(out); setReturns(ret) })
+      .then(([out, ret]) => {
+        // Never offer flights that have already departed (past days).
+        const now = new Date()
+        const pad = (n: number) => String(n).padStart(2, '0')
+        const todayKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+        const upcoming = (fs: FlightDto[]) =>
+          fs.filter(f => f.departureTime && toDateKey(f.departureTime) >= todayKey)
+        setOutbound(upcoming(out))
+        setReturns(upcoming(ret))
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [from, to, isRoundTrip])
