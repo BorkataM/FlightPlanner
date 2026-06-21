@@ -11,13 +11,20 @@ export function fmtTravelTime(sec: number): string {
   return `${min} min`
 }
 
+// Average walking speed, ~5 km/h.
+const WALK_SPEED_MPS = 1.4
+
 export async function fetchOsrmRoute(
   origin: { lat: number; lon: number },
   dest:   { lat: number; lon: number },
   profile: 'driving' | 'walking',
 ): Promise<RouteResult> {
+  // The public OSRM demo server only serves the "driving" profile — it ignores
+  // walking/foot and returns a car route either way. So we always request
+  // driving (for the distance + geometry) and derive a realistic walking time
+  // from the distance instead of trusting the server's car duration.
   const url =
-    `https://router.project-osrm.org/route/v1/${profile}/` +
+    `https://router.project-osrm.org/route/v1/driving/` +
     `${origin.lon},${origin.lat};${dest.lon},${dest.lat}` +
     `?overview=full&geometries=geojson`
 
@@ -33,8 +40,11 @@ export async function fetchOsrmRoute(
     ([lon, lat]) => [lat, lon]
   )
 
+  const durationSec =
+    profile === 'walking' ? route.distance / WALK_SPEED_MPS : route.duration
+
   return {
-    durationSec: route.duration,
+    durationSec,
     distanceM:   route.distance,
     coordinates: coords,
   }
