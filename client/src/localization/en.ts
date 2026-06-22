@@ -11,6 +11,15 @@ export interface LocaleSchema {
     headline: { line1: string; accent: string; line2: string }
     subtitle: string
   }
+  mobileApp: {
+    badge:    string
+    title:    string
+    subtitle: string
+    comingSoon: string
+    emailPlaceholder: string
+    thanks:   string
+    invalidEmail: string
+  }
   search: {
     tabs:         { flights: string; hotels: string; cars: string }
     tripType:     string
@@ -266,6 +275,16 @@ export const en: LocaleSchema = {
     tagline:  '✦ Your journey starts here',
     headline: { line1: 'The world is', accent: 'closer', line2: 'than you think' },
     subtitle: 'Smart search. Best deals. Unforgettable experiences.',
+  },
+
+  mobileApp: {
+    badge:      'Coming soon',
+    title:      'SkyWave for mobile',
+    subtitle:   'Book flights, track trips and get smart deal alerts — right from your pocket. The iOS and Android apps are on their way.',
+    comingSoon: 'Notify me',
+    emailPlaceholder: 'Enter your email',
+    thanks:     "Thanks! We'll email you the moment the app launches.",
+    invalidEmail: 'Please enter a valid email address.',
   },
 
   search: {

@@ -159,6 +159,13 @@
 .btn-tab-active {
   background: linear-gradient(135deg,#7C3AED,#2563EB);
 }
+.mobile-cta {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #2563EB 100%);
+  box-shadow: 0 20px 60px rgba(79,70,229,0.35);
+}
+.mobile-phone {
+  background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+}
 .dest-preview-card {
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(8px);
