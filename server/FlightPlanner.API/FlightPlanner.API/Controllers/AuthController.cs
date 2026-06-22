@@ -85,5 +85,30 @@ namespace FlightPlanner.API.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            // Use the calling site's origin to build the reset link so it works in both local and prod.
+            var origin = Request.Headers.Origin.ToString();
+            await _userService.RequestPasswordResetAsync(dto.Email, origin);
+
+            // Always 200 — never reveal whether an account exists for this email.
+            return Ok(new { message = "If an account exists for that email, a reset link has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            try
+            {
+                await _userService.ResetPasswordAsync(dto.Token, dto.NewPassword);
+                return Ok(new { message = "Your password has been reset. You can now sign in." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

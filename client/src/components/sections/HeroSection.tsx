@@ -10,7 +10,7 @@ export default function HeroSection() {
   const { theme } = useTheme()
   return (
     <section
-      className="relative h-full flex flex-col overflow-hidden"
+      className="relative min-h-screen flex flex-col overflow-x-hidden"
     >
       <div
         className="absolute inset-0 hero-bg-image"

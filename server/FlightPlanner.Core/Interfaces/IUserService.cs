@@ -9,6 +9,8 @@ namespace FlightPlanner.Core.Interfaces
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
         Task<AuthResponseDto> GoogleLoginAsync(string email, string googleId, string firstName, string lastName);
         Task<AuthResponseDto> RefreshAsync(string refreshToken);
+        Task RequestPasswordResetAsync(string email, string? clientBaseUrl);
+        Task ResetPasswordAsync(string token, string newPassword);
         Task<UserProfileDto?> GetProfileAsync(int userId);
         Task<UserProfileDto?> UpdateProfileAsync(int userId, UpdateProfileDto dto);
         Task<UserAppearanceDto?> GetAppearanceAsync(int userId);

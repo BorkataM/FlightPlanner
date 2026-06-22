@@ -67,6 +67,11 @@ export default function AirportBrowser({
     return departureCodes.has(code)
   }
 
+  // When an origin is chosen, only list countries we actually have flights to
+  const toEntries = isToWithFrom
+    ? airportsByCountry.filter(([, airports]) => isCountryEnabled(airports))
+    : airportsByCountry
+
   const toggle = (country: string) => setBrowseCountry(c => c === country ? null : country)
 
   return (
@@ -90,15 +95,19 @@ export default function AirportBrowser({
             </div>
 
             {isToWithFrom ? (
-              <div className="columns-4 gap-x-4">
-                {airportsByCountry.map(([country, airports]) => (
-                  <CountryButton key={country} country={country}
-                    selected={browseCountry === country}
-                    enabled={isCountryEnabled(airports)}
-                    onClick={() => toggle(country)}
-                  />
-                ))}
-              </div>
+              toEntries.length === 0 ? (
+                <p className="text-slate-400 text-sm">{t.selectCountry}</p>
+              ) : (
+                <div className="columns-4 gap-x-4">
+                  {toEntries.map(([country, airports]) => (
+                    <CountryButton key={country} country={country}
+                      selected={browseCountry === country}
+                      enabled={isCountryEnabled(airports)}
+                      onClick={() => toggle(country)}
+                    />
+                  ))}
+                </div>
+              )
             ) : (
               <>
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.popular}</div>
@@ -141,6 +150,7 @@ export default function AirportBrowser({
               {browseCountry ? (
                 allAirports
                   .filter(a => (a.country || 'Other') === browseCountry)
+                  .filter(a => !isToWithFrom || isAirportEnabled(a))
                   .map(a => {
                     const enabled = isAirportEnabled(a)
                     return (

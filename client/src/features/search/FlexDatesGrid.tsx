@@ -4,10 +4,20 @@ import { toDateKey, WEEK_DAYS } from './searchUtils'
 
 interface Props {
   flightsByDate: Map<string, number>
+  returnFlightsByDate: Map<string, number>
+  isRoundTrip: boolean
   departure: Date | null
   returnDate: Date | null
   onSelectDeparture: (d: Date) => void
   onSelectReturn: (d: Date) => void
+  onClear: () => void
+}
+
+function quartiles(map: Map<string, number>): [number, number] {
+  const sorted = Array.from(map.values()).sort((a, b) => a - b)
+  const q1 = sorted[Math.floor(sorted.length / 3)]     ?? Infinity
+  const q2 = sorted[Math.floor(sorted.length * 2 / 3)] ?? Infinity
+  return [q1, q2]
 }
 
 interface CellFlags {
@@ -41,19 +51,31 @@ const SELECTED_STYLE: React.CSSProperties  = { background: 'linear-gradient(135d
 const IN_RANGE_STYLE: React.CSSProperties  = { background: 'rgba(124,58,237,0.55)', color: '#EDE9FE' }
 const DISABLED_STYLE: React.CSSProperties  = { background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.12)' }
 
-export default function FlexDatesGrid({ flightsByDate, departure, returnDate, onSelectDeparture, onSelectReturn }: Props) {
+export default function FlexDatesGrid({ flightsByDate, returnFlightsByDate, isRoundTrip, departure, returnDate, onSelectDeparture, onSelectReturn, onClear }: Props) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const [view, setView]     = useState(() => ({ year: today.getFullYear(), month: today.getMonth() }))
   const [hovered, setHovered] = useState<string | null>(null)
 
-  const sorted = useMemo(() => Array.from(flightsByDate.values()).sort((a, b) => a - b), [flightsByDate])
-  const q1 = sorted[Math.floor(sorted.length / 3)]      ?? Infinity
-  const q2 = sorted[Math.floor(sorted.length * 2 / 3)]  ?? Infinity
+  // After a departure is picked on a round trip, dates after it are priced from the return leg (to -> from)
+  const returnPhase = isRoundTrip && !!departure
+  const [outQ1, outQ2] = useMemo(() => quartiles(flightsByDate),       [flightsByDate])
+  const [retQ1, retQ2] = useMemo(() => quartiles(returnFlightsByDate), [returnFlightsByDate])
 
   const months = [
     view,
     view.month === 11 ? { year: view.year + 1, month: 0 } : { year: view.year, month: view.month + 1 },
   ]
+
+  const depKeyGlobal = departure  ? toDateKey(departure)  : null
+  const retKeyGlobal = returnDate ? toDateKey(returnDate) : null
+
+  const handleClick = (date: Date, key: string) => {
+    if (key === depKeyGlobal) return onClear()                 // click the departure again -> clear everything
+    if (!isRoundTrip)         return onSelectDeparture(date)   // one-way: a click only ever sets the departure
+    if (key === retKeyGlobal) return onSelectDeparture(date)   // click the return again -> it becomes the new departure
+    if (!departure || date <= departure) return onSelectDeparture(date)
+    return onSelectReturn(date)
+  }
 
   const renderMonthContent = (year: number, month: number) => {
     const first  = new Date(year, month, 1)
@@ -68,26 +90,31 @@ export default function FlexDatesGrid({ flightsByDate, departure, returnDate, on
     for (let d = 1; d <= last.getDate(); d++) {
       const date  = new Date(year, month, d)
       const key   = toDateKey(date)
-      const price                          = flightsByDate.get(key)
+      // Price dates after the chosen departure from the return leg; everything else from the outbound leg
+      const useReturn = returnPhase && !!depKey && key > depKey
+      const price     = (useReturn ? returnFlightsByDate : flightsByDate).get(key)
+      const [q1, q2]  = useReturn ? [retQ1, retQ2] : [outQ1, outQ2]
       const { isPast, isSelected, showRange } = getCellFlags(date, today, key, depKey, retKey, hovered)
+      // Past days are treated exactly like days with no flights: faded and not selectable
+      const unavailable = isPast || !price
 
       const cellStyle = isSelected ? SELECTED_STYLE
         : showRange               ? IN_RANGE_STYLE
-        : price                   ? priceStyle(price, q1, q2)
-        :                           DISABLED_STYLE
+        : unavailable             ? DISABLED_STYLE
+        :                           priceStyle(price, q1, q2)
 
       cells.push(
         <button
           key={d}
-          disabled={isPast || !price}
-          onClick={() => !departure || date <= departure ? onSelectDeparture(date) : onSelectReturn(date)}
+          disabled={unavailable}
+          onClick={() => handleClick(date, key)}
           onMouseEnter={() => setHovered(key)}
           onMouseLeave={() => setHovered(null)}
           className="rounded-lg text-center transition-all disabled:cursor-not-allowed hover:scale-105 active:scale-95 flex flex-col items-center justify-center w-full h-12"
           style={cellStyle}
         >
-          <div className={`text-sm font-bold leading-tight ${!price && !showRange ? 'line-through' : ''}`}>{d}</div>
-          {price && <div className="text-[10px] font-bold leading-tight mt-0.5">€{Math.round(price)}</div>}
+          <div className={`text-sm font-bold leading-tight ${unavailable && !showRange && !isSelected ? 'line-through' : ''}`}>{d}</div>
+          {!unavailable && <div className="text-[10px] font-bold leading-tight mt-0.5">€{Math.round(price!)}</div>}
         </button>
       )
     }

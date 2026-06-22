@@ -29,6 +29,12 @@ services:
       JWT_KEY: ${JWT_KEY}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      # SMTP for password-reset emails (leave blank to log links instead of sending)
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
       # Reach the AI service over the compose network, not localhost
       AI_SERVICE_URL: http://ai-service:8000
       ASPNETCORE_ENVIRONMENT: Production

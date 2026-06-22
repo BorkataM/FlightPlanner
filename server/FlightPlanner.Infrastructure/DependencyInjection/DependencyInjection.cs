@@ -42,6 +42,8 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
             services.AddScoped<IFlightService, FlightService>();
 
             services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
+            services.AddSingleton<IPasswordResetTokenStore, InMemoryPasswordResetTokenStore>();
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
 
             services.AddHttpClient<OpenSkyClient>();
             services.AddHostedService<FlightSyncWorker>();
