@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/layout/Navbar'
 import HeroSection from '../components/sections/HeroSection'
+import MobileAppSection from '../components/sections/MobileAppSection'
 import AuthModal from '../components/auth/AuthModal'
 import WelcomeToast from '../components/auth/WelcomeToast'
 import { useAuth } from '../context/AuthContext'
@@ -26,6 +27,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#EFF6FF] dark:bg-slate-900">
       <Navbar onSignIn={() => setShowAuth(true)} onLogout={handleLogout} />
       <HeroSection />
+      <MobileAppSection />
 
       {showAuth && (
         <AuthModal
