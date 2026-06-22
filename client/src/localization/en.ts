@@ -113,6 +113,10 @@ export interface LocaleSchema {
     stop:                string
     primaryPassenger:    string
     passengerSub:        string
+    useMyDetails:        string
+    useMyDetailsHint:    string
+    useMyDetailsHintFull: string
+    filledFromProfile:   string
     givenNames:          string
     surnames:            string
     nationality:         string
@@ -397,6 +401,10 @@ export const en: LocaleSchema = {
     stop:                'stop',
     primaryPassenger:    'Primary Passenger',
     passengerSub:        'Enter details exactly as in your passport / ID',
+    useMyDetails:        'Use my details',
+    useMyDetailsHint:    'Fill the name from your profile',
+    useMyDetailsHintFull: 'Fill all passenger details from your saved info',
+    filledFromProfile:   'Filled from your details',
     givenNames:          'Given names',
     surnames:            'Surnames',
     nationality:         'Nationality',
