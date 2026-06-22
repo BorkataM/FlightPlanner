@@ -25,6 +25,19 @@ export interface BookingState {
 type BaggageType   = 'personal' | 'carryOn'
 type InsuranceType = 'none' | 'basic' | 'plus'
 
+/* Per-user passenger details remembered after a booking, for one-click refill next time */
+interface SavedTraveller {
+  firstName:   string
+  lastName:    string
+  nationality: string
+  gender:      string
+  dobDay:      string
+  dobMonth:    string
+  dobYear:     string
+  email:       string
+  phone:       string
+}
+
 const CARRY_ON_PRICE  = 25
 const CHECKED_PRICE   = 35
 const INS_BASIC_PRICE = 12
@@ -319,6 +332,49 @@ export default function BookingPage() {
   const touch     = (f: string) => setTouched(p => (p[f] ? p : { ...p, [f]: true }))
   const touchMany = (fs: string[]) => setTouched(p => ({ ...p, ...Object.fromEntries(fs.map(f => [f, true])) }))
 
+  /* quick-fill passenger + contact from the signed-in user's profile / last booking */
+  const travellerKey = user ? `skywave_traveller_${user.userId}` : ''
+  const [savedTraveller] = useState<SavedTraveller | null>(() => {
+    if (!travellerKey) return null
+    try {
+      const raw = localStorage.getItem(travellerKey)
+      return raw ? (JSON.parse(raw) as SavedTraveller) : null
+    } catch { return null }
+  })
+  const [profileApplied, setProfileApplied] = useState(false)
+
+  const applyProfile = () => {
+    if (savedTraveller) {
+      // Everything we remembered from a previous booking
+      setFirstName(savedTraveller.firstName)
+      setLastName(savedTraveller.lastName)
+      setNationality(savedTraveller.nationality)
+      setGender(savedTraveller.gender)
+      setDobDay(savedTraveller.dobDay)
+      setDobMonth(savedTraveller.dobMonth)
+      setDobYear(savedTraveller.dobYear)
+      setEmail(savedTraveller.email)
+      setPhone(savedTraveller.phone)
+      touchMany(STEP1_FIELDS)
+    } else if (user) {
+      // First time — only name + email exist on the account profile
+      setFirstName(user.firstName)
+      setLastName(user.lastName)
+      setEmail(user.email)
+      touchMany(['firstName', 'lastName'])
+    }
+    setProfileApplied(true)
+  }
+
+  const rememberTraveller = () => {
+    if (!travellerKey) return
+    try {
+      localStorage.setItem(travellerKey, JSON.stringify({
+        firstName, lastName, nationality, gender, dobDay, dobMonth, dobYear, email, phone,
+      } satisfies SavedTraveller))
+    } catch { /* ignore storage errors */ }
+  }
+
   /* guard */
   if (!state) {
     return (
@@ -384,6 +440,7 @@ export default function BookingPage() {
       createdAt: new Date().toISOString(),
     })
     localStorage.setItem('skywave_local_bookings', JSON.stringify(existing))
+    rememberTraveller()
     setConfirmed(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -576,6 +633,39 @@ export default function BookingPage() {
                     title={bk.primaryPassenger}
                     sub={bk.passengerSub}
                   />
+
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={applyProfile}
+                      className={`w-full flex items-center gap-3 p-3 mb-4 rounded-xl border-2 text-left transition-all ${
+                        profileApplied
+                          ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30'
+                          : 'border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 hover:border-blue-400'
+                      }`}
+                    >
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm ${profileApplied ? 'bg-emerald-500' : 'bg-blue-600'}`}>
+                        {profileApplied
+                          ? <Check className="w-4 h-4" />
+                          : `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                          {user.firstName} {user.lastName}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {profileApplied
+                            ? bk.filledFromProfile
+                            : savedTraveller ? bk.useMyDetailsHintFull : bk.useMyDetailsHint}
+                        </div>
+                      </div>
+                      {!profileApplied && (
+                        <span className="ml-auto shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                          {bk.useMyDetails}
+                        </span>
+                      )}
+                    </button>
+                  )}
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
