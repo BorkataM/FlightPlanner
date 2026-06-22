@@ -2,8 +2,9 @@ import { useState, useLayoutEffect, useRef } from 'react'
 import { X, Eye, EyeOff, Mail, Lock, User, Hash } from 'lucide-react'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../../context/AuthContext'
+import { authApi } from '../../services/api'
 
-type AuthView = 'signin' | 'register'
+type AuthView = 'signin' | 'register' | 'forgot'
 
 interface Props {
   onClose:   () => void
@@ -56,6 +57,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
   const [showPassword,    setShowPassword]    = useState(false)
   const [error,           setError]           = useState('')
   const [loading,         setLoading]         = useState(false)
+  const [forgotSent,      setForgotSent]      = useState(false)
 
   const formRef   = useRef<HTMLDivElement>(null)
   const isMounted = useRef(false)
@@ -64,15 +66,14 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     const el = formRef.current
     if (!el) return
 
+    // Mount: leave the box at its natural height so it adapts to async content (e.g. the Google iframe)
     if (!isMounted.current) {
-      el.style.transition = 'none'
-      el.style.height = `${el.scrollHeight}px`
-      void el.offsetHeight
-      el.style.transition = ''
+      el.style.height = 'auto'
       isMounted.current = true
       return
     }
 
+    // Animate from the current height to the new content height, then onTransitionEnd snaps back to auto
     const prevHeight = el.offsetHeight
     el.style.transition = 'none'
     el.style.height = 'auto'
@@ -81,7 +82,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     void el.offsetHeight
     el.style.transition = ''
     el.style.height = `${newHeight}px`
-  }, [view])
+  }, [view, error, loading, forgotSent])
 
   const handleSignIn = async () => {
     setError('')
@@ -110,33 +111,99 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     }
   }
 
+  const handleForgot = async () => {
+    if (!email.trim()) { setError('Please enter your email address'); return }
+    setError('')
+    setLoading(true)
+    try {
+      await authApi.forgotPassword(email.trim())
+      setForgotSent(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send reset email')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const goToForgot = () => { setView('forgot'); setError(''); setForgotSent(false) }
+  const goToSignin = () => { setView('signin'); setError(''); setForgotSent(false) }
+
   return (
     <div className="fixed inset-0 z-[200] flex items-end justify-center">
       <div className="auth-overlay absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="auth-panel relative w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl px-8 pb-10 pt-5 shadow-2xl">
+      <div className="auth-panel relative w-full max-w-md max-h-[92vh] overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-800 rounded-t-3xl px-8 pb-10 pt-5 shadow-2xl">
         <div className="w-10 h-1 bg-slate-200 dark:bg-slate-600 rounded-full mx-auto mb-5" />
 
         <button onClick={onClose} className="absolute top-5 right-6 text-slate-400 hover:text-slate-700 transition-colors">
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1 mb-6">
-          {(['signin', 'register'] as AuthView[]).map(v => (
-            <button
-              key={v}
-              onClick={() => { setView(v); setError('') }}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                view === v ? 'btn-tab-active text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              {v === 'signin' ? 'Sign in' : 'Register'}
-            </button>
-          ))}
-        </div>
+        {view !== 'forgot' && (
+          <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-1 mb-6">
+            {(['signin', 'register'] as AuthView[]).map(v => (
+              <button
+                key={v}
+                onClick={() => { setView(v); setError('') }}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  view === v ? 'btn-tab-active text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                {v === 'signin' ? 'Sign in' : 'Register'}
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div ref={formRef} className="auth-form-body">
-          {view === 'signin' ? (
+        <div
+          ref={formRef}
+          className="auth-form-body"
+          onTransitionEnd={e => {
+            if (e.propertyName === 'height' && formRef.current) formRef.current.style.height = 'auto'
+          }}
+        >
+          {view === 'forgot' ? (
+            <>
+              <button type="button" onClick={goToSignin}
+                className="text-slate-400 text-xs font-semibold hover:text-slate-600 dark:hover:text-slate-200 transition-colors mb-4 inline-flex items-center gap-1">
+                ← Back to sign in
+              </button>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">Forgot password?</h2>
+
+              {forgotSent ? (
+                <>
+                  <p className="text-slate-400 text-sm mb-6">
+                    If an account exists for <span className="font-semibold text-slate-600 dark:text-slate-300">{email}</span>, we've sent a link to reset your password. Check your inbox (and spam folder).
+                  </p>
+                  <button
+                    onClick={goToSignin}
+                    className="btn-search w-full py-3.5 rounded-xl text-white font-semibold text-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    Back to sign in
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-400 text-sm mb-6">Enter your email and we'll send you a link to reset your password.</p>
+
+                  <div className="flex flex-col gap-3">
+                    <Field icon={<Mail className="w-4 h-4" />} type="email"
+                      placeholder="Email address" value={email} onChange={setEmail} />
+                  </div>
+
+                  {error && <p className="text-red-500 text-xs mt-3">{error}</p>}
+
+                  <button
+                    onClick={handleForgot}
+                    disabled={loading}
+                    className="btn-search w-full py-3.5 rounded-xl text-white font-semibold text-sm mt-4 transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Sending…' : 'Send reset link'}
+                  </button>
+                </>
+              )}
+            </>
+          ) : view === 'signin' ? (
             <>
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">Welcome back</h2>
               <p className="text-slate-400 text-sm mb-6">Sign in to your SkyWave account</p>
@@ -149,7 +216,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
                   suffix={<EyeToggle show={showPassword} onToggle={() => setShowPassword(p => !p)} />} />
               </div>
 
-              <button className="text-indigo-600 text-xs font-semibold hover:text-indigo-800 transition-colors mt-3 block">
+              <button type="button" onClick={goToForgot} className="text-indigo-600 text-xs font-semibold hover:text-indigo-800 transition-colors mt-3 block">
                 Forgot your password?
               </button>
 
@@ -188,6 +255,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
                   shape="pill"
                   size="large"
                   text="signin_with"
+                  width="360"
                 />
               </div>
             </>
@@ -249,6 +317,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
                   shape="pill"
                   size="large"
                   text="signup_with"
+                  width="360"
                 />
               </div>
             </>

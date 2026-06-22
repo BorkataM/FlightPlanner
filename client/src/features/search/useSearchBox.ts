@@ -29,6 +29,7 @@ export interface SearchBoxState {
   setDeparture:  Setter<Date | null>
   returnDate:    Date | null
   setReturnDate: Setter<Date | null>
+  returnFlightsByDate: Map<string, number>
 
   browseField:      'from' | 'to' | null
   browseCountry:    string | null
@@ -90,6 +91,7 @@ export function useSearchBox(): SearchBoxState {
   const [departureCodes,       setDepartureCodes]       = useState<Set<string>>(new Set())
   const [departureCodesLoaded, setDepartureCodesLoaded] = useState(false)
   const [routeFlights,    setRouteFlights]    = useState<FlightDto[]>([])
+  const [returnRouteFlights, setReturnRouteFlights] = useState<FlightDto[]>([])
   const [fromCloseSignal, setFromCloseSignal] = useState(0)
   const [toCloseSignal,   setToCloseSignal]   = useState(0)
 
@@ -132,6 +134,16 @@ export function useSearchBox(): SearchBoxState {
       .catch(() => setRouteFlights([]))
   }, [fromAirport, toAirport])
 
+  // Return-leg flights (to -> from) for round trips, used to re-price the flex grid once a departure is chosen
+  useEffect(() => {
+    if (!fromAirport || !toAirport || !isRoundTrip) { setReturnRouteFlights([]); return }
+    const from = fromAirport.iataCode ?? fromAirport.icaoCode
+    const to   = toAirport.iataCode   ?? toAirport.icaoCode
+    flightsApi.search({ from: to, to: from, limit: 500 })
+      .then(setReturnRouteFlights)
+      .catch(() => setReturnRouteFlights([]))
+  }, [fromAirport, toAirport, isRoundTrip])
+
   const destAirports = useMemo(() =>
     flightsToAirports(destFlights).map(a => {
       const match = allAirports.find(x => (x.iataCode ?? x.icaoCode) === (a.iataCode ?? a.icaoCode))
@@ -169,6 +181,17 @@ export function useSearchBox(): SearchBoxState {
     })
     return map
   }, [routeFlights])
+
+  const returnFlightsByDate = useMemo(() => {
+    const map = new Map<string, number>()
+    returnRouteFlights.forEach(f => {
+      if (!f.departureTime) return
+      const key = toDateKey(new Date(f.departureTime))
+      const cur = map.get(key)
+      if (cur === undefined || f.price < cur) map.set(key, f.price)
+    })
+    return map
+  }, [returnRouteFlights])
 
   const airportsByCountry = useMemo(() => {
     const map = new Map<string, Airport[]>()
@@ -232,7 +255,7 @@ export function useSearchBox(): SearchBoxState {
     allAirports,   departureCodes, departureCodesLoaded,
     destAirports,  destCodes,
     previewDestinations,
-    flightsByDate,
+    flightsByDate, returnFlightsByDate,
     airportsByCountry, popularEntries, otherEntries,
     fromCloseSignal,   toCloseSignal,
     swapAirports,

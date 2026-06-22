@@ -134,6 +134,10 @@ export const authApi = {
   register:    (data: RegisterData) => post<AuthResponse>(`${BASE_URL}/api/auth/register`, data),
   refresh:     (refreshToken: string) => post<AuthResponse>(`${BASE_URL}/api/auth/refresh`, { refreshToken }),
   googleAuth:  (credential: string) => post<AuthResponse>(`${BASE_URL}/api/auth/google`, { credential }),
+  forgotPassword: (email: string) =>
+    post<{ message: string }>(`${BASE_URL}/api/auth/forgot-password`, { email }),
+  resetPassword:  (token: string, newPassword: string) =>
+    post<{ message: string }>(`${BASE_URL}/api/auth/reset-password`, { token, newPassword }),
 }
 
 export const airportsApi = {

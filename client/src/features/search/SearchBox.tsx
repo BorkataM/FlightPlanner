@@ -23,6 +23,15 @@ function calcMinReturnDate(departure: Date | null): Date {
   return new Date(departure.getFullYear(), departure.getMonth(), departure.getDate() + 1)
 }
 
+// Today's date in the same "d MMM, EEE" format the DatePicker uses (e.g. "23 Jun, Tue")
+function todayPlaceholder(): string {
+  const today = new Date()
+  const day     = today.getDate()
+  const month   = today.toLocaleString('en-US', { month: 'short' })
+  const weekday = today.toLocaleString('en-US', { weekday: 'short' })
+  return `${day} ${month}, ${weekday}`
+}
+
 const Tab = ({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) => (
   <button onClick={onClick}
     className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${active ? 'btn-tab-active text-white shadow-sm' : 'text-slate-500 hover:text-blue-700'}`}>
@@ -121,7 +130,7 @@ export default function SearchBox() {
 
         <div className="relative flex flex-col sm:flex-row sm:items-stretch">
           {/* Airport selects row */}
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] border-b sm:border-b-0 border-slate-200/40 dark:border-slate-700/40 sm:flex-[3]">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] border-b sm:border-b-0 border-slate-200/40 dark:border-slate-700/40 sm:flex-1">
             <AirportSelect
               label={t.fields.from.label}
               icon={<Plane className="w-4 h-4 rotate-45" />}
@@ -155,7 +164,7 @@ export default function SearchBox() {
           </div>
 
           {/* Date fields + search button row */}
-          <div className={`grid sm:flex-[2] ${sb.isRoundTrip
+          <div className={`grid sm:flex-1 ${sb.isRoundTrip
             ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]'
             : 'grid-cols-[minmax(0,1fr)_auto]'}`}>
             <DateField
@@ -163,7 +172,7 @@ export default function SearchBox() {
               label={t.fields.departure.label}
               selected={sb.departure}
               onChange={sb.setDeparture}
-              placeholderText={t.fields.departure.value}
+              placeholderText={todayPlaceholder()}
               flightsByDate={sb.flightsByDate}
             />
 
@@ -180,11 +189,11 @@ export default function SearchBox() {
               />
             )}
 
-            <div className="flex items-center px-4">
+            <div className="flex items-center justify-center px-2 sm:px-4">
               <button
                 onClick={handleSearch}
                 disabled={!canSearch}
-                className={`btn-search w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 ${canSearch ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}`}
+                className={`btn-search w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 ${canSearch ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}`}
               >
                 <Search className="w-5 h-5 text-white" />
               </button>
@@ -262,10 +271,13 @@ export default function SearchBox() {
       {sb.fromAirport && sb.toAirport && sb.flexDates && (
         <FlexDatesGrid
           flightsByDate={sb.flightsByDate}
+          returnFlightsByDate={sb.returnFlightsByDate}
+          isRoundTrip={sb.isRoundTrip}
           departure={sb.departure}
           returnDate={sb.returnDate}
           onSelectDeparture={(d) => { sb.setDeparture(d); sb.setReturnDate(null) }}
           onSelectReturn={sb.setReturnDate}
+          onClear={() => { sb.setDeparture(null); sb.setReturnDate(null) }}
         />
       )}
     </>

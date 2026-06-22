@@ -10,6 +10,7 @@ import BookingPage from './pages/BookingPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import BoardingPassPage from './pages/BoardingPassPage'
 import TravelersPage from './pages/TravelersPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Route path="/my-bookings"   element={<MyBookingsPage />} />
               <Route path="/boarding-pass" element={<BoardingPassPage />} />
               <Route path="/travelers"     element={<TravelersPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Routes>
             <ChatWidget />
           </ChatProvider>

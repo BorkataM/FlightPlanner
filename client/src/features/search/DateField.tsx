@@ -30,10 +30,10 @@ export default function DateField({ icon, label, selected, onChange, placeholder
   const today = new Date(); today.setHours(0, 0, 0, 0)
 
   return (
-    <div className="flex items-center gap-3 px-5 py-4">
+    <div className="flex items-center gap-2 px-3 py-4 sm:gap-3 sm:px-4">
       <span className="text-gray-500 shrink-0">{icon}</span>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">{label}</div>
+        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-medium truncate">{label}</div>
         <DatePicker
           selected={selected}
           onChange={onChange}
@@ -41,7 +41,7 @@ export default function DateField({ icon, label, selected, onChange, placeholder
           placeholderText={placeholderText}
           minDate={minDate ?? today}
           popperPlacement="bottom-start"
-          className="bg-transparent text-slate-900 dark:text-slate-100 text-base font-semibold outline-none w-full cursor-pointer placeholder-gray-400 dark:placeholder-slate-500 mt-0.5"
+          className="bg-transparent text-slate-900 dark:text-slate-100 text-sm sm:text-base font-semibold outline-none w-full cursor-pointer placeholder-gray-400 dark:placeholder-slate-500 mt-0.5 text-ellipsis"
           filterDate={hasData ? (d) => flightsByDate!.has(toDateKey(d)) : undefined}
           dayClassName={(date) => getRangeDayClass(date, rangeStart ?? null, hoverDate)}
           renderDayContents={(dayNum, date) => {
