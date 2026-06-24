@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     OPENAI_API_KEY: str
     OPENAI_MODEL: str = "gpt-4o"
+    OPENWEATHER_API_KEY: str = ""
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

@@ -19,6 +19,7 @@ from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services
+import weather
 from database import settings
 from schemas import ChatRequest, ChatResponse, UserContext
 
@@ -85,8 +86,39 @@ TOOLS: list[dict] = [
         "type": "function",
         "function": {
             "name": "get_my_bookings",
-            "description": "Get the current user's flight booking history for personalised recommendations.",
+            "description": (
+                "Get the current user's flight booking history for personalised recommendations. "
+                "Each booking includes the destination city, country, coordinates and travel date, "
+                "so you can infer the user's preferred climate (warm/cold), travel distance (near/far), "
+                "favourite regions and typical season before suggesting a flight."
+            ),
             "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather_forecast",
+            "description": (
+                "Get the weather forecast near noon on a given date for a location, by "
+                "latitude/longitude. Use airport coordinates from a flight or booking: "
+                "departure_latitude/longitude for the departure city, arrival_latitude/longitude "
+                "for the destination, together with the flight's date. Only works up to 5 days "
+                "ahead — if it returns available=false, do NOT invent weather; skip it or say "
+                "the forecast isn't available yet."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "latitude": {"type": "number", "description": "Latitude of the location."},
+                    "longitude": {"type": "number", "description": "Longitude of the location."},
+                    "date": {
+                        "type": "string",
+                        "description": "Date in yyyy-mm-dd format (the flight's departure or arrival date).",
+                    },
+                },
+                "required": ["latitude", "longitude", "date"],
+            },
         },
     },
     {
@@ -162,6 +194,29 @@ For open-ended requests ("sunny destination", "beach", "somewhere warm", "I'm fl
 3. Match them to the user's stated mood or preferences (warm climate, beach, etc.).
 4. Propose the best matching flight YOU found. Do NOT ask the user to pick a destination — that is YOUR job.
 
+## Personalisation — tailor to the user's taste
+
+For recommendations, open-ended suggestions, or "where should I go" requests, FIRST call get_my_bookings and infer the user's travel profile from their past trips:
+- Climate: do their destinations skew warm/southern (low latitude, closer to the equator) or cold/northern (high latitude)? Use `arrival_latitude` and `arrival_country`.
+- Distance: do they prefer short/nearby hops or long/far trips? Compare `departure_latitude/longitude` with `arrival_latitude/longitude` to gauge how far they usually fly.
+- Favourite regions or countries they return to (repeat `arrival_country` / `arrival_city`).
+- Seasonality: which months or season do they usually travel in? Look at `departure_time` and `booking_date`.
+
+Then bias your suggestions toward that profile, matching candidate flights' `arrival_latitude`/`arrival_country` to it, and briefly say WHY the pick fits them (e.g. "Since you usually head somewhere warm in summer, …"). Keep it to one short clause — do not lecture.
+- If the user has no booking history, skip the profiling and ask one short question about what they're in the mood for (warm/cold, near/far, when).
+- An explicit request always overrides the inferred profile: if they ask for somewhere cold, recommend cold even if they usually fly warm.
+
+## When the user asks about one of THEIR booked / upcoming flights
+
+(e.g. "what's my next flight", "when do I fly", "details of my booking")
+
+FIRST answer their exact question directly in one short sentence (flight, date, time, route, confirmation code if relevant). THEN add a brief "Good to know" follow-up on new lines with:
+1. Weather — call get_weather_forecast for the DEPARTURE airport (its departure_latitude/longitude + the flight date) so they pack right, and for the DESTINATION (arrival_latitude/longitude + the same date). Report both briefly (temp + condition). If the tool returns available=false because the date is too far ahead, say the forecast will be available closer to the date — NEVER invent weather.
+2. Airport arrival time — how early to be at the airport: about 2 hours for domestic or EU/Schengen-internal flights, about 3 hours for international flights. Decide which by comparing departure_country and arrival_country.
+3. Getting there — a general suggestion to allow roughly 45–60 minutes to reach the airport (more in rush hour). Make clear it's a general estimate since you don't know where they live.
+
+Keep the whole follow-up to a few short lines. Do this ONLY for the user's own bookings/upcoming trips — not for generic flight searches.
+
 ## Guidelines
 - Keep responses short and direct — 2-4 sentences max, no bullet lists unless showing multiple flights.
 - Lead with the answer, not the reasoning. Skip intros like "Great question!" or "Let me check...".
@@ -202,8 +257,9 @@ def _build_system_prompt(user_context: UserContext | None) -> str:
     return (
         _SYSTEM_PROMPT_BASE
         + f"\nYou are talking to {user_context.first_name} {user_context.last_name} "
-        f"({user_context.email}). You can use get_my_bookings to see their booking history "
-        f"and provide personalised recommendations."
+        f"({user_context.email}). Use get_my_bookings to study their past trips and infer their "
+        f"travel profile (preferred climate, distance, regions and season), then give recommendations "
+        f"tailored to that profile."
     )
 
 # ---------------------------------------------------------------------------
@@ -219,7 +275,12 @@ def _flight_to_dict(flight) -> dict:
         "arrival": getattr(flight.ArrivalAirport, "IataCode", None)
         or getattr(flight.ArrivalAirport, "IcaoCode", None),
         "departure_city": getattr(flight.DepartureAirport, "City", None),
+        "departure_latitude": getattr(flight.DepartureAirport, "Latitude", None),
+        "departure_longitude": getattr(flight.DepartureAirport, "Longitude", None),
         "arrival_city": getattr(flight.ArrivalAirport, "City", None),
+        "arrival_country": getattr(flight.ArrivalAirport, "Country", None),
+        "arrival_latitude": getattr(flight.ArrivalAirport, "Latitude", None),
+        "arrival_longitude": getattr(flight.ArrivalAirport, "Longitude", None),
         "airline": getattr(flight.AirlineEntity, "Name", flight.AirlineName),
         "departure_time": str(flight.DepartureTime) if flight.DepartureTime else None,
         "price_usd": float(flight.Price) if flight.Price else None,
@@ -248,16 +309,24 @@ def _assistant_message_to_dict(msg) -> dict:
 
 def _booking_to_dict(booking) -> dict:
     flight = booking.Flight
+    dep = getattr(flight, "DepartureAirport", None)
+    arr = getattr(flight, "ArrivalAirport", None)
     return {
         "booking_id": booking.Id,
         "confirmation_code": booking.ConfirmationCode,
         "seat_number": booking.SeatNumber,
         "booking_date": str(booking.BookingDate) if booking.BookingDate else None,
         "flight_number": getattr(flight, "FlightNumber", None),
-        "departure": getattr(getattr(flight, "DepartureAirport", None), "IataCode", None)
-            or getattr(getattr(flight, "DepartureAirport", None), "IcaoCode", None),
-        "arrival": getattr(getattr(flight, "ArrivalAirport", None), "IataCode", None)
-            or getattr(getattr(flight, "ArrivalAirport", None), "IcaoCode", None),
+        "departure": getattr(dep, "IataCode", None) or getattr(dep, "IcaoCode", None),
+        "departure_city": getattr(dep, "City", None),
+        "departure_country": getattr(dep, "Country", None),
+        "departure_latitude": getattr(dep, "Latitude", None),
+        "departure_longitude": getattr(dep, "Longitude", None),
+        "arrival": getattr(arr, "IataCode", None) or getattr(arr, "IcaoCode", None),
+        "arrival_city": getattr(arr, "City", None),
+        "arrival_country": getattr(arr, "Country", None),
+        "arrival_latitude": getattr(arr, "Latitude", None),
+        "arrival_longitude": getattr(arr, "Longitude", None),
         "departure_time": str(flight.DepartureTime) if flight and flight.DepartureTime else None,
         "price_usd": float(flight.Price) if flight and flight.Price else None,
         "smart_score": getattr(getattr(flight, "Analytics", None), "SmartScore", None),
@@ -283,6 +352,10 @@ async def _execute_tool(name: str, args: dict, db: AsyncSession, user_context: U
     if name == "get_smartest_flights":
         flights = await services.get_smartest_flights(db, limit=args.get("limit", 5))
         return json.dumps([_flight_to_dict(f) for f in flights])
+
+    if name == "get_weather_forecast":
+        result = await weather.get_forecast(args["latitude"], args["longitude"], args["date"])
+        return json.dumps(result)
 
     if name == "get_flight_analytics":
         flight = await services.get_flight_by_id(db, args["flight_id"])

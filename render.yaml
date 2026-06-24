@@ -23,6 +23,10 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
+      # Same OpenWeather key used by the .NET API — enter in the Render dashboard.
+      # Without it, the assistant simply skips weather (forecast lookups are optional).
+      - key: OPENWEATHER_API_KEY
+        sync: false
 
   # --- .NET API (Docker) ---
   - type: web
