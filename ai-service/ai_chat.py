@@ -219,8 +219,7 @@ Only if the user explicitly asks about the weather, call get_weather_forecast (d
 - If the user says they are flexible with dates, do not ask for dates — just propose the best option you found.
 
 Currency:
-- ALWAYS quote prices in euros, using the `price_eur` field (e.g. "€53"). This is the default — never show USD unless asked.
-- Only if the user explicitly asks for another currency (e.g. "in dollars", "in USD") quote that instead: use `price_usd` for dollars. Keep euros for everything else in the same reply.
+- The app uses euros only. ALWAYS quote prices in euros using the `price_eur` field, formatted like "€53". Never use $/USD or any other currency.
 
 How to present flights to the user:
 - NEVER lead with the flight number — users don't care about it. Lead with the airline, date, time, and price.
@@ -264,15 +263,7 @@ def _build_system_prompt(user_context: UserContext | None) -> str:
 # Tool executor
 # ---------------------------------------------------------------------------
 
-def _to_eur(price_usd: float | None) -> float | None:
-    """Convert a USD price to EUR using the configured fixed rate."""
-    if price_usd is None:
-        return None
-    return round(price_usd * settings.USD_TO_EUR_RATE, 2)
-
-
 def _flight_to_dict(flight) -> dict:
-    price_usd = float(flight.Price) if flight.Price else None
     return {
         "id": flight.Id,
         "flight_number": flight.FlightNumber,
@@ -289,8 +280,7 @@ def _flight_to_dict(flight) -> dict:
         "arrival_longitude": getattr(flight.ArrivalAirport, "Longitude", None),
         "airline": getattr(flight.AirlineEntity, "Name", flight.AirlineName),
         "departure_time": str(flight.DepartureTime) if flight.DepartureTime else None,
-        "price_eur": _to_eur(price_usd),
-        "price_usd": price_usd,
+        "price_eur": float(flight.Price) if flight.Price else None,
         "smart_score": getattr(flight.Analytics, "SmartScore", None),
         "co2_kg": getattr(flight.Analytics, "Co2Emissions", None),
         "delay_probability": getattr(flight.Analytics, "DelayProbability", None),
@@ -335,8 +325,7 @@ def _booking_to_dict(booking) -> dict:
         "arrival_latitude": getattr(arr, "Latitude", None),
         "arrival_longitude": getattr(arr, "Longitude", None),
         "departure_time": str(flight.DepartureTime) if flight and flight.DepartureTime else None,
-        "price_eur": _to_eur(float(flight.Price) if flight and flight.Price else None),
-        "price_usd": float(flight.Price) if flight and flight.Price else None,
+        "price_eur": float(flight.Price) if flight and flight.Price else None,
         "smart_score": getattr(getattr(flight, "Analytics", None), "SmartScore", None),
     }
 

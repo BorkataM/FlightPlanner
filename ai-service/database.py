@@ -9,9 +9,6 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     OPENAI_MODEL: str = "gpt-4o"
     OPENWEATHER_API_KEY: str = ""
-    # Prices are stored in USD; the assistant quotes EUR by default. Approximate
-    # fixed rate — override via env without a code change if it drifts.
-    USD_TO_EUR_RATE: float = 0.92
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
