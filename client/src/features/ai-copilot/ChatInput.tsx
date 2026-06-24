@@ -37,7 +37,7 @@ export default function ChatInput({ onSend, isLoading, placeholder, sendLabel }:
         disabled={isLoading}
         placeholder={placeholder}
         rows={1}
-        className="flex-1 resize-none rounded-2xl border border-white/40 dark:border-white/15 bg-white/50 dark:bg-white/8 backdrop-blur-sm px-3 py-2 text-[13px] text-slate-800 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/50 disabled:opacity-50 transition-all leading-relaxed"
+        className="flex-1 resize-none rounded-2xl border border-white/40 dark:border-white/15 bg-white/50 dark:bg-white/8 backdrop-blur-sm px-3 py-2 text-[13px] text-slate-800 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/50 disabled:opacity-50 transition-all leading-relaxed"
         style={{ maxHeight: '96px', overflowY: 'auto' }}
         aria-label={placeholder}
       />
