@@ -1,3 +1,4 @@
+using FlightPlanner.Core.Configuration;
 using FlightPlanner.Core.Entities;
 using FlightPlanner.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -19,8 +20,7 @@ namespace FlightPlanner.Infrastructure.Services
 
         public string CreateToken(User user)
         {
-            var rawKey = _configuration["Jwt:Key"]!;
-            var resolvedKey = rawKey.Replace("${JWT_KEY}", Environment.GetEnvironmentVariable("JWT_KEY") ?? rawKey);
+            var resolvedKey = ConfigResolver.Resolve(_configuration["Jwt:Key"])!;
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(resolvedKey));
 
             var claims = new[]

@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { aiApi, flightsApi } from '../../services/api'
+import { aiApi, flightsApi, getStoredToken } from '../../services/api'
 import type { AiChatHistoryMessage } from '../../services/api'
 import type { ChatTurn } from './types'
 import type { FlightDto } from '../search/types'
@@ -84,12 +84,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           const flight =
             flights?.find(f => f.id === flightId) ??
             await flightsApi.getById(flightId)
-          const tok = (() => {
-            try {
-              const s = localStorage.getItem('skywave_user')
-              return s ? (JSON.parse(s) as { token: string }).token : ''
-            } catch { return '' }
-          })()
+          const tok = getStoredToken()
           navigate('/booking', {
             state: {
               outbound:    flight,

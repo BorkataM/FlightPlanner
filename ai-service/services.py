@@ -279,7 +279,7 @@ async def initiate_booking(db: AsyncSession, flight_id: int, passenger_first_nam
         "ready_for_checkout": True,
         "flight_id": flight_id,
         "passenger": {"first_name": passenger_first_name, "last_name": passenger_last_name},
-        "price_usd": float(flight.Price) if flight.Price else None,
+        "price_eur": float(flight.Price) if flight.Price else None,
         "flight_number": getattr(flight, "FlightNumber", None),
         "departure": getattr(flight.DepartureAirport, "IataCode", None),
         "arrival": getattr(flight.ArrivalAirport, "IataCode", None),
@@ -322,7 +322,7 @@ async def create_booking(db: AsyncSession, user_id: int, flight_id: int) -> dict
         "departure": getattr(flight.DepartureAirport, "IataCode", None),
         "arrival": getattr(flight.ArrivalAirport, "IataCode", None),
         "departure_time": str(flight.DepartureTime) if flight.DepartureTime else None,
-        "price_usd": float(flight.Price) if flight.Price else None,
+        "price_eur": float(flight.Price) if flight.Price else None,
     }
 
 

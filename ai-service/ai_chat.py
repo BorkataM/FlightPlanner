@@ -11,9 +11,6 @@ An agentic loop runs until the model produces a plain-text response
 """
 import json
 import logging
-from decimal import Decimal
-
-logger = logging.getLogger(__name__)
 
 from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +19,8 @@ import services
 import weather
 from database import settings
 from schemas import ChatRequest, ChatResponse, UserContext
+
+logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -322,45 +321,62 @@ def _booking_to_dict(booking) -> dict:
     }
 
 
+async def _tool_get_my_bookings(args: dict, db: AsyncSession, user_context: UserContext | None):
+    if user_context is None:
+        return {"error": "No authenticated user context available."}
+    bookings = await services.get_user_bookings(db, user_context.user_id)
+    return [_booking_to_dict(b) for b in bookings]
+
+
+async def _tool_search_flights(args: dict, db: AsyncSession, user_context: UserContext | None):
+    flights = await services.search_flights(
+        db,
+        departure_code=args.get("departure_code"),
+        arrival_code=args.get("arrival_code"),
+        limit=args.get("limit", 20),
+    )
+    return [_flight_to_dict(f) for f in flights]
+
+
+async def _tool_get_smartest_flights(args: dict, db: AsyncSession, user_context: UserContext | None):
+    flights = await services.get_smartest_flights(db, limit=args.get("limit", 5))
+    return [_flight_to_dict(f) for f in flights]
+
+
+async def _tool_get_weather_forecast(args: dict, db: AsyncSession, user_context: UserContext | None):
+    return await weather.get_forecast(args["latitude"], args["longitude"], args["date"])
+
+
+async def _tool_get_flight_analytics(args: dict, db: AsyncSession, user_context: UserContext | None):
+    flight = await services.get_flight_by_id(db, args["flight_id"])
+    if flight is None:
+        return {"error": "Flight not found"}
+    return _flight_to_dict(flight)
+
+
+async def _tool_initiate_booking(args: dict, db: AsyncSession, user_context: UserContext | None):
+    if user_context is None:
+        return {"error": "No authenticated user context available."}
+    first = args.get("passenger_first_name") or user_context.first_name
+    last  = args.get("passenger_last_name")  or user_context.last_name
+    return await services.initiate_booking(db, args["flight_id"], first, last)
+
+
+_TOOL_HANDLERS = {
+    "get_my_bookings": _tool_get_my_bookings,
+    "search_flights": _tool_search_flights,
+    "get_smartest_flights": _tool_get_smartest_flights,
+    "get_weather_forecast": _tool_get_weather_forecast,
+    "get_flight_analytics": _tool_get_flight_analytics,
+    "initiate_booking": _tool_initiate_booking,
+}
+
+
 async def _execute_tool(name: str, args: dict, db: AsyncSession, user_context: UserContext | None = None) -> str:
-    if name == "get_my_bookings":
-        if user_context is None:
-            return json.dumps({"error": "No authenticated user context available."})
-        bookings = await services.get_user_bookings(db, user_context.user_id)
-        return json.dumps([_booking_to_dict(b) for b in bookings])
-
-    if name == "search_flights":
-        flights = await services.search_flights(
-            db,
-            departure_code=args.get("departure_code"),
-            arrival_code=args.get("arrival_code"),
-            limit=args.get("limit", 10),
-        )
-        return json.dumps([_flight_to_dict(f) for f in flights])
-
-    if name == "get_smartest_flights":
-        flights = await services.get_smartest_flights(db, limit=args.get("limit", 5))
-        return json.dumps([_flight_to_dict(f) for f in flights])
-
-    if name == "get_weather_forecast":
-        result = await weather.get_forecast(args["latitude"], args["longitude"], args["date"])
-        return json.dumps(result)
-
-    if name == "get_flight_analytics":
-        flight = await services.get_flight_by_id(db, args["flight_id"])
-        if flight is None:
-            return json.dumps({"error": "Flight not found"})
-        return json.dumps(_flight_to_dict(flight))
-
-    if name == "initiate_booking":
-        if user_context is None:
-            return json.dumps({"error": "No authenticated user context available."})
-        first = args.get("passenger_first_name") or user_context.first_name
-        last  = args.get("passenger_last_name")  or user_context.last_name
-        result = await services.initiate_booking(db, args["flight_id"], first, last)
-        return json.dumps(result)
-
-    return json.dumps({"error": f"Unknown tool: {name}"})
+    handler = _TOOL_HANDLERS.get(name)
+    if handler is None:
+        return json.dumps({"error": f"Unknown tool: {name}"})
+    return json.dumps(await handler(args, db, user_context))
 
 
 async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:

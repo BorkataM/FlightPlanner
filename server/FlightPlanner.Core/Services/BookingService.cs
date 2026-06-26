@@ -7,7 +7,6 @@ namespace FlightPlanner.Core.Services
     public class BookingService : IBookingService
     {
         private readonly IBookingRepository _bookingRepository;
-        private static readonly Random _rng = new();
 
         public BookingService(IBookingRepository bookingRepository)
         {
@@ -37,8 +36,8 @@ namespace FlightPlanner.Core.Services
 
         private static string GenerateSeatNumber()
         {
-            var row = _rng.Next(1, 41);
-            var col = (char)('A' + _rng.Next(0, 6));
+            var row = Random.Shared.Next(1, 41);
+            var col = (char)('A' + Random.Shared.Next(0, 6));
             return $"{row}{col}";
         }
 
@@ -46,7 +45,7 @@ namespace FlightPlanner.Core.Services
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Range(0, 8)
-                .Select(_ => chars[_rng.Next(chars.Length)])
+                .Select(_ => chars[Random.Shared.Next(chars.Length)])
                 .ToArray());
         }
 

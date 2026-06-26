@@ -1,4 +1,5 @@
 using FlightPlanner.API.Middleware;
+using FlightPlanner.Core.Configuration;
 using FlightPlanner.Infrastructure.DependencyInjection;
 using FlightPlanner.Infrastructure.Persistence;
 using DotNetEnv;
@@ -22,8 +23,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-var rawJwtKey = builder.Configuration["Jwt:Key"]!;
-var jwtKey = rawJwtKey.Replace("${JWT_KEY}", Environment.GetEnvironmentVariable("JWT_KEY") ?? rawJwtKey);
+var jwtKey = ConfigResolver.Resolve(builder.Configuration["Jwt:Key"])!;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -46,6 +46,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         var context = services.GetRequiredService<FlightPlannerDbContext>();
@@ -56,11 +57,11 @@ using (var scope = app.Services.CreateScope())
         await FlightPlannerDbContext.SeedMassEuropeanFlightsAsync(context);
         await FlightPlannerDbContext.SeedGlobalAirlinesAsync(context);
         await FlightPlannerDbContext.SeedGlobalFlightsAsync(context);
-        Console.WriteLine("Seed process completed successfully.");
+        logger.LogInformation("Seed process completed successfully.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+        logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
 

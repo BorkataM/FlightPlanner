@@ -1,3 +1,4 @@
+using FlightPlanner.Core.Configuration;
 using FlightPlanner.Core.DTOs.Auth;
 using FlightPlanner.Core.Interfaces;
 using Google.Apis.Auth;
@@ -51,8 +52,7 @@ namespace FlightPlanner.API.Controllers
         {
             try
             {
-                var rawClientId = _configuration["Google:ClientId"] ?? "";
-                var clientId = rawClientId.Replace("${GOOGLE_CLIENT_ID}", Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID") ?? rawClientId);
+                var clientId = ConfigResolver.Resolve(_configuration["Google:ClientId"]) ?? "";
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
                     Audience = new[] { clientId }

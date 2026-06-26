@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plane } from 'lucide-react'
 import type { FlightDto } from '../search/types'
 import AirlineLogo from '../search/AirlineLogo'
+import { getStoredToken } from '../../services/api'
 
 const fmt = (s?: string | null) => {
   if (!s) return '—'
@@ -13,12 +14,7 @@ export default function ChatFlightCard({ flight }: { flight: FlightDto }) {
   const navigate = useNavigate()
 
   const handleBook = () => {
-    const tok = (() => {
-      try {
-        const s = localStorage.getItem('skywave_user')
-        return s ? (JSON.parse(s) as { token: string }).token : ''
-      } catch { return '' }
-    })()
+    const tok = getStoredToken()
     navigate('/booking', {
       state: {
         outbound:    flight,

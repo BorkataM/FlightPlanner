@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
-import { authApi } from '../services/api'
+import { authApi, getStoredUser, STORAGE_KEY } from '../services/api'
 import type { LoginData, RegisterData, AuthResponse } from '../services/api'
 
 export interface AuthUser {
@@ -21,8 +21,6 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const STORAGE_KEY = 'skywave_user'
-
 function toAuthUser(r: AuthResponse): AuthUser {
   return {
     userId:       r.userId,
@@ -35,10 +33,7 @@ function toAuthUser(r: AuthResponse): AuthUser {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? (JSON.parse(stored) as AuthUser) : null
-  })
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
 
   const persist = useCallback((u: AuthUser) => {
     setUser(u)

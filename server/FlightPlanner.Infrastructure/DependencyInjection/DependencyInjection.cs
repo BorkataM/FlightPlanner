@@ -1,4 +1,5 @@
-﻿using FlightPlanner.Core.Interfaces;
+﻿using FlightPlanner.Core.Configuration;
+using FlightPlanner.Core.Interfaces;
 using FlightPlanner.Core.Services;
 using FlightPlanner.Infrastructure.BackgroundServices;
 using FlightPlanner.Infrastructure.ExternalClients;
@@ -15,13 +16,7 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            var rawConnectionString = configuration.GetConnectionString("DefaultConnection");
-
-            var connectionString = rawConnectionString?
-                .Replace("${DB_HOST}", Environment.GetEnvironmentVariable("DB_HOST"))
-                .Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME"))
-                .Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER"))
-                .Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD"));
+            var connectionString = ConfigResolver.Resolve(configuration.GetConnectionString("DefaultConnection"));
 
             services.AddDbContext<FlightPlannerDbContext>(options =>
                 options.UseNpgsql(connectionString));
@@ -48,16 +43,14 @@ namespace FlightPlanner.Infrastructure.DependencyInjection
             services.AddHttpClient<OpenSkyClient>();
             services.AddHostedService<FlightSyncWorker>();
 
-            var rawAiUrl = configuration["AiService:BaseUrl"] ?? "http://localhost:8000";
-            var aiServiceUrl = rawAiUrl.Replace("${AI_SERVICE_URL}", Environment.GetEnvironmentVariable("AI_SERVICE_URL") ?? rawAiUrl);
+            var aiServiceUrl = ConfigResolver.Resolve(configuration["AiService:BaseUrl"]) ?? "http://localhost:8000";
             services.AddHttpClient<IAiChatService, AiChatClient>(client =>
             {
                 client.BaseAddress = new Uri(aiServiceUrl);
                 client.Timeout = TimeSpan.FromSeconds(90);
             });
 
-            var rawWeatherKey = configuration["Weather:ApiKey"] ?? "";
-            var weatherKey    = rawWeatherKey.Replace("${OPENWEATHER_API_KEY}", Environment.GetEnvironmentVariable("OPENWEATHER_API_KEY") ?? rawWeatherKey);
+            var weatherKey    = ConfigResolver.Resolve(configuration["Weather:ApiKey"]) ?? "";
             var rawWeatherUrl = configuration["Weather:BaseUrl"] ?? "https://api.openweathermap.org";
 
             services.AddHttpClient("openweather", client =>

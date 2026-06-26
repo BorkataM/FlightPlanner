@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Plane, ChevronLeft, ChevronRight, Loader2, Info } from 'lucide-react'
-import { flightsApi } from '../services/api'
+import { flightsApi, getStoredToken } from '../services/api'
 import type { FlightDto } from '../features/search/types'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/auth/AuthModal'
@@ -531,9 +531,7 @@ export default function SearchResultsPage() {
           onSuccess={(_type) => {
             setShowAuth(false)
             if (pendingCombo) {
-              const stored = localStorage.getItem('skywave_user')
-              const token  = stored ? (JSON.parse(stored) as { token: string }).token : ''
-              goToBooking(pendingCombo, token)
+              goToBooking(pendingCombo, getStoredToken())
             }
             setPendingCombo(null)
           }}

@@ -4,7 +4,7 @@ namespace FlightPlanner.Core.DTOs.Ai
     {
         public int FlightId { get; set; }
         public AiPassengerDto Passenger { get; set; } = new();
-        public double? PriceUsd { get; set; }
+        public double? PriceEur { get; set; }
         public string? DepartureCity { get; set; }
         public string? ArrivalCity { get; set; }
     }

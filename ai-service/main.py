@@ -2,15 +2,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-
-logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import ai_chat
 import services
 from database import engine, get_db
-from models import Base
 from schemas import (
     AnalyticsProcessResult,
     ChatRequest,
@@ -18,6 +15,9 @@ from schemas import (
     FlightAnalyticsOut,
     FlightOut,
 )
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -38,7 +38,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -121,4 +121,4 @@ async def chat_endpoint(request: ChatRequest, db: AsyncSession = Depends(get_db)
         return await ai_chat.chat(request, db)
     except Exception as exc:
         logger.exception("AI chat error")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="The AI assistant is temporarily unavailable.") from exc
