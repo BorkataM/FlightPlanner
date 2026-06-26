@@ -20,7 +20,7 @@ interface Combo {
   badges:        Badge[]
 }
 
-/* ── helpers ─────────────────────────────────────────────────── */
+/* helpers */
 const toDateKey = (s: string) => s.slice(0, 10)
 
 function durationMin(f: FlightDto) {
@@ -43,7 +43,7 @@ const fmtTabDate = (s: string) =>
 const fmtLegDate = (s?: string | null) =>
   s ? new Date(s).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
 
-/* ── badge styles ────────────────────────────────────────────── */
+/* badge styles */
 const BADGE_CLASS: Record<Badge, string> = {
   CHEAPEST: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   FASTEST:  'bg-sky-50     dark:bg-sky-950  text-sky-700     dark:text-sky-400  border border-sky-200     dark:border-sky-800',
@@ -51,7 +51,7 @@ const BADGE_CLASS: Record<Badge, string> = {
   ECO:      'bg-teal-50    dark:bg-teal-950 text-teal-700    dark:text-teal-400 border border-teal-200    dark:border-teal-800',
 }
 
-/* ── FlightLeg ───────────────────────────────────────────────── */
+/* FlightLeg */
 function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outbound' | 'Return' }) {
   const { t } = useLocale()
   const sr = t.searchResults
@@ -125,7 +125,7 @@ function FlightLeg({ flight, direction }: { flight: FlightDto; direction?: 'Outb
   )
 }
 
-/* ── FlightCard ──────────────────────────────────────────────── */
+/* FlightCard */
 function FlightCard({ combo, isRoundTrip, onSelect }: { combo: Combo; isRoundTrip: boolean; onSelect: () => void }) {
   const { t } = useLocale()
   const sr = t.searchResults
@@ -173,7 +173,7 @@ function FlightCard({ combo, isRoundTrip, onSelect }: { combo: Combo; isRoundTri
   )
 }
 
-/* ── Page ────────────────────────────────────────────────────── */
+/* Page */
 export default function SearchResultsPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -361,7 +361,7 @@ export default function SearchResultsPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
 
-      {/* ── sticky header ── */}
+      {/* sticky header */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3 lg:py-4 sticky top-0 z-20 shadow-sm">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <button
@@ -390,7 +390,7 @@ export default function SearchResultsPage() {
         </div>
       </div>
 
-      {/* ── outbound date tabs ── */}
+      {/* outbound date tabs */}
       {availDates.length > 0 && (
         <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
           <div className="max-w-5xl mx-auto flex items-center">
@@ -446,7 +446,7 @@ export default function SearchResultsPage() {
         </div>
       )}
 
-      {/* ── return date chips ── */}
+      {/* return date chips */}
       {isRoundTrip && retDates.length > 0 && (
         <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
           <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 overflow-x-auto results-tab-scroll">
@@ -468,7 +468,7 @@ export default function SearchResultsPage() {
         </div>
       )}
 
-      {/* ── no return flights notice ── */}
+      {/* no return flights notice */}
       {isRoundTrip && !loading && returns.length === 0 && (
         <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-100 dark:border-amber-900">
           <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
@@ -478,7 +478,7 @@ export default function SearchResultsPage() {
         </div>
       )}
 
-      {/* ── results ── */}
+      {/* results */}
       <div className="max-w-5xl mx-auto px-4 pt-5 pb-12">
         {/* sort + count */}
         <div className="flex items-center gap-2 mb-5">

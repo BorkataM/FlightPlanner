@@ -5,7 +5,7 @@ import type { BookingRecord } from '../services/api'
 import { useLocale } from '../context/LocaleContext'
 import AirlineLogo from '../features/search/AirlineLogo'
 
-/* ── types ──────────────────────────────────────────────────── */
+/* types */
 interface PassengerInfo {
   firstName:    string
   lastName:     string
@@ -30,7 +30,7 @@ interface CardProps {
   compact:    boolean
 }
 
-/* ── helpers ────────────────────────────────────────────────── */
+/* helpers */
 const fmtTime = (s?: string | null) => {
   if (!s) return '--:--'
   const d = new Date(s)
@@ -51,7 +51,7 @@ const genSeat     = (ref: string, fn: string) =>
 const genGate     = (fn: string) => String((hash(fn + 'gate') % 30) + 1)
 const genTerminal = (code: string) => ['1', '2', '2C', '3', 'A', 'B'][hash(code) % 6]
 
-/* ── barcode ────────────────────────────────────────────────── */
+/* barcode */
 function Barcode({ seed, width = 240 }: { seed: string; width?: number }) {
   const ws: number[] = [2, 1, 1, 1, 2]
   for (let i = 0; i < seed.length; i++) {
@@ -77,7 +77,7 @@ function Barcode({ seed, width = 240 }: { seed: string; width?: number }) {
   )
 }
 
-/* ── boarding pass card ─────────────────────────────────────── */
+/* boarding pass card */
 function BoardingPassCard(p: CardProps) {
   const c        = p.compact
   const gate     = genGate(p.flightNum)
@@ -123,7 +123,7 @@ function BoardingPassCard(p: CardProps) {
 
       <div className="flex rounded-3xl overflow-hidden" style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.13)' }}>
 
-        {/* ── LEFT ────────────────────────────────────────────── */}
+        {/* LEFT */}
         <div
           className={`relative text-white overflow-hidden ${pad}`}
           style={{ flex: '0 0 62%', background: leftBg }}
@@ -195,10 +195,10 @@ function BoardingPassCard(p: CardProps) {
           </div>
         </div>
 
-        {/* ── SEPARATOR ───────────────────────────────────────── */}
+        {/* SEPARATOR */}
         <div className="self-stretch shrink-0" style={{ width: 2, borderLeft: '2px dashed #cbd5e1' }} />
 
-        {/* ── RIGHT ───────────────────────────────────────────── */}
+        {/* RIGHT */}
         <div className={`flex-1 bg-white ${rPad} flex flex-col justify-between min-w-0`}>
           <div>
             <div className="text-[8px] font-black tracking-[0.3em] text-slate-400 uppercase mb-5">
@@ -273,7 +273,7 @@ function BoardingPassCard(p: CardProps) {
   )
 }
 
-/* ── page ───────────────────────────────────────────────────── */
+/* page */
 export default function BoardingPassPage() {
   const location = useLocation()
   const navigate  = useNavigate()
@@ -366,7 +366,7 @@ export default function BoardingPassPage() {
 
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 print:bg-white flex flex-col">
 
-        {/* ── header ──────────────────────────────────────────── */}
+        {/* header */}
         <div className="print:hidden bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3 lg:py-4 sticky top-0 z-20 shadow-sm">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between">
             <button
@@ -385,7 +385,7 @@ export default function BoardingPassPage() {
           </div>
         </div>
 
-        {/* ── content ─────────────────────────────────────────── */}
+        {/* content */}
         <div className="flex-1 flex flex-col print:block print:p-0">
 
           {/* title — pinned at top, centered */}

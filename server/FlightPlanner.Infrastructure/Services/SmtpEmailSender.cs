@@ -6,11 +6,7 @@ using System.Net.Mail;
 
 namespace FlightPlanner.Infrastructure.Services
 {
-    // Generic SMTP sender (Gmail / SendGrid / Mailgun SMTP, etc.).
-    // Configure via environment variables:
-    //   EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD, EMAIL_FROM
-    // If SMTP is not configured, the email is logged to the console instead so the
-    // flow remains testable in local/dev environments.
+    // SMTP sender configured via EMAIL_* env vars; logs to console when unconfigured.
     public class SmtpEmailSender : IEmailSender
     {
         private readonly ILogger<SmtpEmailSender> _logger;

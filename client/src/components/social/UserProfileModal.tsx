@@ -89,7 +89,7 @@ export default function UserProfileModal({ userId, onClose }: Props) {
         className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        {/* ── Cover banner ── */}
+        {/* Cover banner */}
         <div
           className={`relative h-32 shrink-0 ${hasCoverImg ? '' : `bg-gradient-to-br ${gradient}`}`}
           style={hasCoverImg ? { backgroundImage: `url(${appearance!.coverImageDataUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
@@ -103,7 +103,7 @@ export default function UserProfileModal({ userId, onClose }: Props) {
           </button>
         </div>
 
-        {/* ── Profile info ── */}
+        {/* Profile info */}
         <div className="px-6 pb-4 shrink-0 bg-white dark:bg-slate-800">
           {/* Avatar row */}
           <div className="-mt-10 relative z-10">
@@ -170,7 +170,7 @@ export default function UserProfileModal({ userId, onClose }: Props) {
           )}
         </div>
 
-        {/* ── Body: map + countries sidebar ── */}
+        {/* Body: map + countries sidebar */}
         <div className="flex-1 min-h-0 flex overflow-hidden border-t border-slate-100 dark:border-slate-700">
           {/* Map */}
           <div className="flex-1 min-w-0 min-h-0 p-4">

@@ -50,7 +50,7 @@ export async function fetchOsrmRoute(
   }
 }
 
-// ── OSRM response shape ────────────────────────────────────────────────────
+// OSRM response shape
 interface OsrmResponse {
   code:   string
   routes: OsrmRoute[]

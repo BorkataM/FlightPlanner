@@ -25,10 +25,6 @@ from schemas import ChatRequest, ChatResponse, UserContext
 
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
-# ---------------------------------------------------------------------------
-# Tool definitions (OpenAI function-calling schema)
-# ---------------------------------------------------------------------------
-
 TOOLS: list[dict] = [
     {
         "type": "function",
@@ -259,10 +255,6 @@ def _build_system_prompt(user_context: UserContext | None) -> str:
         f"tailored to that profile."
     )
 
-# ---------------------------------------------------------------------------
-# Tool executor
-# ---------------------------------------------------------------------------
-
 def _flight_to_dict(flight) -> dict:
     return {
         "id": flight.Id,
@@ -371,10 +363,6 @@ async def _execute_tool(name: str, args: dict, db: AsyncSession, user_context: U
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
-# ---------------------------------------------------------------------------
-# Main chat function
-# ---------------------------------------------------------------------------
-
 async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
     user_context = request.user_context
     messages: list[dict] = [{"role": "system", "content": _build_system_prompt(user_context)}]
@@ -388,10 +376,8 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
     flight_ids: list[int] = []
     checkout_data: dict | None = None
 
-    # Agentic loop — keep going while the model wants to call tools.
-    # We only append the assistant message to history when it has tool_calls
-    # (i.e. the loop continues). The final text response is never appended so
-    # the messages list never ends with a null-content assistant entry.
+    # Agentic loop: only assistant turns with tool_calls are appended, so history
+    # never ends with a null-content entry.
     MAX_ITERATIONS = 3
     choice = None
     for _ in range(MAX_ITERATIONS):
@@ -454,9 +440,7 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
 
     final_message = (choice.message.content or "") if choice else ""
 
-    # Model ran tool calls but returned no text — ask for a plain summary.
-    # At this point messages ends cleanly with the last tool_result entry,
-    # so no null-content assistant entry is present to confuse the model.
+    # Ran tools but returned no text — ask for a plain summary.
     if not final_message.strip() and tools_used:
         messages.append({"role": "user", "content": "Based on the flight data above, give me a short recommendation in 2-3 sentences."})
         for attempt in range(3):

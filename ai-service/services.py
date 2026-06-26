@@ -11,10 +11,6 @@ from sqlalchemy.orm import aliased, selectinload
 from models import Airline, Airport, Booking, Flight, FlightAnalytics
 
 
-# ---------------------------------------------------------------------------
-# Geo helpers
-# ---------------------------------------------------------------------------
-
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Return great-circle distance between two coordinates in kilometres."""
     R = 6371.0
@@ -24,10 +20,6 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-
-# ---------------------------------------------------------------------------
-# Environmental impact
-# ---------------------------------------------------------------------------
 
 def calculate_co2_emissions(distance_km: float, eco_rating: float) -> float:
     """
@@ -69,10 +61,6 @@ def calculate_predicted_delay_minutes(delay_probability: float) -> int:
     return int(delay_probability * 120)
 
 
-# ---------------------------------------------------------------------------
-# Component scores  (all on a 1–10 scale, clamped)
-# ---------------------------------------------------------------------------
-
 def _clamp(value: float) -> float:
     return round(max(1.0, min(10.0, value)), 4)
 
@@ -98,10 +86,6 @@ def calculate_delay_score(delay_probability: float) -> float:
     return _clamp(10.0 - delay_probability * 9.0)
 
 
-# ---------------------------------------------------------------------------
-# SmartScore
-# ---------------------------------------------------------------------------
-
 def calculate_smart_score(
     price_score: float,
     eco_score: float,
@@ -114,10 +98,6 @@ def calculate_smart_score(
     raw = price_score * 0.4 + eco_score * 0.4 + delay_score * 0.2
     return round(max(1.0, min(10.0, raw)), 2)
 
-
-# ---------------------------------------------------------------------------
-# Database operations
-# ---------------------------------------------------------------------------
 
 async def _load_flight(db: AsyncSession, flight_id: int) -> Flight | None:
     result = await db.execute(

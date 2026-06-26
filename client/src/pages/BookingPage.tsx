@@ -10,7 +10,7 @@ import type { FlightDto } from '../features/search/types'
 import { bookingsApi } from '../services/api'
 import GooglePayButton from '@google-pay/button-react'
 
-/* ── types ──────────────────────────────────────────────── */
+/* types */
 export interface BookingState {
   outbound:    FlightDto
   ret:         FlightDto | null
@@ -43,7 +43,7 @@ const CHECKED_PRICE   = 35
 const INS_BASIC_PRICE = 12
 const INS_PLUS_PRICE  = 20
 
-/* ── helpers ────────────────────────────────────────────── */
+/* helpers */
 const fmtTime = (s?: string | null) => {
   if (!s) return '—'
   const d = new Date(s)
@@ -63,7 +63,7 @@ const fmtDur = (m: number) =>
 
 const genRef = () => Math.random().toString(36).slice(2, 8).toUpperCase()
 
-/* ── constants ──────────────────────────────────────────── */
+/* constants */
 const MONTHS = [
   'January','February','March','April','May','June',
   'July','August','September','October','November','December',
@@ -83,7 +83,7 @@ const COUNTRIES = [
   'United Arab Emirates','United Kingdom','United States','Venezuela','Vietnam','Other',
 ]
 
-/* ── validation ─────────────────────────────────────────── */
+/* validation */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const NAME_RE  = /^[\p{L}][\p{L} '.-]{1,}$/u
 
@@ -161,11 +161,11 @@ function cvvError(v: string): string {
   return ''
 }
 
-/* ── shared styles ──────────────────────────────────────── */
+/* shared styles */
 const inputCls  = 'w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all placeholder-slate-300 bg-white dark:bg-slate-700'
 const selectCls = 'w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all bg-white dark:bg-slate-700 cursor-pointer'
 
-/* ── small components ───────────────────────────────────── */
+/* small components */
 function ProgressDot({ n, label, state }: { n: number; label: string; state: 'done' | 'active' | 'upcoming' }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
@@ -284,7 +284,7 @@ function SummaryRow({ label, value, mono }: { label: string; value: string; mono
   )
 }
 
-/* ── main page ──────────────────────────────────────────── */
+/* main page */
 export default function BookingPage() {
   const location = useLocation()
   const navigate  = useNavigate()
@@ -474,7 +474,7 @@ export default function BookingPage() {
     }
   }
 
-  /* ── Confirmation ──────────────────────────────────────── */
+  /* Confirmation */
   if (confirmed) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4 py-12">
@@ -532,7 +532,7 @@ export default function BookingPage() {
     )
   }
 
-  /* ── price sidebar ─────────────────────────────────────── */
+  /* price sidebar */
   const PriceSidebar = () => (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 sticky top-24">
       <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{bk.priceSummary}</div>
@@ -573,7 +573,7 @@ export default function BookingPage() {
     </div>
   )
 
-  /* ── page ──────────────────────────────────────────────── */
+  /* page */
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* sticky header */}
@@ -606,7 +606,7 @@ export default function BookingPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
-          {/* ── left ────────────────────────────────────── */}
+          {/* left */}
           <div className="space-y-4">
 
             {/* trip summary */}
@@ -623,7 +623,7 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* ── STEP 1 ─────────────────────────────────── */}
+            {/* STEP 1 */}
             {step === 1 && (
               <>
                 {/* passenger */}
@@ -828,7 +828,7 @@ export default function BookingPage() {
               </>
             )}
 
-            {/* ── STEP 2 ─────────────────────────────────── */}
+            {/* STEP 2 */}
             {step === 2 && (
               <>
                 {/* booking summary */}
@@ -1000,7 +1000,7 @@ export default function BookingPage() {
             )}
           </div>
 
-          {/* ── right sidebar ────────────────────────────── */}
+          {/* right sidebar */}
           <div className="hidden lg:block">
             <PriceSidebar />
           </div>

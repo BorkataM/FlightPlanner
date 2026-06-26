@@ -44,18 +44,10 @@ app.add_middleware(
 )
 
 
-# ---------------------------------------------------------------------------
-# Health
-# ---------------------------------------------------------------------------
-
 @app.get("/health", tags=["System"])
 async def health():
     return {"status": "ok", "service": "FlightPlanner AI Service"}
 
-
-# ---------------------------------------------------------------------------
-# Flights
-# ---------------------------------------------------------------------------
 
 @app.get("/flights", response_model=list[FlightOut], tags=["Flights"])
 async def list_flights(
@@ -75,10 +67,6 @@ async def get_flight(flight_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Flight not found")
     return flight
 
-
-# ---------------------------------------------------------------------------
-# Analytics
-# ---------------------------------------------------------------------------
 
 @app.get("/analytics/smartest", response_model=list[FlightOut], tags=["Analytics"])
 async def smartest_flights(
@@ -118,10 +106,6 @@ async def process_one(flight_id: int, db: AsyncSession = Depends(get_db)):
         )
     return analytics
 
-
-# ---------------------------------------------------------------------------
-# AI Chat
-# ---------------------------------------------------------------------------
 
 @app.post("/ai/chat", response_model=ChatResponse, tags=["AI"])
 async def chat_endpoint(request: ChatRequest, db: AsyncSession = Depends(get_db)):

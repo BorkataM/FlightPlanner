@@ -106,7 +106,7 @@ namespace FlightPlanner.Infrastructure.ExternalClients
             };
         }
 
-        // ── Delay risk rules ──────────────────────────────────────────────────
+        // Delay risk rules
         private static (string Risk, string Reason) ClassifyRisk(WeatherForecastDto w) =>
             w.Condition switch
             {
@@ -120,7 +120,7 @@ namespace FlightPlanner.Infrastructure.ExternalClients
                 _              => ("Low",    "Conditions look good for departure"),
             };
 
-        // ── OWM response models ───────────────────────────────────────────────
+        // OWM response models
         private static WeatherForecastDto Map(OWMPoint p, string city) => new()
         {
             TemperatureC    = p.Main?.Temp ?? 0,

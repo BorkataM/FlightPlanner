@@ -14,7 +14,7 @@ import {
 import WeatherWidget from '../components/bookings/WeatherWidget'
 import AirportRouteMap from '../components/bookings/AirportRouteMap'
 
-// ── Countdown ─────────────────────────────────────────────────────
+// Countdown
 function useDiff(iso: string) {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
@@ -41,7 +41,7 @@ function CountdownBox({ n, label }: { n: number; label: string }) {
   )
 }
 
-// ── Left panel atoms ─────────────────────────────────────────────
+// Left panel atoms
 function LDetail({ icon: Icon, label, value, accent, mono }: {
   icon: React.ElementType; label: string; value: string; accent?: boolean; mono?: boolean
 }) {
@@ -68,7 +68,7 @@ function LSummaryRow({ icon: Icon, label, value, color }: {
   )
 }
 
-// ── Next flight section ───────────────────────────────────────────
+// Next flight section
 function NextFlightSection({ trip }: { trip: Trip }) {
   const { t } = useLocale()
   const mb = t.myBookings
@@ -151,7 +151,7 @@ function NextFlightSection({ trip }: { trip: Trip }) {
   )
 }
 
-// ── Left panel ────────────────────────────────────────────────────
+// Left panel
 type SortOrder = 'flight' | 'purchase'
 
 function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
@@ -271,7 +271,7 @@ function LeftPanel({ nextTrip, upcoming, past, selected, onSelect }: {
   )
 }
 
-// ── Right panel ───────────────────────────────────────────────────
+// Right panel
 function RightPanel({ trip }: { trip: Trip }) {
   const navigate = useNavigate()
   const { t } = useLocale()
@@ -412,7 +412,7 @@ function FlightCard({ booking, dir, depName, arrName, dur }: {
   )
 }
 
-// ── Empty right panel ─────────────────────────────────────────────
+// Empty right panel
 function EmptyRight() {
   const navigate = useNavigate()
   const { t } = useLocale()
@@ -436,7 +436,7 @@ function EmptyRight() {
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────
+// Main page
 export default function MyBookingsPage() {
   const navigate = useNavigate()
   const { user }  = useAuth()

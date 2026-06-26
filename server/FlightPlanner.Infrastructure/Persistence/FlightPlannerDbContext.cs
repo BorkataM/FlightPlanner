@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using FlightPlanner.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -405,7 +405,7 @@ namespace FlightPlanner.Infrastructure.Persistence
             // (from, to, durationMins, basePrice, airlines[])
             var routes = new (string F, string T, int D, decimal P, string[] Als)[]
             {
-                // ── SOF outbound ──
+                // SOF outbound
                 ("SOF","LHR",175, 89m, new[]{"LZB","WZZ","EZY","BAW"}),
                 ("SOF","CDG",195, 95m, new[]{"LZB","AFR","WZZ","TVF"}),
                 ("SOF","FRA",185, 88m, new[]{"LZB","DLH","WZZ"}),
@@ -425,7 +425,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("SOF","BUD",100, 39m, new[]{"LZB","WZZ","BGH"}),
                 ("SOF","OSL",230, 79m, new[]{"LZB","SAS","WZZ"}),
                 ("SOF","MXP",180, 59m, new[]{"LZB","WZZ","EZY"}),
-                // ── SOF inbound (returns) ──
+                // SOF inbound (returns)
                 ("LHR","SOF",175, 89m, new[]{"LZB","WZZ","EZY","BAW"}),
                 ("CDG","SOF",195, 95m, new[]{"LZB","AFR","WZZ","TVF"}),
                 ("FRA","SOF",185, 88m, new[]{"LZB","DLH","WZZ"}),
@@ -445,7 +445,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("BUD","SOF",100, 39m, new[]{"LZB","WZZ","BGH"}),
                 ("OSL","SOF",230, 79m, new[]{"LZB","SAS","WZZ"}),
                 ("MXP","SOF",180, 59m, new[]{"LZB","WZZ","EZY"}),
-                // ── London hub ──
+                // London hub
                 ("LHR","CDG", 75, 95m, new[]{"BAW","AFR","EZY"}),
                 ("CDG","LHR", 75, 95m, new[]{"BAW","AFR","EZY"}),
                 ("LHR","FRA",105,115m, new[]{"BAW","DLH","EZY"}),
@@ -482,7 +482,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("WAW","LHR",160, 89m, new[]{"BAW","LOT","WZZ"}),
                 ("LHR","MUC",125,109m, new[]{"BAW","DLH","EZY"}),
                 ("MUC","LHR",125,109m, new[]{"BAW","DLH","EZY"}),
-                // ── Frankfurt hub ──
+                // Frankfurt hub
                 ("FRA","CDG", 90, 89m, new[]{"DLH","AFR"}),
                 ("CDG","FRA", 90, 89m, new[]{"DLH","AFR"}),
                 ("FRA","AMS", 75, 89m, new[]{"DLH","KLM"}),
@@ -517,7 +517,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("MUC","FRA", 70, 55m, new[]{"DLH","EZY"}),
                 ("FRA","MXP", 85, 65m, new[]{"DLH","EZY"}),
                 ("MXP","FRA", 85, 65m, new[]{"DLH","EZY"}),
-                // ── Paris hub ──
+                // Paris hub
                 ("CDG","AMS", 75, 79m, new[]{"AFR","KLM","EZY"}),
                 ("AMS","CDG", 75, 79m, new[]{"AFR","KLM","EZY"}),
                 ("CDG","IST",195,129m, new[]{"AFR","THY","PGT"}),
@@ -544,7 +544,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("WAW","CDG",155, 99m, new[]{"AFR","LOT"}),
                 ("CDG","BUD",145, 89m, new[]{"AFR","WZZ"}),
                 ("BUD","CDG",145, 89m, new[]{"AFR","WZZ"}),
-                // ── Amsterdam hub ──
+                // Amsterdam hub
                 ("AMS","IST",215,115m, new[]{"KLM","THY"}),
                 ("IST","AMS",215,115m, new[]{"KLM","THY"}),
                 ("AMS","BCN",150, 89m, new[]{"KLM","EZY","RYR"}),
@@ -567,7 +567,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("OSL","AMS",130, 89m, new[]{"KLM","SAS"}),
                 ("AMS","MUC",115, 79m, new[]{"KLM","DLH"}),
                 ("MUC","AMS",115, 79m, new[]{"KLM","DLH"}),
-                // ── Istanbul hub ──
+                // Istanbul hub
                 ("IST","BCN",250,135m, new[]{"THY","PGT"}),
                 ("BCN","IST",250,135m, new[]{"THY","PGT"}),
                 ("IST","FCO",195,119m, new[]{"THY","PGT"}),
@@ -588,7 +588,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("OSL","IST",290,149m, new[]{"THY","SAS"}),
                 ("IST","CPH",270,139m, new[]{"THY","SAS"}),
                 ("CPH","IST",270,139m, new[]{"THY","SAS"}),
-                // ── Iberian routes ──
+                // Iberian routes
                 ("BCN","FCO",105, 59m, new[]{"EZY","RYR","TVF"}),
                 ("FCO","BCN",105, 59m, new[]{"EZY","RYR","TVF"}),
                 ("BCN","MAD", 75, 45m, new[]{"EZY","RYR"}),
@@ -611,7 +611,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("DUB","MAD",155, 79m, new[]{"EZY","RYR"}),
                 ("MAD","MXP",140, 79m, new[]{"EZY","RYR"}),
                 ("MXP","MAD",140, 79m, new[]{"EZY","RYR"}),
-                // ── Central / Eastern Europe ──
+                // Central / Eastern Europe
                 ("VIE","ATH",150, 89m, new[]{"AUA","EZY"}),
                 ("ATH","VIE",150, 89m, new[]{"AUA","EZY"}),
                 ("VIE","FCO",110, 79m, new[]{"AUA","EZY","RYR"}),
@@ -648,7 +648,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("DUB","WAW",175, 89m, new[]{"LOT","RYR"}),
                 ("WAW","OSL",115, 79m, new[]{"LOT","SAS"}),
                 ("OSL","WAW",115, 79m, new[]{"LOT","SAS"}),
-                // ── Scandinavian ──
+                // Scandinavian
                 ("CPH","OSL", 60, 49m, new[]{"SAS","EZY"}),
                 ("OSL","CPH", 60, 49m, new[]{"SAS","EZY"}),
                 ("CPH","DUB",130, 89m, new[]{"SAS","RYR"}),
@@ -659,7 +659,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("MXP","CPH",165, 95m, new[]{"SAS","EZY"}),
                 ("OSL","MXP",185,105m, new[]{"SAS","EZY"}),
                 ("MXP","OSL",185,105m, new[]{"SAS","EZY"}),
-                // ── Italy / Switzerland ──
+                // Italy / Switzerland
                 ("FCO","ATH",135, 69m, new[]{"EZY","RYR"}),
                 ("ATH","FCO",135, 69m, new[]{"EZY","RYR"}),
                 ("MXP","ATH",165, 79m, new[]{"EZY","RYR"}),
@@ -849,7 +849,7 @@ namespace FlightPlanner.Infrastructure.Persistence
             // Each tuple is one direction; we add the reverse automatically below.
             var oneWayRoutes = new (string F, string T, int D, decimal P, string[] Als)[]
             {
-                // ── North America domestic ──
+                // North America domestic
                 ("JFK","LAX",335,180m, new[]{"AAL","DAL","UAL","JBU"}),
                 ("JFK","ORD",150,120m, new[]{"AAL","UAL","SWA"}),
                 ("JFK","MIA",165,130m, new[]{"AAL","DAL","JBU"}),
@@ -864,19 +864,19 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("ORD","MIA",185,140m, new[]{"AAL","DAL","UAL"}),
                 ("ORD","ATL",115,105m, new[]{"DAL","UAL","SWA"}),
                 ("MIA","ATL",115,100m, new[]{"DAL","AAL","SWA"}),
-                // ── Canada ──
+                // Canada
                 ("YYZ","YVR",280,175m, new[]{"ACA","WJA"}),
                 ("YYZ","LAX",315,180m, new[]{"ACA","WJA","UAL"}),
                 ("YYZ","JFK", 80, 95m, new[]{"ACA","UAL","DAL"}),
                 ("YYZ","LHR",465,385m, new[]{"ACA","BAW","VIR"}),
                 ("YVR","LAX",145,110m, new[]{"ACA","UAL","WJA"}),
                 ("YVR","JFK",330,185m, new[]{"ACA","DAL","UAL"}),
-                // ── Mexico / Central America ──
+                // Mexico / Central America
                 ("MEX","JFK",280,165m, new[]{"AMX","AAL","DAL"}),
                 ("MEX","LAX",215,155m, new[]{"AMX","AAL","UAL"}),
                 ("MEX","MIA",205,148m, new[]{"AMX","AAL","JBU"}),
                 ("MEX","BOG",265,195m, new[]{"AMX","AVA","LAN"}),
-                // ── South America ──
+                // South America
                 ("GRU","EZE",155,140m, new[]{"LAN","GLO","ARG"}),
                 ("GRU","SCL",240,185m, new[]{"LAN","GLO","ARG"}),
                 ("GRU","BOG",335,225m, new[]{"LAN","AVA","GLO"}),
@@ -886,7 +886,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("EZE","BOG",360,245m, new[]{"LAN","AVA","ARG"}),
                 ("SCL","LIM",225,185m, new[]{"LAN","AVA"}),
                 ("BOG","LIM",160,145m, new[]{"AVA","LAN"}),
-                // ── Transatlantic – US/Canada to Europe ──
+                // Transatlantic – US/Canada to Europe
                 ("JFK","LHR",420,420m, new[]{"AAL","BAW","VIR","UAL"}),
                 ("JFK","CDG",445,410m, new[]{"DAL","AFR","UAL"}),
                 ("JFK","FRA",475,430m, new[]{"UAL","DLH","LH"}),
@@ -909,14 +909,14 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("ATL","CDG",560,455m, new[]{"DAL","AFR"}),
                 ("YYZ","LHR",465,385m, new[]{"ACA","BAW","VIR"}),
                 ("YYZ","CDG",480,395m, new[]{"ACA","AFR"}),
-                // ── South America to Europe ──
+                // South America to Europe
                 ("GRU","LHR",720,590m, new[]{"LAN","BAW","VIR"}),
                 ("GRU","CDG",715,580m, new[]{"LAN","AFR"}),
                 ("GRU","MAD",810,615m, new[]{"LAN","IBE"}),
                 ("EZE","MAD",820,625m, new[]{"ARG","LAN"}),
                 ("SCL","MAD",815,620m, new[]{"LAN","IBE"}),
                 ("BOG","MAD",695,540m, new[]{"AVA","LAN"}),
-                // ── Middle East hub ──
+                // Middle East hub
                 ("DXB","LHR",420,390m, new[]{"UAE","BAW","VIR"}),
                 ("DXB","CDG",415,380m, new[]{"UAE","AFR"}),
                 ("DXB","FRA",415,375m, new[]{"UAE","DLH"}),
@@ -948,7 +948,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("AUH","SIN",435,390m, new[]{"ETD","SIA"}),
                 ("AUH","SYD",840,680m, new[]{"ETD","QFA"}),
                 ("AUH","BOM",195,185m, new[]{"ETD","AIC"}),
-                // ── South/Southeast Asia ──
+                // South/Southeast Asia
                 ("SIN","HKG",155,155m, new[]{"SIA","CPA"}),
                 ("SIN","BKK",145,135m, new[]{"SIA","THA"}),
                 ("SIN","KUL", 55, 75m, new[]{"SIA","MAS"}),
@@ -979,7 +979,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("BOM","LHR",545,460m, new[]{"AIC","BAW","VIR"}),
                 ("BOM","FRA",535,450m, new[]{"AIC","DLH"}),
                 ("BOM","JFK",885,700m, new[]{"AIC","UAL"}),
-                // ── East Asia ──
+                // East Asia
                 ("HKG","NRT",235,225m, new[]{"CPA","JAL","ANA"}),
                 ("HKG","ICN",200,200m, new[]{"CPA","KAL"}),
                 ("HKG","PEK",185,190m, new[]{"CPA","CCA"}),
@@ -1025,7 +1025,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("PVG","JFK",875,700m, new[]{"CSN","UAL"}),
                 ("PVG","LAX",675,550m, new[]{"CSN","UAL"}),
                 ("PVG","SYD",595,500m, new[]{"CSN","QFA"}),
-                // ── Australia / Pacific domestic + regional ──
+                // Australia / Pacific domestic + regional
                 ("SYD","MEL", 95,100m, new[]{"QFA","ANZ"}),
                 ("SYD","BNE",100, 95m, new[]{"QFA","ANZ"}),
                 ("SYD","PER",295,255m, new[]{"QFA","ANZ"}),
@@ -1036,7 +1036,7 @@ namespace FlightPlanner.Infrastructure.Persistence
                 ("BNE","AKL",155,155m, new[]{"QFA","ANZ"}),
                 ("PER","SIN",300,268m, new[]{"QFA","SIA","MAS"}),
                 ("PER","DXB",585,500m, new[]{"QFA","UAE"}),
-                // ── Australia to Europe / Americas ──
+                // Australia to Europe / Americas
                 ("SYD","LHR",1295,980m, new[]{"QFA","BAW","VIR"}),
                 ("SYD","CDG",1325,995m, new[]{"QFA","AFR"}),
                 ("SYD","JFK",1235,950m, new[]{"QFA","UAL"}),

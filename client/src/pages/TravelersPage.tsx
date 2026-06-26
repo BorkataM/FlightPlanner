@@ -42,7 +42,7 @@ const AVATAR_COLORS = [
 ]
 function avatarGradient(id: number) { return AVATAR_COLORS[id % AVATAR_COLORS.length] }
 
-// ── Circular progress for Your Journey ──────────────────────────────────────
+// Circular progress for Your Journey
 function JourneyCircle({ pct }: { pct: number }) {
   const r = 46
   const circ = 2 * Math.PI * r
@@ -66,7 +66,7 @@ function JourneyCircle({ pct }: { pct: number }) {
   )
 }
 
-// ── Stat column in the profile stats bar ────────────────────────────────────
+// Stat column in the profile stats bar
 function ProfileStat({ icon: Icon, value, label, sub, color, onClick }: {
   icon: React.ElementType; value: number; label: string; sub: string; color: string; onClick?: () => void
 }) {
@@ -89,7 +89,7 @@ function ProfileStat({ icon: Icon, value, label, sub, color, onClick }: {
   )
 }
 
-// ── Compact traveler row for sidebar ────────────────────────────────────────
+// Compact traveler row for sidebar
 function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: number) => void }) {
   const { user: me } = useAuth()
   const { t } = useLocale()
@@ -138,7 +138,7 @@ function TravelerRow({ user, onOpen }: { user: UserSearchResult; onOpen: (id: nu
   )
 }
 
-// ── Page ────────────────────────────────────────────────────────────────────
+// Page
 export default function TravelersPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -309,7 +309,7 @@ export default function TravelersPage() {
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
-      {/* ── Navbar ── */}
+      {/* Navbar */}
       <nav className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20 shadow-sm">
         <div className="w-full px-6 h-16 flex items-center gap-4">
           {/* Logo */}
@@ -386,11 +386,11 @@ export default function TravelersPage() {
         </div>
       </nav>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="flex-1 w-full px-3 lg:px-6 py-4 lg:py-6 min-h-0 flex flex-col">
         <div className="flex-1 min-h-0 grid md:grid-cols-[1fr_3fr] lg:grid-cols-4 gap-3 lg:gap-6">
 
-          {/* ── Main column (3/4): profile card + map stacked ── */}
+          {/* Main column (3/4): profile card + map stacked */}
           <div className="lg:col-span-3 flex flex-col gap-5 min-h-0">
 
             {/* Profile cover card */}
@@ -473,7 +473,7 @@ export default function TravelersPage() {
 
           </div>
 
-          {/* ── Sidebar (1/4) ── */}
+          {/* Sidebar (1/4) */}
           <div className="flex flex-col gap-4 min-h-0">
 
             {/* Your Journey */}
