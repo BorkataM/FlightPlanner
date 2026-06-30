@@ -73,7 +73,10 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
       return
     }
 
-    // Animate from the current height to the new content height, then onTransitionEnd snaps back to auto
+    // Animate from the current height to the new content height, then snap back to auto.
+    // transitionend only fires if the height actually changes, so a timer backs it up —
+    // otherwise an equal-height transition (e.g. toggling `loading`) leaves the box locked
+    // at a fixed px, clipping anything that grows later (the async Google iframe).
     const prevHeight = el.offsetHeight
     el.style.transition = 'none'
     el.style.height = 'auto'
@@ -82,6 +85,9 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     void el.offsetHeight
     el.style.transition = ''
     el.style.height = `${newHeight}px`
+
+    const releaseTimer = setTimeout(() => { el.style.height = 'auto' }, 450)
+    return () => clearTimeout(releaseTimer)
   }, [view, error, loading, forgotSent])
 
   const handleSignIn = async () => {

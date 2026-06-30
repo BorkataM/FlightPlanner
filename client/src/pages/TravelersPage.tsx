@@ -350,7 +350,7 @@ export default function TravelersPage() {
           </div>
 
           {/* Sidebar (1/4) */}
-          <div className="flex flex-col gap-4 min-h-0">
+          <div className="flex flex-col gap-4 min-h-0 overflow-y-auto">
 
             {/* Your Journey */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
@@ -406,7 +406,7 @@ export default function TravelersPage() {
             </div>
 
             {/* Suggested Travelers */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm flex-1 flex flex-col min-h-0">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
               <div className="mb-4">
                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">{tr.suggestedTravelers}</h3>
               </div>
@@ -418,7 +418,7 @@ export default function TravelersPage() {
                 </div>
               ) : (
                 <div className="space-y-3.5">
-                  {suggestedUsers.slice(0, 5).map(u => (
+                  {suggestedUsers.map(u => (
                     <TravelerRow
                       key={u.id}
                       user={u}
