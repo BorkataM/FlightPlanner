@@ -132,7 +132,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     <div className="fixed inset-0 z-[200] flex items-end justify-center">
       <div className="auth-overlay absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="auth-panel relative w-full max-w-md max-h-[92vh] overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-800 rounded-t-3xl px-8 pb-10 pt-5 shadow-2xl">
+      <div className="auth-panel relative w-full max-w-md max-h-[95dvh] overflow-y-auto overflow-x-hidden bg-white dark:bg-slate-800 rounded-t-3xl px-8 pt-5 shadow-2xl" style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}>
         <div className="w-10 h-1 bg-slate-200 dark:bg-slate-600 rounded-full mx-auto mb-5" />
 
         <button onClick={onClose} className="absolute top-5 right-6 text-slate-400 hover:text-slate-700 transition-colors">
