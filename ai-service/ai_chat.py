@@ -244,10 +244,14 @@ Booking flow (follow exactly):
 
 
 def _build_system_prompt(user_context: UserContext | None) -> str:
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date_line = f"\nToday's date (UTC) is {today}. Use this to determine which flights are upcoming vs. past."
     if user_context is None:
-        return _SYSTEM_PROMPT_BASE
+        return _SYSTEM_PROMPT_BASE + date_line
     return (
         _SYSTEM_PROMPT_BASE
+        + date_line
         + f"\nYou are talking to {user_context.first_name} {user_context.last_name} "
         f"({user_context.email}). Use get_my_bookings to study their past trips and infer their "
         f"travel profile (preferred climate, distance, regions and season), then give recommendations "
