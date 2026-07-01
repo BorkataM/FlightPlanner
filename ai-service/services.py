@@ -244,8 +244,12 @@ async def search_flights(
     db: AsyncSession,
     departure_code: str | None = None,
     arrival_code: str | None = None,
+    month: int | None = None,
+    year: int | None = None,
     limit: int = 10,
 ) -> list[Flight]:
+    from sqlalchemy import extract
+
     dep = aliased(Airport)
     arr = aliased(Airport)
 
@@ -267,6 +271,10 @@ async def search_flights(
     if arrival_code:
         code = arrival_code.upper()
         query = query.where((arr.IcaoCode == code) | (arr.IataCode == code))
+    if month:
+        query = query.where(extract("month", Flight.DepartureTime) == month)
+    if year:
+        query = query.where(extract("year", Flight.DepartureTime) == year)
     result = await db.execute(query)
     return list(result.scalars().all())
 

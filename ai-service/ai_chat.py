@@ -46,6 +46,14 @@ TOOLS: list[dict] = [
                         "type": "string",
                         "description": "IATA or ICAO code of the arrival airport.",
                     },
+                    "month": {
+                        "type": "integer",
+                        "description": "Filter flights by departure month (1=January … 12=December). Always use this when the user specifies a month.",
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Filter flights by departure year (e.g. 2026). Use together with month when the user specifies a period.",
+                    },
                     "limit": {
                         "type": "integer",
                         "description": "Maximum number of results to return (default 20). Use a higher value for open-ended browsing.",
@@ -337,6 +345,8 @@ async def _tool_search_flights(args: dict, db: AsyncSession, user_context: UserC
         db,
         departure_code=args.get("departure_code"),
         arrival_code=args.get("arrival_code"),
+        month=args.get("month"),
+        year=args.get("year"),
         limit=args.get("limit", 20),
     )
     return [_flight_to_dict(f) for f in flights]
@@ -460,9 +470,9 @@ async def chat(request: ChatRequest, db: AsyncSession) -> ChatResponse:
 
     final_message = (choice.message.content or "") if choice else ""
 
-    # Ran tools but returned no text - ask for a plain summary.
+    # Ran tools but returned no text - ask for a plain summary in the user's language.
     if not final_message.strip() and tools_used:
-        messages.append({"role": "user", "content": "Based on the flight data above, give me a short recommendation in 2-3 sentences."})
+        messages.append({"role": "user", "content": f"Based on the flight data above, answer my question. Respond in the exact same language as this message: {request.message}"})
         for attempt in range(3):
             summary = await client.chat.completions.create(
                 model=settings.OPENAI_MODEL,

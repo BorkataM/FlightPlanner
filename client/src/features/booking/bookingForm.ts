@@ -91,7 +91,7 @@ export function dobError(d: string, m: string, y: string): string {
   if (day < 1 || day > daysInMonth) return 'Invalid day for that month'
   const dob = new Date(year, month - 1, day)
   if (dob > today) return 'Date of birth cannot be in the future'
-  const age = (today.getTime() - dob.getTime()) / (365.25 * 24 * 3600 * 1000)
+  const age = (today.getTime() - dob.getTime() ) / (365.25 * 24 * 3600 * 1000)
   if (age > 120) return 'Please check the year of birth'
   return ''
 }
