@@ -33,7 +33,7 @@ export const INS_BASIC_PRICE = 12
 export const INS_PLUS_PRICE  = 20
 
 export const fmtTime = (s?: string | null) => {
-  if (!s) return '—'
+  if (!s) return '-'
   const d = new Date(s)
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
 }

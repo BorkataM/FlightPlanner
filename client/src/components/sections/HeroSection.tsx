@@ -18,11 +18,11 @@ export default function HeroSection() {
       />
       <StarField active={theme === 'dark'} />
 
-      {/* day overlay — fades out when dark */}
+      {/* day overlay - fades out when dark */}
       <div className="absolute inset-0 hero-overlay-day pointer-events-none"
         style={{ zIndex: 2, opacity: theme === 'dark' ? 0 : 1, transition: 'opacity 0.7s ease' }} />
 
-      {/* night overlay — fades in when dark */}
+      {/* night overlay - fades in when dark */}
       <div className="absolute inset-0 hero-overlay-night pointer-events-none"
         style={{ zIndex: 2, opacity: theme === 'dark' ? 1 : 0, transition: 'opacity 0.7s ease' }} />
 

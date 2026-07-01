@@ -114,7 +114,7 @@ async def _load_flight(db: AsyncSession, flight_id: int) -> Flight | None:
 
 
 def _compute_analytics(flight: Flight) -> FlightAnalytics | None:
-    """Pure calculation — no DB I/O.  Returns a populated (unsaved) FlightAnalytics."""
+    """Pure calculation - no DB I/O.  Returns a populated (unsaved) FlightAnalytics."""
     dep = flight.DepartureAirport
     arr = flight.ArrivalAirport
     if dep is None or arr is None:

@@ -17,7 +17,7 @@ export default function MobileAppSection() {
       return
     }
     setError('')
-    // Remember interest locally — no backend signup endpoint yet for the coming-soon app.
+    // Remember interest locally - no backend signup endpoint yet for the coming-soon app.
     try {
       const list = JSON.parse(localStorage.getItem('skywave_mobile_waitlist') ?? '[]') as string[]
       if (!list.includes(email.trim().toLowerCase())) list.push(email.trim().toLowerCase())

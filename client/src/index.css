@@ -171,7 +171,7 @@
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.18);
 }
-/* horizontal tab strip — results page */
+/* horizontal tab strip - results page */
 .results-tab-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(203,213,225,0.8) transparent;

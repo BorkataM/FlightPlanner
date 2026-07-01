@@ -74,7 +74,7 @@ export default function AuthModal({ onClose, onSuccess }: Props) {
     }
 
     // Animate from the current height to the new content height, then snap back to auto.
-    // transitionend only fires if the height actually changes, so a timer backs it up —
+    // transitionend only fires if the height actually changes, so a timer backs it up -
     // otherwise an equal-height transition (e.g. toggling `loading`) leaves the box locked
     // at a fixed px, clipping anything that grows later (the async Google iframe).
     const prevHeight = el.offsetHeight

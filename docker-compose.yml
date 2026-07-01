@@ -1,6 +1,6 @@
 # FlightPlanner full stack: AI service + .NET API + React client.
 # The database is external (Supabase), so no Postgres container is defined.
-# Secrets are read from the root .env file (gitignored) — see .env.example.
+# Secrets are read from the root .env file (gitignored) - see .env.example.
 
 services:
   ai-service:
@@ -51,7 +51,7 @@ services:
         # Empty => app uses relative /api and /ai paths (proxied by nginx)
         VITE_API_URL: ""
         VITE_AI_URL: ""
-        # Google OAuth client ID — baked into the SPA at build time
+        # Google OAuth client ID - baked into the SPA at build time
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     ports:
       - "8080:80"

@@ -120,7 +120,7 @@ export default function BoardingPassPage() {
         {/* content */}
         <div className="flex-1 flex flex-col print:block print:p-0">
 
-          {/* title — pinned at top, centered */}
+          {/* title - pinned at top, centered */}
           <div className="print:hidden text-center pt-10 pb-6 px-6">
             <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-1">{bp.title}</h1>
             <p className="text-slate-400 text-sm">
@@ -135,7 +135,7 @@ export default function BoardingPassPage() {
             </p>
           </div>
 
-          {/* cards — fill remaining height, centered in both axes */}
+          {/* cards - fill remaining height, centered in both axes */}
           <div className="flex-1 flex items-center justify-center px-4 lg:px-6 pb-10">
             <div
               className={`bp-cards flex gap-6 xl:gap-8 justify-center items-center ${

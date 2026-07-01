@@ -120,7 +120,7 @@ export function BoardingPassCard(p: CardProps) {
             <div className="text-[13px] font-bold opacity-70 mb-1">{p.dateStr}</div>
             <div className="flex items-baseline gap-4">
               <span className="font-black tabular-nums" style={{ fontSize: timeFs }}>{p.depTime}</span>
-              <span className="opacity-40 text-xl">—</span>
+              <span className="opacity-40 text-xl">-</span>
               <span className="font-black tabular-nums" style={{ fontSize: timeFs }}>{p.arrTime}</span>
             </div>
           </div>

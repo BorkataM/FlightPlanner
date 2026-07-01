@@ -20,13 +20,13 @@ export function durationMin(f: FlightDto) {
 }
 
 export const fmtTime = (s?: string | null) => {
-  if (!s) return '—'
+  if (!s) return '-'
   const d = new Date(s)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
 export const fmtDur = (min: number) =>
-  isFinite(min) ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m` : '—'
+  isFinite(min) ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m` : '-'
 
 export const fmtTabDate = (s: string) =>
   new Date(s + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })

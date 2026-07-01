@@ -121,7 +121,7 @@ export default function SearchResultsPage() {
     setSelRet(retDates[0])
   }, [retDates, selRet, cheapestRetByDate, isRoundTrip])
 
-  /* cheapest return overall — fallback when selRet has no match */
+  /* cheapest return overall - fallback when selRet has no match */
   const cheapestRetOverall = useMemo(() =>
     isRoundTrip
       ? returns.reduce<FlightDto | null>((best, f) => !best || f.price < best.price ? f : best, null)

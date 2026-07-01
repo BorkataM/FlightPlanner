@@ -24,7 +24,7 @@ export default function FlightLoader({ text = 'Loading your flights…' }: { tex
         <div className="absolute w-full h-px bg-blue-800/20" />
         <div className="absolute w-px h-full bg-blue-800/20" />
 
-        {/* Rotating sweep arm — conic gradient */}
+        {/* Rotating sweep arm - conic gradient */}
         <div
           className="absolute inset-0 rounded-full animate-spin"
           style={{
@@ -59,7 +59,7 @@ export default function FlightLoader({ text = 'Loading your flights…' }: { tex
           />
         ))}
 
-        {/* Blip dots — simulated radar contacts */}
+        {/* Blip dots - simulated radar contacts */}
         <div
           className="absolute rounded-full bg-blue-300/70 animate-pulse"
           style={{ width: 5, height: 5, top: '28%', left: '68%' }}

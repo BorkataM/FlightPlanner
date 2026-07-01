@@ -18,7 +18,7 @@ export const bg: LocaleSchema = {
   mobileApp: {
     badge:      'Очаквайте скоро',
     title:      'SkyWave за мобилни устройства',
-    subtitle:   'Резервирай полети, следи пътуванията си и получавай умни известия за оферти — директно от джоба си. Приложенията за iOS и Android са на път.',
+    subtitle:   'Резервирай полети, следи пътуванията си и получавай умни известия за оферти - директно от джоба си. Приложенията за iOS и Android са на път.',
     comingSoon: 'Уведоми ме',
     emailPlaceholder: 'Въведи своя имейл',
     thanks:     'Благодарим! Ще ти пишем веднага щом приложението излезе.',
@@ -41,7 +41,7 @@ export const bg: LocaleSchema = {
     flexibleDates:       'Гъвкави дати',
     from:                'от',
     noFlights:           'Няма намерени полети от това летище.',
-    flightsFromAllDates: 'Полети от {city} — всички дати',
+    flightsFromAllDates: 'Полети от {city} - всички дати',
   },
 
   browse: {
@@ -58,7 +58,7 @@ export const bg: LocaleSchema = {
 
   aiCopilot: {
     label:    'AI Умен Скорер Ко-Пилот',
-    subtitle: 'Анализира въведеното — персонализирани резултати очаквайте',
+    subtitle: 'Анализира въведеното - персонализирани резултати очаквайте',
     status:   'Оценява на живо',
     chat: {
       title:        'SkyWave AI',

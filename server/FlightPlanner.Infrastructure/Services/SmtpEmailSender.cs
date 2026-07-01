@@ -69,7 +69,7 @@ namespace FlightPlanner.Infrastructure.Services
         {
             var value = Environment.GetEnvironmentVariable(key);
             if (!string.IsNullOrWhiteSpace(value)) return value;
-            // appsettings may contain a "${EMAIL_...}" placeholder that wasn't substituted — treat as unset
+            // appsettings may contain a "${EMAIL_...}" placeholder that wasn't substituted - treat as unset
             if (fallback is not null && fallback.StartsWith("${")) return null;
             return fallback;
         }

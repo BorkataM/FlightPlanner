@@ -47,7 +47,7 @@ export default function AirportRouteMap({ flightId }: Props) {
     )
   }, [])
 
-  // OSRM routing for car and walking — gives actual road time
+  // OSRM routing for car and walking - gives actual road time
   useEffect(() => {
     if (!userPos || !geo || mode === 'transit') { setRoute(null); return }
     setRouteLoading(true)

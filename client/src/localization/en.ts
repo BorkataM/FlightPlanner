@@ -284,7 +284,7 @@ export const en: LocaleSchema = {
   mobileApp: {
     badge:      'Coming soon',
     title:      'SkyWave for mobile',
-    subtitle:   'Book flights, track trips and get smart deal alerts — right from your pocket. The iOS and Android apps are on their way.',
+    subtitle:   'Book flights, track trips and get smart deal alerts - right from your pocket. The iOS and Android apps are on their way.',
     comingSoon: 'Notify me',
     emailPlaceholder: 'Enter your email',
     thanks:     "Thanks! We'll email you the moment the app launches.",
@@ -307,7 +307,7 @@ export const en: LocaleSchema = {
     flexibleDates:       'Flexible dates',
     from:                'from',
     noFlights:           'No flights found from this airport.',
-    flightsFromAllDates: 'Flights from {city} — all dates',
+    flightsFromAllDates: 'Flights from {city} - all dates',
   },
 
   browse: {
@@ -324,7 +324,7 @@ export const en: LocaleSchema = {
 
   aiCopilot: {
     label:    'AI Smart Scorer Co-Pilot',
-    subtitle: 'Analyzing your inputs — personalized smart results incoming',
+    subtitle: 'Analyzing your inputs - personalized smart results incoming',
     status:   'Scoring live',
     chat: {
       title:        'SkyWave AI',
@@ -354,7 +354,7 @@ export const en: LocaleSchema = {
     { title: 'Trusted by Millions',  sub: 'Join happy travelers worldwide'   },
   ],
 
-  socialFeed: { label: "Live Social Feed — Friends' Activity" },
+  socialFeed: { label: "Live Social Feed - Friends' Activity" },
 
   destinations: {
     title:    'Popular destinations',

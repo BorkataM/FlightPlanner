@@ -54,7 +54,7 @@ export default function StarField({ active }: Props) {
 
     const draw = () => {
       animId = requestAnimationFrame(draw)
-      if (!activeRef.current) return   // invisible — skip GPU work
+      if (!activeRef.current) return   // invisible - skip GPU work
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       t += 0.016

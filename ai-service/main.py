@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Verify DB connectivity on startup (no table creation — tables are managed by .NET)
+    # Verify DB connectivity on startup (no table creation - tables are managed by .NET)
     async with engine.connect() as conn:
         await conn.run_sync(lambda _: None)
     yield
@@ -85,7 +85,7 @@ async def smartest_flights(
 async def process_all(db: AsyncSession = Depends(get_db)):
     """
     Calculate and persist analytics for every flight that has a NULL or zero SmartScore.
-    Safe to call repeatedly — already-processed flights are skipped.
+    Safe to call repeatedly - already-processed flights are skipped.
     """
     result = await services.process_all_unprocessed(db)
     return result

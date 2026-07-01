@@ -93,7 +93,7 @@ namespace FlightPlanner.API.Controllers
             var origin = Request.Headers.Origin.ToString();
             await _userService.RequestPasswordResetAsync(dto.Email, origin);
 
-            // Always 200 — never reveal whether an account exists for this email.
+            // Always 200 - never reveal whether an account exists for this email.
             return Ok(new { message = "If an account exists for that email, a reset link has been sent." });
         }
 

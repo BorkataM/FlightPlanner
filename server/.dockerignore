@@ -2,7 +2,7 @@
 **/bin/
 **/obj/
 
-# Secrets — provided at runtime via compose env, never baked into the image
+# Secrets - provided at runtime via compose env, never baked into the image
 **/.env
 
 # IDE / VS

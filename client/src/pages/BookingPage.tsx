@@ -92,7 +92,7 @@ export default function BookingPage() {
       setPhone(savedTraveller.phone)
       touchMany(STEP1_FIELDS)
     } else if (user) {
-      // First time — only name + email exist on the account profile
+      // First time - only name + email exist on the account profile
       setFirstName(user.firstName)
       setLastName(user.lastName)
       setEmail(user.email)
@@ -607,7 +607,7 @@ export default function BookingPage() {
                     sub={bk.payWithCardSub}
                   />
 
-                  {/* Google Pay — requires valid contact details */}
+                  {/* Google Pay - requires valid contact details */}
                   <div className={`mb-4 ${errors.email || errors.phone ? 'opacity-50 pointer-events-none' : ''}`}>
                     <GooglePayButton
                       environment="TEST"

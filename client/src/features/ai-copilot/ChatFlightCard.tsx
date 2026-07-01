@@ -5,7 +5,7 @@ import AirlineLogo from '../search/AirlineLogo'
 import { getStoredToken } from '../../services/api'
 
 const fmt = (s?: string | null) => {
-  if (!s) return '—'
+  if (!s) return '-'
   const d = new Date(s)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }

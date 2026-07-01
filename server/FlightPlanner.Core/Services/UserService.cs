@@ -138,7 +138,7 @@ namespace FlightPlanner.Core.Services
             user.PasswordHash = _passwordHasher.Hash(newPassword);
             await _userRepository.UpdateAsync(user);
 
-            // One-time use — consume the token so the same link can't be replayed.
+            // One-time use - consume the token so the same link can't be replayed.
             _passwordResetTokenStore.Invalidate(token);
         }
 
@@ -154,7 +154,7 @@ namespace FlightPlanner.Core.Services
     Reset password
   </a>
   <p style=""color:#94A3B8;font-size:12px;line-height:1.6"">
-    If you didn't request this, you can safely ignore this email — your password won't change.
+    If you didn't request this, you can safely ignore this email - your password won't change.
   </p>
   <p style=""color:#94A3B8;font-size:12px;word-break:break-all"">
     Or paste this link into your browser:<br>{resetUrl}

@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace FlightPlanner.Infrastructure.Services
 {
-    // Singleton — survives the lifetime of the process.
+    // Singleton - survives the lifetime of the process.
     // Reset tokens are intentionally short-lived; for production-grade durability
     // (surviving restarts / multiple instances) replace the backing store with Redis or a DB table.
     public class InMemoryPasswordResetTokenStore : IPasswordResetTokenStore

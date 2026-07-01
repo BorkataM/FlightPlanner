@@ -1,4 +1,4 @@
-# FlightPlanner React/Vite client — built to static assets, served by nginx
+# FlightPlanner React/Vite client - built to static assets, served by nginx
 FROM node:20-alpine AS build
 WORKDIR /app
 

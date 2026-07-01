@@ -85,7 +85,7 @@ export default function WeatherWidget({ flightId }: Props) {
           <span className={`text-xs font-bold ${riskStyle.text}`}>
             {risk.risk} delay risk
           </span>
-          <span className="text-xs text-slate-400 ml-1">— {risk.reason}</span>
+          <span className="text-xs text-slate-400 ml-1">- {risk.reason}</span>
         </div>
       )}
 

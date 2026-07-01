@@ -19,7 +19,7 @@ export async function fetchOsrmRoute(
   dest:   { lat: number; lon: number },
   profile: 'driving' | 'walking',
 ): Promise<RouteResult> {
-  // The public OSRM demo server only serves the "driving" profile — it ignores
+  // The public OSRM demo server only serves the "driving" profile - it ignores
   // walking/foot and returns a car route either way. So we always request
   // driving (for the distance + geometry) and derive a realistic walking time
   // from the distance instead of trusting the server's car duration.

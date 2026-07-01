@@ -1,4 +1,4 @@
-# Render Blueprint — deploys FlightPlanner as 3 services on the free tier.
+# Render Blueprint - deploys FlightPlanner as 3 services on the free tier.
 # Secrets (sync: false) are entered in the Render dashboard on first deploy,
 # so they are never committed to the repo.
 #
@@ -23,7 +23,7 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
-      # Same OpenWeather key used by the .NET API — enter in the Render dashboard.
+      # Same OpenWeather key used by the .NET API - enter in the Render dashboard.
       # Without it, the assistant simply skips weather (forecast lookups are optional).
       - key: OPENWEATHER_API_KEY
         sync: false

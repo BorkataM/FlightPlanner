@@ -463,7 +463,7 @@ export default function TravelersPage() {
               ) : followList.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-8 h-8 text-slate-200 dark:text-slate-600 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">{followModal === 'followers' ? tr.followersTitle : tr.followingTitle} — 0</p>
+                  <p className="text-sm text-slate-400">{followModal === 'followers' ? tr.followersTitle : tr.followingTitle} - 0</p>
                 </div>
               ) : (
                 <div className="space-y-3">

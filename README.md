@@ -4,7 +4,7 @@ An intelligent flight booking and route-analytics platform. Search flights, book
 
 **Live app:** https://skywave-web.onrender.com
 
-> Hosted on Render's free tier — the two Docker backends spin down when idle, so the first request after a nap can take ~50s to wake up.
+> Hosted on Render's free tier - the two Docker backends spin down when idle, so the first request after a nap can take ~50s to wake up.
 
 ## Architecture
 
@@ -16,8 +16,8 @@ SkyWave is a three-service application:
 | **API** (`server/`) | ASP.NET Core Web API (.NET 10) | https://localhost:7236 | https://skywave-api.onrender.com |
 | **AI Service** (`ai-service/`) | Python FastAPI | http://localhost:8000 | https://skywave-ai.onrender.com |
 
-- **Database:** PostgreSQL (Supabase). The .NET API owns the schema and CRUD; the Python service reads/updates the same tables for analytics. Always connect via the Supabase IPv4 session pooler — the direct `db.*.supabase.co` host is IPv6-only.
-- The .NET API does **not** compute analytics — it delegates to the Python AI service (CO₂, SmartScore, delay probability).
+- **Database:** PostgreSQL (Supabase). The .NET API owns the schema and CRUD; the Python service reads/updates the same tables for analytics. Always connect via the Supabase IPv4 session pooler - the direct `db.*.supabase.co` host is IPv6-only.
+- The .NET API does **not** compute analytics - it delegates to the Python AI service (CO₂, SmartScore, delay probability).
 - Authentication uses JWT plus Google OAuth (Sign in with Google).
 
 ## Features

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace FlightPlanner.Infrastructure.Services
 {
-    // Singleton — survives the lifetime of the process.
+    // Singleton - survives the lifetime of the process.
     // For production, replace backing store with Redis or a DB table.
     public class InMemoryRefreshTokenStore : IRefreshTokenStore
     {
@@ -27,7 +27,7 @@ namespace FlightPlanner.Infrastructure.Services
             if (entry.Expiry < DateTime.UtcNow)
                 return null;
 
-            // Issue a fresh token (rotation — old token already removed above)
+            // Issue a fresh token (rotation - old token already removed above)
             var newToken = Generate(entry.UserId);
             return (entry.UserId, newToken);
         }
